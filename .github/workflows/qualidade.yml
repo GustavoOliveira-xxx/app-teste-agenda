@@ -1,0 +1,70 @@
+# Roda a cada envio (push) e em pull requests: confere segredos, testa o
+# banco (permissões) e o app (tipos, lint, formatação, testes e empacotamento).
+name: Qualidade
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qualidade-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  segredos:
+    name: Verificar segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Procurar chaves, senhas e arquivos proibidos
+        run: bash scripts/verificar-segredos.sh
+
+  banco:
+    name: Banco de dados (regras de acesso)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: supabase
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: supabase/package-lock.json
+      - name: Instalar dependências
+        run: npm ci
+      - name: Testes de integração do banco (PGlite)
+        run: npm test
+
+  app:
+    name: App (tipos, lint, testes, empacotamento)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-mobile
+    env:
+      EXPO_NO_TELEMETRY: 1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-mobile/package-lock.json
+      - name: Instalar dependências
+        run: npm ci
+      - name: Verificar tipos (TypeScript)
+        run: npm run typecheck
+      - name: Lint (ESLint)
+        run: npm run lint
+      - name: Formatação (Prettier)
+        run: npm run format:check
+      - name: Testes unitários (Jest)
+        run: npm test -- --ci
+      - name: Empacotar o JavaScript do app Android (garante que compila)
+        run: npx expo export --platform android --output-dir dist-ci
