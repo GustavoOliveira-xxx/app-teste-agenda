@@ -1,0 +1,148 @@
+import { useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { t } from '@/i18n';
+import { useAppTheme } from '@/theme/ThemeProvider';
+import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { normalizeText } from '@/utils/text';
+
+import { AppText } from './AppText';
+import { Icon } from './Icon';
+import { IconButton } from './IconButton';
+
+export interface Option<T> {
+  value: T;
+  label: string;
+  description?: string;
+  disabled?: boolean;
+}
+
+/** Lista de opções em uma folha (modal), com busca opcional (ex.: fusos horários). */
+export function OptionSheet<T>({
+  visible,
+  title,
+  options,
+  value,
+  onSelect,
+  onClose,
+  searchable,
+  searchPlaceholder,
+}: {
+  visible: boolean;
+  title: string;
+  options: Option<T>[];
+  value: T;
+  onSelect: (value: T) => void;
+  onClose: () => void;
+  searchable?: boolean;
+  searchPlaceholder?: string;
+}) {
+  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const [query, setQuery] = useState('');
+  const filtered = useMemo(() => {
+    const q = normalizeText(query);
+    return q
+      ? options.filter((o) => normalizeText(`${o.label} ${o.description ?? ''}`).includes(q))
+      : options;
+  }, [options, query]);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
+        <View
+          style={[
+            styles.sheet,
+            { backgroundColor: colors.surface, paddingBottom: insets.bottom + spacing.md },
+          ]}
+          accessibilityViewIsModal
+        >
+          <View style={styles.header}>
+            <AppText variant="heading" style={styles.flex}>
+              {title}
+            </AppText>
+            <IconButton icon="close" label={t('common.close')} onPress={onClose} />
+          </View>
+          {searchable && (
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder={searchPlaceholder ?? t('common.search')}
+              placeholderTextColor={colors.textMuted}
+              accessibilityLabel={searchPlaceholder ?? t('common.search')}
+              autoCorrect={false}
+              style={[styles.search, typography.body, { color: colors.text, borderColor: colors.border }]}
+            />
+          )}
+          <FlatList
+            data={filtered}
+            keyExtractor={(item, index) => `${String(item.value)}-${index}`}
+            initialNumToRender={30}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item }) => {
+              const selected = item.value === value;
+              return (
+                <Pressable
+                  disabled={item.disabled}
+                  onPress={() => {
+                    onSelect(item.value);
+                    onClose();
+                  }}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected, disabled: !!item.disabled }}
+                  accessibilityLabel={item.description ? `${item.label}. ${item.description}` : item.label}
+                  style={({ pressed }) => [
+                    styles.option,
+                    {
+                      backgroundColor: pressed ? colors.surfaceAlt : 'transparent',
+                      opacity: item.disabled ? 0.45 : 1,
+                    },
+                  ]}
+                >
+                  <View style={styles.flex}>
+                    <AppText style={{ fontWeight: selected ? '700' : '400' }}>{item.label}</AppText>
+                    {item.description ? (
+                      <AppText variant="small" tone="muted">
+                        {item.description}
+                      </AppText>
+                    ) : null}
+                  </View>
+                  {selected && <Icon name="checkmark-circle" color={colors.primary} />}
+                </Pressable>
+              );
+            }}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: { flex: 1, justifyContent: 'flex-end' },
+  sheet: {
+    maxHeight: '85%',
+    borderTopLeftRadius: radius.lg,
+    borderTopRightRadius: radius.lg,
+    paddingTop: spacing.sm,
+  },
+  header: { flexDirection: 'row', alignItems: 'center', paddingLeft: spacing.lg, paddingRight: spacing.xs },
+  flex: { flex: 1 },
+  search: {
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    minHeight: MIN_TOUCH,
+    borderWidth: 1,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+  },
+  option: {
+    minHeight: MIN_TOUCH + 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+});
