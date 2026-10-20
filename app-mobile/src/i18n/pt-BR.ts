@@ -148,6 +148,7 @@ export const ptBR = {
     endNever: 'Nunca termina',
     endUntil: 'Termina em uma data',
     endCount: 'Termina após N vezes',
+    endLabel: 'Término da repetição',
     interval: 'Repetir a cada',
     frequency: 'Frequência',
     unitDays: 'dia(s)',
@@ -501,6 +502,8 @@ export const ptBR = {
     history: 'Histórico do evento',
     openLink: 'Abrir link',
     timeInYourZone: 'No seu fuso: {time}',
+    moreOptions: 'Mais opções',
+    lessOptions: 'Menos opções',
   },
   notificationsInbox: {
     title: 'Avisos',

@@ -98,6 +98,8 @@ export interface CalendarEvent extends Omit<EventFields, 'title'> {
   exceptions: RecurrenceException[];
   attendee_ids: string[];
   my_reminders: number[];
+  /** Preenchido apenas em respostas de escrita (evento na lixeira). */
+  deleted_at?: string | null;
   /** Somente no app: o evento tem alterações ainda não enviadas. */
   pending?: boolean;
 }

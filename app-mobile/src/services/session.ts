@@ -1,0 +1,80 @@
+// Ciclo de vida da sessão: o que acontece ao entrar e ao sair da conta.
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
+
+import { env } from '@/config/env';
+import { loadLocalState, requestSync, setAfterSyncHook, syncNow } from '@/offline/syncEngine';
+import { clearUserData, getInstallationId } from '@/offline/storage';
+import { overlayPending } from '@/offline/outbox';
+import { useAuthStore } from '@/stores/authStore';
+import { useDataStore } from '@/stores/dataStore';
+import { useSyncStore } from '@/stores/syncStore';
+import { getDeviceTimezone } from '@/hooks/useDeviceTimezone';
+import { expandEvents } from '@/utils/recurrence';
+
+import * as api from './api';
+import { signOutThisDevice } from './auth';
+import { logError } from './errorLog';
+import { cancelAllReminders, rescheduleReminders } from './localNotifications';
+import { startRealtime, stopRealtime } from './realtime';
+
+let activeUser: string | null = null;
+
+/** Reagenda os lembretes locais a partir do estado atual. */
+export async function refreshReminders(): Promise<void> {
+  const userId = useAuthStore.getState().session?.user.id ?? null;
+  const account = useAuthStore.getState().account;
+  const events = overlayPending(useDataStore.getState().events, useSyncStore.getState().outbox, userId);
+  const now = new Date();
+  const occurrences = expandEvents(Object.values(events), now, new Date(now.getTime() + 31 * 86_400_000));
+  const tz =
+    account?.preferences.use_device_timezone === false ? account.preferences.timezone : getDeviceTimezone();
+  await rescheduleReminders(
+    occurrences,
+    account?.notification_preferences ?? null,
+    tz,
+    account?.preferences.time_format ?? '24h',
+  );
+}
+
+export async function startSession(userId: string): Promise<void> {
+  if (activeUser === userId) return;
+  activeUser = userId;
+  await loadLocalState(userId);
+  setAfterSyncHook(refreshReminders);
+  startRealtime(userId);
+  void registerThisDevice();
+  void syncNow();
+}
+
+async function registerThisDevice(): Promise<void> {
+  try {
+    await api.registerDevice({
+      installationId: await getInstallationId(),
+      platform: Platform.OS,
+      deviceName: Device.modelName ?? Device.deviceName ?? null,
+      osVersion: Device.osVersion ?? null,
+      appVersion: env.appVersion,
+    });
+  } catch (error) {
+    await logError('dispositivo', error);
+  }
+}
+
+/** Sair: para o tempo real, cancela lembretes e apaga os dados deste aparelho. */
+export async function endSession(): Promise<void> {
+  const userId = activeUser ?? useAuthStore.getState().session?.user.id ?? null;
+  activeUser = null;
+  setAfterSyncHook(null);
+  stopRealtime();
+  await cancelAllReminders();
+  if (userId) await clearUserData(userId);
+  useDataStore.getState().reset();
+  useSyncStore.getState().reset();
+  useAuthStore.getState().setAccount(null);
+  await signOutThisDevice();
+}
+
+export function onAppForeground(): void {
+  if (activeUser) requestSync({ pull: true });
+}
