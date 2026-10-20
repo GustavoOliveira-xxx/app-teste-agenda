@@ -1,0 +1,13 @@
+{
+  "name": "agenda-compartilhada-supabase",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Banco de dados do Agenda Compartilhada: migrations, seeds e testes de permissões com PGlite.",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 \"tests/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10"
+  }
+}
