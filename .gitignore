@@ -1,0 +1,36 @@
+# Dependências (reinstaláveis com npm install)
+node_modules/
+
+# Variáveis de ambiente reais: NUNCA versionar
+.env
+.env.*
+!.env.example
+
+# Chaves de assinatura e certificados: NUNCA versionar
+*.jks
+*.keystore
+*.p8
+*.p12
+*.pem
+*.key
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+credentials.json
+
+# Builds e artefatos gerados
+*.apk
+*.aab
+dist/
+web-build/
+coverage/
+app-mobile/android/
+app-mobile/ios/
+
+# Ferramentas
+.expo/
+supabase/.temp/
+supabase/.branches/
+*.tsbuildinfo
+*.log
+.DS_Store
