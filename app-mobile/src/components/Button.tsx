@@ -34,7 +34,7 @@ export function Button({
   const palette = {
     primary: { bg: colors.primary, fg: colors.primaryText, border: colors.primary },
     secondary: { bg: colors.surface, fg: colors.primary, border: colors.border },
-    danger: { bg: colors.danger, fg: '#FFFFFF', border: colors.danger },
+    danger: { bg: colors.danger, fg: colors.dangerText, border: colors.danger },
     ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
   }[variant];
 

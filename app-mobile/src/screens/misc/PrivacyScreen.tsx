@@ -10,7 +10,7 @@ export default function PrivacyScreen() {
     <Screen showOfflineBanner={false}>
       <Stack.Screen options={{ title: t('privacyPolicy.title') }} />
       <AppText variant="small" tone="muted">
-        Versão {PRIVACY_POLICY_VERSION}
+        {t('privacyPolicy.version', { version: PRIVACY_POLICY_VERSION })}
       </AppText>
       {PRIVACY_POLICY.map((section) => (
         <AppText key={section.title}>

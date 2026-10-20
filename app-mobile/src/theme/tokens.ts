@@ -7,12 +7,16 @@ export interface Palette {
   surface: string;
   surfaceAlt: string;
   border: string;
+  /** Borda de campos de formulário (contraste mínimo de 3:1 com o fundo). */
+  inputBorder: string;
   text: string;
   textMuted: string;
   primary: string;
   primaryText: string;
   primarySoft: string;
   danger: string;
+  /** Texto sobre fundo `danger` (botões destrutivos). */
+  dangerText: string;
   dangerSoft: string;
   success: string;
   successSoft: string;
@@ -28,12 +32,14 @@ export const lightPalette: Palette = {
   surface: '#FFFFFF',
   surfaceAlt: '#EEF1F5',
   border: '#D5DAE1',
+  inputBorder: '#858D9B',
   text: '#1A1D23',
   textMuted: '#555B68',
   primary: '#3358D4',
   primaryText: '#FFFFFF',
   primarySoft: '#E6ECFC',
   danger: '#C2261F',
+  dangerText: '#FFFFFF',
   dangerSoft: '#FDECEB',
   success: '#1F7A45',
   successSoft: '#E5F4EA',
@@ -49,12 +55,14 @@ export const darkPalette: Palette = {
   surface: '#1A1D24',
   surfaceAlt: '#242833',
   border: '#363C4A',
+  inputBorder: '#646C7E',
   text: '#ECEEF2',
   textMuted: '#AAB1BE',
   primary: '#8EA6F0',
   primaryText: '#0E1426',
   primarySoft: '#26304D',
   danger: '#FF8A80',
+  dangerText: '#2A0B09',
   dangerSoft: '#3D1F1E',
   success: '#7CD49B',
   successSoft: '#1C3326',
@@ -114,6 +122,9 @@ export const shadow = Platform.select({
 });
 
 /** Cor de texto legível sobre um fundo colorido (preto ou branco). */
+/** Luminância relativa de #111318. */
+const DARK_TEXT_LUMINANCE = 0.0065;
+
 export function readableTextOn(hex: string): string {
   const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
   if (!m) return '#FFFFFF';
@@ -122,5 +133,8 @@ export function readableTextOn(hex: string): string {
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   });
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 0.4 ? '#111318' : '#FFFFFF';
+  // Escolhe o texto (branco ou quase preto) com maior contraste (WCAG).
+  const withWhite = 1.05 / (luminance + 0.05);
+  const withDark = (luminance + 0.05) / (DARK_TEXT_LUMINANCE + 0.05);
+  return withDark > withWhite ? '#111318' : '#FFFFFF';
 }

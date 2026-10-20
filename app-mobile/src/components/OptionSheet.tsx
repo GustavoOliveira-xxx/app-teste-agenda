@@ -38,7 +38,7 @@ export function OptionSheet<T>({
   searchable?: boolean;
   searchPlaceholder?: string;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
@@ -49,7 +49,12 @@ export function OptionSheet<T>({
   }, [options, query]);
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={reduceMotion ? 'none' : 'slide'}
+      onRequestClose={onClose}
+    >
       <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
         <View
           style={[

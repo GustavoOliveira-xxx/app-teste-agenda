@@ -67,9 +67,9 @@ const styles = StyleSheet.create({
   wrapper: { gap: 6 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   swatch: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     borderWidth: 3,
     alignItems: 'center',
     justifyContent: 'center',

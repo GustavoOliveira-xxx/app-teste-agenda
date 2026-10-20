@@ -43,7 +43,10 @@ export default function OnboardingScreen() {
         <AppText tone="muted" center>
           {slide.text}
         </AppText>
-        <View style={styles.dots} accessibilityLabel={`${index + 1} de ${SLIDES.length}`}>
+        <View
+          style={styles.dots}
+          accessibilityLabel={t('onboarding.progress', { n: index + 1, total: SLIDES.length })}
+        >
           {SLIDES.map((s, i) => (
             <View
               key={s.title}

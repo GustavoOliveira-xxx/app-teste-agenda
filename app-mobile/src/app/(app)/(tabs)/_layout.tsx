@@ -39,7 +39,7 @@ export default function TabsLayout() {
           title: t('tabs.notifications'),
           tabBarBadge: unread > 0 ? (unread > 99 ? '99+' : unread) : undefined,
           tabBarAccessibilityLabel:
-            unread > 0 ? `${t('tabs.notifications')}, ${unread} não lidos` : t('tabs.notifications'),
+            unread > 0 ? t('tabs.notificationsUnread', { n: unread }) : t('tabs.notifications'),
           tabBarIcon: ({ color }) => <Icon name="notifications-outline" color={color as string} />,
         }}
       />
