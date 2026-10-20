@@ -225,7 +225,7 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 
 ## D18 Autoria, licença e repositório
 
-- Autor: **Gustavo Oliveira dos Santos**, e-mail de commits `gu.prgm@gmail.com`.
+- Autor: **Gustavo Oliveira dos Santos**, e-mail de commits informado pelo proprietário.
 - Repositório: `GustavoOliveira-xxx/app-teste-agenda` (já existente).
 - Licença: **MIT**.
 - Os commits são de autoria do proprietário. O assistente de IA aparece apenas como coautor técnico na mensagem do commit (linha `Co-Authored-By`), conforme a ferramenta utilizada.
