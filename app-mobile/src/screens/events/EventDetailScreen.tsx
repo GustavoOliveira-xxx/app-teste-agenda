@@ -389,11 +389,17 @@ export default function EventDetailScreen() {
                 {t('events.assignee')}: {nameOf(event.assignee_id)}
               </AppText>
             ) : null}
-            {event.attendee_ids.length > 0 && (
-              <AppText>
-                {t('events.participants')}: {event.attendee_ids.map(nameOf).join(', ')}
-              </AppText>
-            )}
+            <Button
+              title={
+                event.attendee_ids.length
+                  ? `${t('events.participants')}: ${event.attendee_ids.map(nameOf).join(', ')}`
+                  : t('events.participants')
+              }
+              icon="people-outline"
+              variant="ghost"
+              compact
+              onPress={() => router.push({ pathname: '/event/[id]/participants', params: { id: event.id } })}
+            />
             <AppText variant="small" tone="muted">
               {t('events.createdBy', { name: nameOf(event.created_by) })}
             </AppText>

@@ -72,13 +72,11 @@ export default function NotificationsScreen() {
   const open = (n: AppNotification) => {
     if (!n.read_at) {
       void api.markNotificationsRead([n.id]).catch(() => undefined);
-      useDataStore
-        .getState()
-        .set({
-          notifications: notifications.map((x) =>
-            x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x,
-          ),
-        });
+      useDataStore.getState().set({
+        notifications: notifications.map((x) =>
+          x.id === n.id ? { ...x, read_at: new Date().toISOString() } : x,
+        ),
+      });
     }
     if (n.type === 'invite_received') router.push('/invites');
     else if (n.event_id && n.type !== 'event_deleted')
