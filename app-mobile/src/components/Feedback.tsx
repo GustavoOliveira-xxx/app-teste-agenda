@@ -40,7 +40,7 @@ const FeedbackContext = createContext<FeedbackApi>({
 });
 
 export function FeedbackProvider({ children }: { children: ReactNode }) {
-  const { colors } = useAppTheme();
+  const { colors, reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
   const [dialog, setDialog] = useState<(ConfirmOptions & { resolve: (r: ConfirmResult) => void }) | null>(
     null,
@@ -90,7 +90,12 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   return (
     <FeedbackContext.Provider value={{ confirm, toast }}>
       {children}
-      <Modal visible={!!dialog} transparent animationType="fade" onRequestClose={() => close(false)}>
+      <Modal
+        visible={!!dialog}
+        transparent
+        animationType={reduceMotion ? 'none' : 'fade'}
+        onRequestClose={() => close(false)}
+      >
         <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
           <View style={[styles.dialog, { backgroundColor: colors.surface }]} accessibilityViewIsModal>
             <AppText variant="heading">{dialog?.title}</AppText>

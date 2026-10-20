@@ -124,7 +124,7 @@ export default function NotificationsScreen() {
                 {!item.read_at && <View style={[styles.unreadDot, { backgroundColor: colors.danger }]} />}
               </View>
             }
-            accessibilityHint={item.read_at ? undefined : 'Não lido'}
+            accessibilityHint={item.read_at ? undefined : t('notificationsInbox.unread')}
             onPress={() => open(item)}
           />
         )}

@@ -46,7 +46,7 @@ function SettingsForm({ calendar }: { calendar: Calendar }) {
     allow_private_events: calendar.allow_private_events,
   });
   const [errors, setErrors] = useState<Partial<Record<'name' | 'description' | 'color', string>>>({});
-  const [copyName, setCopyName] = useState(`${calendar.name} (cópia)`);
+  const [copyName, setCopyName] = useState(t('calendars.copyName', { name: calendar.name }));
   const [copyEvents, setCopyEvents] = useState(true);
   const set = <K extends keyof typeof settings>(key: K, value: (typeof settings)[K]) =>
     setSettings((s) => ({ ...s, [key]: value }));

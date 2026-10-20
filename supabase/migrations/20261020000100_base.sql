@@ -134,7 +134,7 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   display_name text not null
     check (char_length(btrim(display_name)) between 1 and 80),
-  avatar_color text not null default '#4F7DF3'
+  avatar_color text not null default '#3358D4'
     check (avatar_color ~ '^#[0-9A-Fa-f]{6}$'),
   avatar_url text check (avatar_url is null or char_length(avatar_url) <= 2048),
   account_status text not null default 'active'
@@ -237,7 +237,7 @@ language sql
 immutable
 set search_path = ''
 as $$
-  select (array['#4F7DF3', '#E5484D', '#30A46C', '#F76B15', '#8E4EC6',
+  select (array['#3358D4', '#E5484D', '#30A46C', '#F76B15', '#8E4EC6',
                 '#0090FF', '#D6409F', '#12A594', '#AD7F58', '#5B5BD6'])
          [1 + (get_byte(uuid_send(p_id), 15) % 10)];
 $$;

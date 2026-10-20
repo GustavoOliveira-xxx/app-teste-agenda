@@ -36,7 +36,7 @@ export default function ProfileScreen() {
     <Screen>
       <Card>
         <View style={styles.row}>
-          <Avatar name={name} color={account?.avatar_color ?? '#4F7DF3'} size={64} />
+          <Avatar name={name} color={account?.avatar_color ?? '#3358D4'} size={64} />
           <View style={styles.flex}>
             <AppText variant="title">{name}</AppText>
             <AppText tone="muted">{email}</AppText>
@@ -105,7 +105,7 @@ export default function ProfileScreen() {
         <ListItem icon="log-out-outline" title={t('auth.logout')} danger onPress={logout} chevron={false} />
       </Card>
       <AppText variant="small" tone="muted" center>
-        {t('common.appName')} · {t('profile.about', { version: env.appVersion })}
+        {t('common.appName')} · {t('profile.about', { version: env.appVersion, build: env.appBuild })}
       </AppText>
     </Screen>
   );

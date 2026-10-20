@@ -43,7 +43,7 @@ export function SelectField<T>({
         accessibilityState={{ disabled: !!disabled }}
         style={[
           styles.field,
-          { borderColor: colors.border, backgroundColor: colors.surface, opacity: disabled ? 0.55 : 1 },
+          { borderColor: colors.inputBorder, backgroundColor: colors.surface, opacity: disabled ? 0.55 : 1 },
         ]}
       >
         <AppText style={styles.flex} numberOfLines={1}>

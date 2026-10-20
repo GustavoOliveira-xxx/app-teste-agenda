@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', borderRadius: radius.md, padding: 3 },
   item: {
     flex: 1,
-    minHeight: 40,
+    minHeight: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: radius.sm,

@@ -24,7 +24,7 @@ export default function HelpScreen() {
               onPress={() => setOpen(expanded ? null : index)}
               accessibilityRole="button"
               accessibilityState={{ expanded }}
-              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 }}
             >
               <AppText variant="label" style={{ flex: 1 }}>
                 {topic.question}

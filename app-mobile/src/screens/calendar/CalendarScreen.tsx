@@ -181,7 +181,7 @@ export default function CalendarScreen() {
     viewMode === 'month'
       ? capitalize(formatMonthYear(year, month))
       : viewMode === 'week'
-        ? `${formatShortDate(firstDay)} a ${formatShortDate(lastDay)}`
+        ? t('calendarView.weekRange', { start: formatShortDate(firstDay), end: formatShortDate(lastDay) })
         : viewMode === 'day'
           ? capitalize(formatLongDate(selected))
           : '';

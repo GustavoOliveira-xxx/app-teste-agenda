@@ -10,7 +10,7 @@ create table if not exists public.calendars (
   owner_id uuid not null references public.profiles (id) on delete restrict,
   name text not null check (char_length(btrim(name)) between 1 and 80),
   description text check (description is null or char_length(description) <= 500),
-  color text not null default '#4F7DF3' check (color ~ '^#[0-9A-Fa-f]{6}$'),
+  color text not null default '#3358D4' check (color ~ '^#[0-9A-Fa-f]{6}$'),
   icon text check (icon is null or char_length(icon) <= 40),
   kind text not null default 'shared'
     check (kind in ('personal', 'shared', 'family', 'work', 'project', 'travel', 'custom')),
@@ -316,7 +316,7 @@ begin
   insert into public.notification_preferences (user_id) values (new.id);
 
   insert into public.calendars (owner_id, name, kind, color, default_timezone, default_member_role)
-  values (new.id, 'Minha agenda', 'personal', '#4F7DF3', v_tz, 'viewer');
+  values (new.id, 'Minha agenda', 'personal', '#3358D4', v_tz, 'viewer');
 
   return new;
 end;

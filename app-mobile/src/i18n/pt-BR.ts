@@ -238,12 +238,14 @@ export const ptBR = {
     skip: 'Pular',
     next: 'Próximo',
     start: 'Começar',
+    progress: '{n} de {total}',
   },
   tabs: {
     calendar: 'Agenda',
     calendars: 'Agendas',
     notifications: 'Avisos',
     profile: 'Perfil',
+    notificationsUnread: 'Avisos, {n} não lidos',
   },
   calendarView: {
     month: 'Mês',
@@ -266,6 +268,7 @@ export const ptBR = {
     goToToday: 'Ir para hoje',
     selectCalendars: 'Agendas exibidas',
     conflictBadge: 'Conflito de horário',
+    weekRange: '{start} a {end}',
   },
   filters: {
     title: 'Filtros',
@@ -335,6 +338,7 @@ export const ptBR = {
     duplicate: 'Duplicar agenda',
     duplicateWithEvents: 'Copiar também os eventos',
     duplicateDone: 'Cópia criada!',
+    copyName: '{name} (cópia)',
     archive: 'Arquivar agenda',
     archiveMessage: 'A agenda fica somente leitura para todos. Você pode desarquivar depois.',
     unarchive: 'Desarquivar agenda',
@@ -510,6 +514,7 @@ export const ptBR = {
     empty: 'Nenhum aviso por aqui.',
     markAllRead: 'Marcar todos como lidos',
     deleteAll: 'Apagar lidos',
+    unread: 'Não lido',
   },
   activity: {
     title: 'Histórico',
@@ -628,7 +633,7 @@ export const ptBR = {
     privacyPolicy: 'Política de privacidade',
     sync: 'Sincronização',
     diagnostics: 'Diagnóstico (desenvolvimento)',
-    about: 'Versão {version}',
+    about: 'Versão {version} (build {build})',
     saved: 'Perfil atualizado.',
   },
   preferences: {
@@ -715,10 +720,12 @@ export const ptBR = {
   },
   privacyPolicy: {
     title: 'Política de privacidade',
+    version: 'Versão {version}',
   },
   diagnostics: {
     title: 'Diagnóstico',
     note: 'Informações técnicas para quem desenvolve o app. Não contém senhas nem tokens.',
+    recentErrors: 'Erros recentes ({n})',
   },
   notConfigured: {
     title: 'Servidor não configurado',

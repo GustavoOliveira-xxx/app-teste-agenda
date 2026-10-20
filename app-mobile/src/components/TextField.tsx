@@ -22,7 +22,7 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
   const { colors } = useAppTheme();
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
-  const borderColor = error ? colors.danger : focused ? colors.focus : colors.border;
+  const borderColor = error ? colors.danger : focused ? colors.focus : colors.inputBorder;
 
   return (
     <View style={styles.wrapper}>

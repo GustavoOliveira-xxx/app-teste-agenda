@@ -15,7 +15,7 @@ import { validateDisplayName } from '@/validation/auth';
 export default function EditProfileScreen() {
   const account = useAuthStore((s) => s.account);
   const [name, setName] = useState(account?.display_name ?? '');
-  const [color, setColor] = useState(account?.avatar_color ?? '#4F7DF3');
+  const [color, setColor] = useState(account?.avatar_color ?? '#3358D4');
   const [error, setError] = useState<string | undefined>();
   const { run, busy } = useAction();
 

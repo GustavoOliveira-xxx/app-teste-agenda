@@ -32,7 +32,7 @@ export default function DiagnosticsScreen() {
   }, []);
 
   const info = {
-    app: env.appVersion,
+    app: `${env.appVersion} (build ${env.appBuild})`,
     plataforma: `${Platform.OS} ${Device.osVersion ?? ''}`.trim(),
     aparelho: Device.modelName ?? '-',
     servidorConfigurado: isSupabaseConfigured,
@@ -61,7 +61,7 @@ export default function DiagnosticsScreen() {
           {JSON.stringify(info, null, 2)}
         </AppText>
       </Card>
-      <SectionHeader title={`Erros recentes (${errors.length})`} />
+      <SectionHeader title={t('diagnostics.recentErrors', { n: errors.length })} />
       {errors.slice(0, 20).map((e) => (
         <AppText key={`${e.at}-${e.message}`} variant="small" tone="muted" selectable>
           {e.at} [{e.where}] {e.message}

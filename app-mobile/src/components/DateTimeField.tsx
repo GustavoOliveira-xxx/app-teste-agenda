@@ -28,7 +28,7 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * o fuso do evento é aplicado depois, na conversão para o servidor.
  */
 export function DateTimeField(props: Props) {
-  const { colors } = useAppTheme();
+  const { colors, reduceMotion } = useAppTheme();
   const [iosOpen, setIosOpen] = useState(false);
   const [webText, setWebText] = useState(props.value);
 
@@ -86,7 +86,7 @@ export function DateTimeField(props: Props) {
             else setWebText(props.value);
           }}
           placeholder={props.mode === 'date' ? 'AAAA-MM-DD' : 'HH:mm'}
-          style={[styles.field, typography.body, { color: colors.text, borderColor: colors.border }]}
+          style={[styles.field, typography.body, { color: colors.text, borderColor: colors.inputBorder }]}
         />
         {props.error ? (
           <AppText variant="small" tone="danger">
@@ -106,7 +106,7 @@ export function DateTimeField(props: Props) {
         accessibilityLabel={`${props.label}: ${display}`}
         style={[
           styles.field,
-          { borderColor: props.error ? colors.danger : colors.border, backgroundColor: colors.surface },
+          { borderColor: props.error ? colors.danger : colors.inputBorder, backgroundColor: colors.surface },
         ]}
       >
         <Icon
@@ -122,7 +122,12 @@ export function DateTimeField(props: Props) {
         </AppText>
       ) : null}
       {Platform.OS === 'ios' && (
-        <Modal visible={iosOpen} transparent animationType="fade" onRequestClose={() => setIosOpen(false)}>
+        <Modal
+          visible={iosOpen}
+          transparent
+          animationType={reduceMotion ? 'none' : 'fade'}
+          onRequestClose={() => setIosOpen(false)}
+        >
           <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
             <View style={[styles.iosSheet, { backgroundColor: colors.surface }]}>
               <DateTimePicker

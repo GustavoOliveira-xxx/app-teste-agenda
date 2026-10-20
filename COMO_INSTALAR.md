@@ -13,6 +13,7 @@ Este guia é para quem **não programa**. Existem dois caminhos:
 |---|---|
 | Sistema | Android **7.0 ou mais novo** (Configurações > Sobre o telefone > Versão do Android) |
 | Processador | ARM (praticamente todos os celulares; o APK não instala em emuladores de computador x86) |
+| Download | Cerca de 50 MB (o APK) |
 | Espaço | Cerca de 150 MB livres |
 | Internet | Necessária para criar conta e entrar; depois o app também funciona offline |
 
