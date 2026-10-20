@@ -62,7 +62,21 @@ async function registerThisDevice(): Promise<void> {
 }
 
 /** Sair: para o tempo real, cancela lembretes e apaga os dados deste aparelho. */
+let ending = false;
+
 export async function endSession(): Promise<void> {
+  // Pode ser chamado pelo botão "Sair" e, em seguida, pelo aviso de sessão
+  // encerrada: a segunda chamada não precisa fazer nada.
+  if (ending) return;
+  ending = true;
+  try {
+    await doEndSession();
+  } finally {
+    ending = false;
+  }
+}
+
+async function doEndSession(): Promise<void> {
   const userId = activeUser ?? useAuthStore.getState().session?.user.id ?? null;
   activeUser = null;
   setAfterSyncHook(null);
