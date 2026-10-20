@@ -1,0 +1,34 @@
+# Configuração do Supabase para desenvolvimento LOCAL (Supabase CLI + Docker).
+# O projeto na nuvem é configurado pelo painel: veja GUIA_DE_DEPLOY.md.
+project_id = "agenda-compartilhada"
+
+[api]
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+site_url = "agendacompartilhada://"
+enable_signup = true
+minimum_password_length = 8
+
+[auth.email]
+enable_signup = true
+# Em desenvolvimento local não há envio real de e-mail (o CLI mostra as
+# mensagens no Inbucket). Ligue para testar o fluxo com código.
+enable_confirmations = false
+
+[auth.email.template.confirmation]
+subject = "Seu código de confirmação"
+content_path = "./supabase/templates/confirmacao.html"
+
+[auth.email.template.recovery]
+subject = "Código para redefinir sua senha"
+content_path = "./supabase/templates/recuperacao.html"
