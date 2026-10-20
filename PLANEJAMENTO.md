@@ -229,6 +229,6 @@ A responsabilidade de cada pasta está explicada em [ARQUITETURA.md](ARQUITETURA
 Foram feitas antes do início e já respondidas:
 - Seguir direto para a construção: **sim**.
 - Usar o Supabase da conta do proprietário: **sim** (reativar o projeto pausado).
-- Autoria: **Gustavo Oliveira dos Santos**, e-mail de commits `gu.prgm@gmail.com`, licença **MIT**.
+- Autoria: **Gustavo Oliveira dos Santos**, e-mail de commits informado pelo proprietário, licença **MIT**.
 
 Pendência que não bloqueia o código, mas bloqueia o uso real: liberar uma vaga de projeto ativo no Supabase (veja [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md)).
