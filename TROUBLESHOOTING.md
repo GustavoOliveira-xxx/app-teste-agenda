@@ -135,6 +135,7 @@ Clique na execução e veja qual job ficou vermelho:
 | Verificar segredos | Um arquivo proibido ou algo parecido com uma senha ou chave foi enviado | Veja a linha apontada. Se era um segredo de verdade, **considere-o vazado** e siga [SEGURANCA.md](SEGURANCA.md#procedimento-para-revogar-credenciais-expostas). Remover o arquivo não basta. |
 | Banco de dados | Um teste de permissão ou regra falhou | Rode `npm test` na pasta `supabase` e leia o teste que falhou |
 | App | Tipos, lint, formatação, testes ou empacotamento falharam | Rode `npm run check` na pasta `app-mobile`. Formatação: `npm run format` corrige sozinho |
+| Telas (versão web) | Uma tela não mostrou o que devia, deu erro de JavaScript ou o servidor de testes recusou uma chamada | Baixe **Artifacts > capturas-das-telas** da execução para ver a tela no momento da falha. Rode localmente em `e2e` (`npm run preparar` e `npm test`) |
 
 ### "Gerar APK Android" falhou
 

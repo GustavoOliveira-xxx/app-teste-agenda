@@ -1,5 +1,6 @@
 # Roda a cada envio (push) e em pull requests: confere segredos, testa o
-# banco (permissões) e o app (tipos, lint, formatação, testes e empacotamento).
+# banco (permissões), o app (tipos, lint, formatação, testes e empacotamento)
+# e as telas principais na versão web (e2e/).
 name: Qualidade
 
 on:
@@ -68,3 +69,40 @@ jobs:
         run: npm test -- --ci
       - name: Empacotar o JavaScript do app Android (garante que compila)
         run: npx expo export --platform android --output-dir dist-ci
+
+  telas:
+    name: Telas (versão web, ponta a ponta)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      EXPO_NO_TELEMETRY: 1
+      # Chrome já vem instalado nas máquinas do GitHub; não precisa baixar outro navegador.
+      CHROMIUM_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            supabase/package-lock.json
+            app-mobile/package-lock.json
+            e2e/package-lock.json
+      - name: Instalar dependências
+        run: |
+          npm ci --prefix supabase
+          npm ci --prefix app-mobile
+          npm ci --prefix e2e
+      - name: Gerar a versão web do app
+        working-directory: e2e
+        run: npm run preparar
+      - name: Testes de tela (login, calendário, evento, membros, convite, privacidade)
+        working-directory: e2e
+        run: npm test
+      - name: Guardar as capturas de cada tela (aba Actions > esta execução > Artifacts)
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: capturas-das-telas
+          path: e2e/saida/
+          retention-days: 14

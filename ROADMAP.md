@@ -186,7 +186,7 @@ Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos
 | Foto de perfil | Avatar com iniciais e cor | Storage + seletor de imagem do sistema |
 | Carência na exclusão de conta | Exclusão imediata | Agendar a exclusão (o campo já existe no banco) e permitir cancelar |
 | Outros idiomas | Só pt-BR, com estrutura de tradução pronta | Arquivos `en.ts`, `es.ts` e seleção em Preferências |
-| Testes automáticos de interface | Roteiro manual em [docs/TESTES.md](docs/TESTES.md) | Maestro ou Detox no GitHub Actions com emulador |
+| Testes de interface no Android | Testes de tela na versão web (`e2e/`) e roteiro manual em [docs/TESTES.md](docs/TESTES.md) | Maestro ou Detox no GitHub Actions com emulador |
 | Monitoramento de erros | Registro local em Diagnóstico | Sentry (plano gratuito), sem dados pessoais |
 | Menores de idade | Uso indicado para maiores de 18 | Regras de consentimento do responsável |
 | Visibilidade "personalizada" de eventos | 4 níveis fixos | Regras por agenda |

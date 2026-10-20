@@ -219,6 +219,16 @@ npm test               # testes do banco com PGlite (permissões, convites, even
 ```
 
 ```bash
+# Pasta: e2e (precisa de npm ci em supabase, app-mobile e e2e)
+npm run preparar       # gera a versão web do app (1 a 2 minutos)
+CHROMIUM_PATH=/usr/bin/google-chrome npm test
+                       # testes de tela: login, calendário, evento, membros, convite e privacidade
+                       # Esperado: "# pass 5". Capturas de cada tela em e2e/saida/
+```
+
+- O teste de tela precisa do Chrome ou Chromium instalado. Informe o caminho em `CHROMIUM_PATH` (Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`, macOS: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`). O comando `npm run preparar` usa a sintaxe de variáveis do Linux/macOS; no Windows, rode-o pelo Git Bash.
+
+```bash
 # Pasta: raiz do projeto
 bash scripts/verificar-segredos.sh   # procura senhas e chaves no código
                                      # Esperado: "OK: nenhum segredo encontrado"

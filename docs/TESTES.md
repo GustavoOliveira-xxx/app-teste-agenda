@@ -14,11 +14,12 @@ Resultado conferido em 20/10/2026, rodando os comandos abaixo neste repositório
 | Lint (ESLint) | `app-mobile`: `npm run lint` | | | sem erros | |
 | Formatação (Prettier) | `app-mobile`: `npm run format:check` | | | "All matched files use Prettier code style!" | |
 | Segredos no repositório | raiz: `bash scripts/verificar-segredos.sh` | | | "OK: nenhum segredo encontrado nos arquivos versionados." | |
-| Testes de interface (UI/E2E) | | 0 | **0** | **não existem testes automáticos de tela**; use o [roteiro manual](#roteiro-de-teste-manual) | |
+| Testes de tela (versão web, ponta a ponta) | `e2e`: `npm run preparar` e `npm test` | 1 | **5** | 5 passaram, 0 falharam | cerca de 30 s (mais 1 a 2 min para gerar a versão web) |
+| Testes de interface no Android (emulador ou celular) | | 0 | **0** | não automatizados; use o [roteiro manual](#roteiro-de-teste-manual) | |
 
-**Total automatizado: 142 testes** (69 do banco + 73 do app).
+**Total automatizado: 147 testes** (69 do banco + 73 do app + 5 de tela).
 
-> **Importante:** nenhum teste automático abre o app ou toca na tela. Não há Detox, Maestro, Appium nem testes de componentes. Tudo o que envolve telas, celular real, notificações do Android e servidor Supabase real precisa ser verificado pelo roteiro manual deste documento.
+> **Importante:** os testes de tela abrem a **versão web** do app (o mesmo código do APK) num navegador com tamanho de celular, ligada a um "Supabase de mentira" que usa o **banco real** do projeto (PGlite com as migrations e os dados de demonstração). Eles não usam um celular Android de verdade, nem o Supabase Auth real, nem as notificações do Android. Isso continua no roteiro manual deste documento.
 
 ## Estratégia: a pirâmide de testes
 
@@ -41,7 +42,7 @@ Pense numa pirâmide com três andares:
 
 - **Base (unitários):** testam pedaços pequenos de lógica, como "converter 10h de São Paulo para o horário universal" ou "calcular as repetições de um evento mensal no dia 31". São muitos, rodam em segundos e apontam exatamente onde está o erro.
 - **Meio (integração):** testam o banco de dados **inteiro**, com as migrations reais, fingindo ser cada pessoa logada. É aqui que se confirma o mais importante do projeto: **quem pode ver e mudar o quê**. Como toda permissão é conferida no banco (veja [SEGURANCA.md](../SEGURANCA.md)), estes testes protegem os dados mesmo que alguém use um app modificado.
-- **Topo (interface):** testam o app como uma pessoa usaria, tocando na tela. São os mais caros: precisam de emulador Android, servidor rodando e são lentos e instáveis em automação. Por isso, nesta primeira versão, ficaram **manuais**.
+- **Topo (interface):** testam o app como uma pessoa usaria, tocando na tela. São os mais caros. Nesta versão há um meio-termo automático: a versão web do app é aberta num navegador e percorre as telas principais (pasta `e2e/`). Os testes no próprio Android (emulador ou celular) ficaram **manuais**.
 - **Chão (verificações automáticas de código):** TypeScript, ESLint e Prettier não são "testes", mas pegam muitos erros antes de qualquer teste rodar (tipo errado, variável esquecida, código bagunçado).
 
 A escolha foi colocar o esforço onde o risco é maior: regras de permissão e privacidade (banco) e cálculos difíceis de datas, fusos, recorrência e fila offline (app).
@@ -111,13 +112,14 @@ Rodam na pasta `app-mobile`:
 
 ### Integração contínua no GitHub (`.github/workflows/qualidade.yml`)
 
-O workflow **Qualidade** roda sozinho a cada envio (`push`), em todo pull request e também pode ser disparado à mão (aba Actions > Qualidade > Run workflow). Ele tem três trabalhos (jobs) que rodam em paralelo:
+O workflow **Qualidade** roda sozinho a cada envio (`push`), em todo pull request e também pode ser disparado à mão (aba Actions > Qualidade > Run workflow). Ele tem quatro trabalhos (jobs) que rodam em paralelo:
 
 | Job | Pasta | Passos |
 |---|---|---|
 | **Verificar segredos** | raiz | `bash scripts/verificar-segredos.sh` |
 | **Banco de dados (regras de acesso)** | `supabase` | Node 22, `npm ci`, `npm test` (os 69 testes do banco) |
 | **App (tipos, lint, testes, empacotamento)** | `app-mobile` | Node 22, `npm ci`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test -- --ci` (os 73 testes) e `npx expo export --platform android --output-dir dist-ci` (garante que o JavaScript do app Android compila) |
+| **Telas (versão web, ponta a ponta)** | `e2e` | Node 22, `npm ci` em `supabase`, `app-mobile` e `e2e`, `npm run preparar` (gera a versão web) e `npm test` (os 5 testes de tela, usando o Chrome da máquina do GitHub). As capturas de cada etapa ficam em **Artifacts > capturas-das-telas** |
 
 O workflow `.github/workflows/android.yml` ("Gerar APK Android") **não roda testes**: ele só compila o APK e o AAB. Por isso, confira se o Qualidade está verde antes de distribuir um APK.
 
@@ -255,14 +257,34 @@ Legenda: os nomes de arquivo `0N_*.test.mjs` ficam em `supabase/tests/`; os `*.t
 
 ### Testes de interface
 
-**Nenhum é automatizado.** Não há ferramenta de teste de interface (Detox, Maestro ou Appium) configurada no projeto. Motivo: exigiria emulador Android e servidor rodando dentro do GitHub Actions, o que é lento, instável e mais caro de manter nesta primeira versão. Todos ficam no roteiro manual:
+**Testes de tela automáticos (versão web), em `e2e/telas.test.mjs`:**
+
+| Teste | O que confere |
+|---|---|
+| Primeiro acesso | A apresentação abre e a tela de login aparece |
+| Senha errada | Aparece "E-mail ou senha incorretos." |
+| Proprietária (Ana) | Entra; calendário do mês e lista; evento privado de outra pessoa **não** aparece; detalhes do evento com data e local; membros com papéis; gera um código de convite no formato `XXXX-XXXX-XXXX`; abre novo evento, agendas, avisos, perfil, sincronização, histórico, busca, filtros e ajuda |
+| Visualizador (Davi, tema escuro) | Vê "Ocupado" no lugar dos detalhes de um evento marcado como ocupado e **não** vê o evento privado |
+| Sem erros | Nenhum erro de JavaScript em nenhuma tela e nenhuma chamada ao servidor falhou |
+
+Como rodar no computador:
+
+```bash
+# Pasta: e2e (precisa de npm ci em supabase, app-mobile e e2e)
+npm run preparar   # gera a versão web do app em app-mobile/dist-e2e (1 a 2 minutos)
+npm test           # roda os 5 testes; capturas em e2e/saida/
+```
+
+O navegador usado é o Chrome/Chromium do computador: informe o caminho em `CHROMIUM_PATH` (no Linux, por exemplo, `CHROMIUM_PATH=/usr/bin/google-chrome npm test`).
+
+**No Android (emulador ou celular), nenhum é automatizado.** Não há Detox, Maestro ou Appium configurado: exigiria emulador e servidor dentro do GitHub Actions, lento e instável para esta primeira versão. Os cenários do prompt ficam no roteiro manual (os marcados com "web" também são cobertos, em parte, pelos testes de tela acima):
 
 | # | Cenário pedido | Status | Roteiro manual |
 |---|---|---|---|
 | 1 | Criar usuário | Não automatizado | M01 |
-| 2 | Fazer login | Não automatizado | M02 |
+| 2 | Fazer login | Parcial: web, com o servidor de testes | M02 |
 | 3 | Criar agenda | Não automatizado | M03 |
-| 4 | Convidar participante | Não automatizado | M04 |
+| 4 | Convidar participante | Parcial: web (gerar código) | M04 |
 | 5 | Aceitar convite | Não automatizado | M05 |
 | 6 | Criar evento | Não automatizado | M06 |
 | 7 | Visualizar evento em outro dispositivo | Não automatizado | M06 (passo 6) |
@@ -544,7 +566,7 @@ Copie esta tabela para cada rodada de testes.
 
 ## Limitações conhecidas
 
-- **Sem testes automáticos de interface** (UI/E2E). As telas só são verificadas pelo roteiro manual.
+- **Testes de tela só na versão web.** No Android (emulador ou celular) as telas são verificadas pelo roteiro manual. O "Supabase de mentira" imita o Auth e o PostgREST de forma simplificada; o tempo real (Realtime) não é testado.
 - **O roteiro manual ainda não foi executado** em celular físico com servidor real. Não há registro de resultado até agora.
 - **Supabase Auth não é testado automaticamente** (login, logout, recuperação, e-mail).
 - **Lembretes no Android:** o cálculo de quais lembretes agendar é testado, mas o agendamento e a entrega pelo sistema (`expo-notifications`) não têm teste automático.
