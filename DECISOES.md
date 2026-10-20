@@ -268,3 +268,13 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 | DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | Interna do Android, protege o próprio app | Não |
 
 **Motivo.** Requisito do prompt: não adicionar permissões desnecessárias. A checagem automática impede que uma atualização de biblioteca traga uma permissão nova sem ninguém perceber.
+
+## D23 Testes de tela na versão web, contra o banco real
+
+**Alternativas.** (a) Detox ou Maestro com emulador Android no GitHub Actions; (b) testes de componentes isolados; (c) abrir a versão web do app num navegador com tamanho de celular e imitar só a camada HTTP do Supabase, usando o banco real em PGlite.
+
+**Decisão.** (c), na pasta `e2e/`, com Playwright (`playwright-core`) e o Chrome que já vem nas máquinas do GitHub.
+
+**Motivo.** Roda em cerca de 2 minutos sem emulador, usa o mesmo código das telas do APK e as mesmas regras de acesso do banco (migrations e seed reais). Pegou um problema real na primeira execução: a tela de detalhes do evento não mostrava a data.
+
+**Limitações.** Não exercita o Android nativo (seletores de data, notificações, armazenamento seguro), o Supabase Auth real nem o tempo real. Esses pontos seguem no roteiro manual de [docs/TESTES.md](docs/TESTES.md). Emulador Android no CI fica no [ROADMAP.md](ROADMAP.md).

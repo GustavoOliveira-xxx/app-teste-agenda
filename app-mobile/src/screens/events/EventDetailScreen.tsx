@@ -34,7 +34,7 @@ import { useSyncStore } from '@/stores/syncStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme/tokens';
 import { describeActivity } from '@/utils/activity';
-import { formatDateTime, formatOccurrenceTime } from '@/utils/dates';
+import { capitalize, formatDateTime, formatLongDate, formatOccurrenceTime, toDateKey } from '@/utils/dates';
 import { canComment, canEditEvent } from '@/utils/permissions';
 import { describeRule, expandEvent, parseRule } from '@/utils/recurrence';
 
@@ -226,6 +226,12 @@ export default function EventDetailScreen() {
         : (people.find((p) => p.user_id === uid)?.display_name ?? t('common.someone'));
   const title = event.is_masked ? t('events.maskedTitle') : (occurrence.title ?? '');
   const time = formatOccurrenceTime(occurrence, display.timezone, display.timeFormat, display.dateFormat);
+  // Evento de um dia só: mostra a data por extenso (eventos de vários dias já trazem as datas no horário).
+  const startKey = occurrence.allDay ? occurrence.startDate : toDateKey(occurrence.start, display.timezone);
+  const endKey = occurrence.allDay
+    ? occurrence.endDate
+    : toDateKey(new Date(occurrence.end.getTime() - 1), display.timezone);
+  const dateLabel = startKey && startKey === endKey ? capitalize(formatLongDate(startKey, true)) : null;
   const eventZoneTime =
     !event.all_day && event.timezone !== display.timezone
       ? `${formatOccurrenceTime(occurrence, event.timezone, display.timeFormat, display.dateFormat)} (${event.timezone})`
@@ -318,6 +324,12 @@ export default function EventDetailScreen() {
             <AppText tone="muted">{calendar?.name}</AppText>
           </View>
         </View>
+        {dateLabel ? (
+          <View style={styles.row}>
+            <Icon name="calendar-outline" size={20} color={colors.textMuted} />
+            <AppText style={styles.flex}>{dateLabel}</AppText>
+          </View>
+        ) : null}
         <View style={styles.row}>
           <Icon name="time-outline" size={20} color={colors.textMuted} />
           <AppText style={styles.flex}>{time}</AppText>

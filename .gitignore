@@ -23,6 +23,7 @@ credentials.json
 *.aab
 dist/
 dist-ci/
+dist-e2e/
 web-build/
 coverage/
 app-mobile/android/

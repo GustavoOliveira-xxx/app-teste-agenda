@@ -1,0 +1,179 @@
+// Testes de tela (ponta a ponta) na versão web do app.
+//
+// Abre o app num navegador com tamanho de celular, entra com as contas
+// fictícias do seed e confere as telas principais e as regras de privacidade
+// pela interface. O servidor é o "Supabase de mentira" de servidor-falso.mjs,
+// que usa o banco real do projeto (PGlite + migrations + seed).
+//
+// Pré-requisito: a versão web exportada em app-mobile/dist-e2e (npm run preparar).
+// Capturas de cada etapa ficam em e2e/saida/.
+import { after, before, test } from 'node:test';
+import assert from 'node:assert/strict';
+import { createReadStream, existsSync, mkdirSync, statSync } from 'node:fs';
+import http from 'node:http';
+import { dirname, extname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { chromium } from 'playwright-core';
+
+import { criarServidorFalso, SENHA_DEMO } from './servidor-falso.mjs';
+
+const aqui = dirname(fileURLToPath(import.meta.url));
+const WEB = process.env.WEB_DIR ?? join(aqui, '..', 'app-mobile', 'dist-e2e');
+const SAIDA = join(aqui, 'saida');
+const API = 'https://demonstracao.supabase.co';
+const AGENDA = 'c0000000-0000-4000-8000-000000000001';
+
+let site;
+let base;
+let servidor;
+let navegador;
+const erros = [];
+
+function servirSite(pasta) {
+  const tipos = { '.js': 'text/javascript', '.html': 'text/html', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.ttf': 'font/ttf' };
+  return http.createServer((req, res) => {
+    let arquivo = join(pasta, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    if (!arquivo.startsWith(pasta) || !existsSync(arquivo) || statSync(arquivo).isDirectory()) {
+      arquivo = join(pasta, 'index.html');
+    }
+    res.writeHead(200, { 'content-type': tipos[extname(arquivo)] ?? 'application/octet-stream' });
+    createReadStream(arquivo).pipe(res);
+  });
+}
+
+async function abrirSessao(tema = 'light') {
+  const ctx = await navegador.newContext({
+    viewport: { width: 390, height: 844 },
+    colorScheme: tema,
+    locale: 'pt-BR',
+    timezoneId: 'America/Sao_Paulo',
+  });
+  await ctx.route(`${API}/**`, async (route) => route.fulfill(await servidor.responder(route.request())));
+  await ctx.routeWebSocket(/realtime/, () => {}); // tempo real fica de fora destes testes
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => erros.push(`erro na página: ${e.message}`));
+  page.on('console', (m) => {
+    // "Failed to load resource" é o navegador registrando respostas de erro do servidor
+    // (como a senha errada, de propósito); falhas reais do servidor são checadas no fim.
+    if (m.type() === 'error' && !m.text().startsWith('Failed to load resource')) {
+      erros.push(`console: ${m.text().slice(0, 300)}`);
+    }
+  });
+  return page;
+}
+
+async function entrar(page, email) {
+  await page.goto(`${base}/login`);
+  await page.locator('input').nth(0).fill(email);
+  await page.locator('input').nth(1).fill(SENHA_DEMO);
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await page.getByText('Mês', { exact: true }).waitFor({ timeout: 20_000 });
+}
+
+async function ir(page, caminho) {
+  await page.goto(base + caminho);
+  await page.waitForLoadState('networkidle');
+}
+
+const foto = (page, nome) => page.screenshot({ path: join(SAIDA, `${nome}.png`) });
+const visivel = (page, texto) => page.getByText(texto, { exact: false }).first().waitFor({ timeout: 15_000 });
+
+before(async () => {
+  assert.ok(existsSync(join(WEB, 'index.html')), `Versão web não encontrada em ${WEB}. Rode: npm run preparar`);
+  mkdirSync(SAIDA, { recursive: true });
+  servidor = await criarServidorFalso();
+  site = servirSite(WEB);
+  await new Promise((ok) => site.listen(0, ok));
+  base = `http://localhost:${site.address().port}`;
+  navegador = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+});
+
+after(async () => {
+  await navegador?.close();
+  site?.close();
+  await servidor?.fechar();
+});
+
+test('primeiro acesso: apresentação e tela de login', async () => {
+  const page = await abrirSessao();
+  await page.goto(base);
+  await visivel(page, 'Uma agenda para várias pessoas');
+  await foto(page, '01-apresentacao');
+  await ir(page, '/login');
+  await visivel(page, 'Esqueci minha senha');
+  await page.context().close();
+});
+
+test('senha errada mostra mensagem compreensível', async () => {
+  const page = await abrirSessao();
+  await page.goto(`${base}/login`);
+  await page.locator('input').nth(0).fill('ana.demo@exemplo.test');
+  await page.locator('input').nth(1).fill('SenhaErrada1');
+  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await visivel(page, 'E-mail ou senha incorretos.');
+  await foto(page, '02-senha-errada');
+  await page.context().close();
+});
+
+test('proprietária: calendário, evento, membros, convite e demais telas', async () => {
+  const page = await abrirSessao();
+  await entrar(page, 'ana.demo@exemplo.test');
+  await foto(page, '03-agenda-mes');
+
+  await page.getByText('Lista', { exact: true }).click();
+  await visivel(page, 'Jantar de aniversário');
+  await visivel(page, 'Consulta médica'); // "ocupado" para membros, mas a proprietária vê tudo
+  assert.equal(await page.getByText('Comprar presente').count(), 0, 'evento privado de outra pessoa apareceu');
+  await foto(page, '04-agenda-lista');
+
+  await ir(page, `/event/${servidor.eventos['Jantar de aniversário']}`);
+  await visivel(page, 'Restaurante Central');
+  await visivel(page, 'de outubro de'); // data por extenso
+  await foto(page, '05-evento-detalhe');
+
+  await ir(page, `/calendar/${AGENDA}/members`);
+  for (const nome of ['Bruno Demo', 'Carla Demo', 'Davi Demo']) await visivel(page, nome);
+  await visivel(page, 'Visualizador');
+  await foto(page, '06-membros');
+
+  await ir(page, `/calendar/${AGENDA}/invite`);
+  await page.getByRole('button', { name: 'Gerar convite' }).click();
+  const codigo = page.getByText(/^[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$/);
+  await codigo.waitFor({ timeout: 15_000 });
+  await foto(page, '07-convite');
+
+  for (const [caminho, texto, nome] of [
+    ['/event/new', 'Novo evento', '08-evento-novo'],
+    ['/calendars', 'Casa (demonstração)', '09-agendas'],
+    ['/notifications', 'Nova pessoa em Casa', '10-avisos'],
+    ['/profile', 'Ana Demo', '11-perfil'],
+    ['/sync', 'Tudo sincronizado', '12-sincronizacao'],
+    [`/calendar/${AGENDA}/history`, 'criou', '13-historico'],
+    ['/search', 'Buscar', '14-busca'],
+    ['/filters', 'Filtros', '15-filtros'],
+    ['/help', 'Ajuda', '16-ajuda'],
+  ]) {
+    await ir(page, caminho);
+    await visivel(page, texto);
+    await foto(page, nome);
+  }
+  await page.context().close();
+});
+
+test('visualizador: vê "Ocupado" no lugar de detalhes e não vê eventos privados', async () => {
+  const page = await abrirSessao('dark');
+  await entrar(page, 'davi.demo@exemplo.test');
+  await page.getByText('Lista', { exact: true }).click();
+  await visivel(page, 'Jantar de aniversário');
+  await visivel(page, 'Ocupado');
+  assert.equal(await page.getByText('Consulta médica').count(), 0, 'detalhes de evento "ocupado" vazaram');
+  assert.equal(await page.getByText('Comprar presente').count(), 0, 'evento privado apareceu');
+  await foto(page, '17-visualizador-escuro');
+  await page.context().close();
+});
+
+test('nenhum erro de JavaScript em nenhuma tela', () => {
+  assert.deepEqual(erros, []);
+  const falhas = servidor.registro.filter((r) => r.includes('ERRO'));
+  assert.deepEqual(falhas, [], 'chamadas ao servidor falharam');
+});

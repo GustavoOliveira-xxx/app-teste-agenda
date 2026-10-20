@@ -4,3 +4,5 @@ android
 ios
 coverage
 .expo
+dist-ci
+dist-e2e

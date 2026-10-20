@@ -39,7 +39,16 @@ O mapa completo de telas está em [docs/TELAS.md](docs/TELAS.md).
 
 ## Capturas de tela
 
-Ainda **não há capturas das telas internas**, porque o servidor (Supabase) do projeto está pausado e as telas internas dependem dele (veja [Limitações conhecidas](#limitações-conhecidas)). As capturas disponíveis, quando existirem, ficam em [`docs/capturas/`](docs/capturas/).
+| | | |
+|---|---|---|
+| ![Apresentação](docs/capturas/01-apresentacao.png) | ![Calendário do mês](docs/capturas/03-agenda-mes.png) | ![Lista de próximos eventos](docs/capturas/04-agenda-lista.png) |
+| Apresentação | Calendário do mês | Próximos eventos |
+| ![Detalhes do evento](docs/capturas/05-evento-detalhe.png) | ![Membros e papéis](docs/capturas/08-membros.png) | ![Código de convite](docs/capturas/09-convite.png) |
+| Detalhes do evento e lembretes | Membros e papéis | Código de convite |
+| ![Avisos](docs/capturas/10-avisos.png) | ![Histórico](docs/capturas/11-historico.png) | ![Tema escuro](docs/capturas/13-agenda-tema-escuro.png) |
+| Avisos | Histórico da agenda | Tema escuro |
+
+Mais capturas em [`docs/capturas/`](docs/capturas/). **Como foram feitas:** a versão web do app (o mesmo código do APK) rodou num navegador com tamanho de celular, conectada a uma cópia local do banco com as migrations reais e os dados fictícios de demonstração (`supabase/seed.sql`), entrando como "Ana Demo". No celular o visual é o mesmo, com pequenas diferenças (por exemplo, os seletores de data e hora são os do Android).
 
 ## Tecnologias
 
@@ -72,6 +81,7 @@ Toda permissão é conferida **no banco** (Row Level Security e funções no ser
 ```
 app-mobile/          App (Expo). Código em app-mobile/src
 supabase/            Banco: migrations (SQL), dados de demonstração e testes
+e2e/                 Testes de tela (versão web do app contra o banco real)
 docs/                Telas, design, acessibilidade, testes
 scripts/             Verificação de segredos
 .github/workflows/   Qualidade (testes) e Gerar APK Android
@@ -110,11 +120,14 @@ npx expo start            # abre o servidor de desenvolvimento (leia o QR code c
 # Pasta: supabase   (testa tabelas, permissões, convites, eventos, exclusão de conta)
 npm ci && npm test
 
-# Pasta: app-mobile (testa datas, recorrência, permissões, filtros, validações, fila offline)
+# Pasta: app-mobile (testa datas, recorrência, permissões, filtros, validações, fila offline, lembretes)
 npm ci && npm run check   # tipos + lint + formatação + testes
+
+# Pasta: e2e (abre a versão web do app e percorre as telas principais)
+npm ci && npm run preparar && CHROMIUM_PATH=/caminho/do/chrome npm test
 ```
 
-Os mesmos testes rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
+São 147 testes automáticos (69 do banco, 73 do app e 5 de tela). Os mesmos rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
 
 ## Build, APK e AAB
 
@@ -141,8 +154,7 @@ Integrações futuras (Google Calendar, exportação ICS, push remoto, anexos, l
 ## Limitações conhecidas
 
 - **Servidor pausado:** o projeto Supabase da conta está pausado e não pôde ser reativado automaticamente porque a conta já tem 2 projetos gratuitos ativos (limite do plano). Enquanto isso, o app instalado abre na tela "Servidor não configurado" ou não conecta. Como resolver: [GUIA_DE_DEPLOY.md, parte 1](GUIA_DE_DEPLOY.md#parte-1-servidor-supabase).
-- **Não testado em celular físico** nem com o servidor real: a lógica foi testada automaticamente (banco e app) e o APK compila no GitHub, mas o uso de ponta a ponta ainda precisa do roteiro manual de [docs/TESTES.md](docs/TESTES.md).
-- **Sem testes automáticos de interface** (cliques simulados); as telas são verificadas pelo roteiro manual.
+- **Não testado em celular físico** nem com o Supabase real: a lógica foi testada automaticamente (banco e app), as telas principais foram testadas automaticamente na versão web contra uma cópia local do banco, e o APK compila no GitHub. O uso no celular ainda precisa do roteiro manual de [docs/TESTES.md](docs/TESTES.md) (login real, notificações, offline, tempo real).
 - **E-mail:** sem um servidor de e-mail próprio (SMTP), o Supabase só envia e-mails para membros da equipe do projeto. Por isso o guia recomenda desligar a confirmação de e-mail no começo.
 - **Convite por e-mail não envia e-mail:** o convite fica registrado e aparece para a pessoa quando ela entra com aquele e-mail. O jeito principal de convidar é o código.
 - **Lembretes são locais:** cada celular agenda os próprios lembretes; não há push remoto do servidor nesta versão.

@@ -331,4 +331,4 @@ Itens da seção 24 que não foram feitos, ou foram feitos só em parte:
 5. **Calendário semanal e diário sem grade de horários:** as duas visões são listas por dia.
 6. **Um idioma só:** a estrutura está pronta para outros idiomas, mas só existe português do Brasil; o seletor de idioma tem uma opção.
 7. **Tela grande e paisagem:** o app é só em retrato e não tem layout próprio para tablets.
-8. **Sem capturas ou protótipo visual:** este documento descreve o que está no código; o visual ainda não foi conferido num celular físico.
+8. **Visual conferido só na versão web:** há capturas em [capturas/](capturas/) (geradas pelos testes de tela na versão web, com dados fictícios), mas o visual ainda não foi conferido num celular físico.
