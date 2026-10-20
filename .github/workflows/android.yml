@@ -1,0 +1,161 @@
+# Gera o APK (instalável no celular) e o AAB (para a Play Store).
+#
+# Como usar (sem programar): GitHub > aba "Actions" > "Gerar APK Android" >
+# botão "Run workflow". Em ~20 minutos o APK aparece na página "Releases".
+# Passo a passo completo em GUIA_DE_DEPLOY.md e COMO_INSTALAR.md.
+name: Gerar APK Android
+
+on:
+  workflow_dispatch:
+    inputs:
+      publicar:
+        description: "Publicar o APK na página Releases (link para baixar no celular)"
+        type: boolean
+        default: true
+  push:
+    tags: ["v*"]
+    branches: ["**"]
+    paths:
+      - "app-mobile/**"
+      - ".github/workflows/android.yml"
+  pull_request:
+    paths:
+      - "app-mobile/**"
+      - ".github/workflows/android.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    name: Compilar APK e AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    defaults:
+      run:
+        working-directory: app-mobile
+    env:
+      EXPO_NO_TELEMETRY: 1
+      CI: 1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-mobile/package-lock.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Configurar o endereço do servidor (Supabase)
+        env:
+          SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+            echo "::warning title=Servidor não configurado::Cadastre as Variables EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY (GUIA_DE_DEPLOY.md). Sem elas o app abre na tela 'Servidor não configurado'."
+          fi
+          # O arquivo .env só existe dentro desta máquina temporária do GitHub.
+          printf 'EXPO_PUBLIC_SUPABASE_URL=%s\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_KEY" > .env
+
+      - name: Definir o número da versão (versionCode cresce a cada build)
+        run: |
+          node -e "
+            const fs = require('fs');
+            const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            app.expo.android.versionCode = Number(process.env.GITHUB_RUN_NUMBER);
+            fs.writeFileSync('app.json', JSON.stringify(app, null, 2));
+          "
+          echo "VERSAO=$(node -p "require('./app.json').expo.version")" >> "$GITHUB_ENV"
+
+      - name: Gerar o projeto Android nativo (expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Compilar (Gradle)
+        working-directory: app-mobile/android
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
+
+      - name: Assinar com a chave própria (se configurada nos Secrets)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASS: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          NOME="agenda-compartilhada-v${VERSAO}-build${GITHUB_RUN_NUMBER}"
+          mkdir -p ../saida
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
+            BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+            "$BT/apksigner" sign --ks "$RUNNER_TEMP/release.keystore" --ks-pass env:KS_PASS \
+              --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASS --out "../saida/$NOME.apk" "$APK"
+            cp "$AAB" "../saida/$NOME.aab"
+            zip -q -d "../saida/$NOME.aab" 'META-INF/*' || true
+            jarsigner -keystore "$RUNNER_TEMP/release.keystore" -storepass:env KS_PASS -keypass:env KEY_PASS \
+              "../saida/$NOME.aab" "$KEY_ALIAS" > /dev/null
+            rm -f "$RUNNER_TEMP/release.keystore"
+            echo "ASSINATURA=propria" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=Chave de testes::APK assinado com a chave de testes (debug). Bom para testar; para distribuir, configure sua chave (GUIA_DE_DEPLOY.md)."
+            cp "$APK" "../saida/$NOME.apk"
+            cp "$AAB" "../saida/$NOME.aab"
+            echo "ASSINATURA=teste" >> "$GITHUB_ENV"
+          fi
+          echo "NOME=$NOME" >> "$GITHUB_ENV"
+          ls -la ../saida
+
+      - name: Conferir permissões, assinatura e tamanho
+        continue-on-error: true
+        run: |
+          BT=$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)
+          echo "Permissões pedidas pelo app:"
+          "$BT/aapt2" dump permissions "../saida/$NOME.apk" || "$BT/aapt" dump permissions "../saida/$NOME.apk"
+          echo "Assinatura:"
+          "$BT/apksigner" verify --print-certs "../saida/$NOME.apk" | head -4
+          echo "Tamanho:"
+          du -h ../saida/*
+
+      - name: Guardar o APK e o AAB (aba Actions > esta execução > Artifacts)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NOME }}
+          path: saida/
+          retention-days: 30
+
+      - name: Publicar na página Releases
+        if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && inputs.publicar)
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then TAG="$GITHUB_REF_NAME"; else TAG="v${VERSAO}-build${GITHUB_RUN_NUMBER}"; fi
+          EXTRA=""
+          [ "$ASSINATURA" = "teste" ] && EXTRA="--prerelease"
+          cat > notas.md <<NOTAS
+          ## Como instalar no celular Android
+          1. No celular, abra esta página e toque em **$NOME.apk** (em "Assets").
+          2. Abra o arquivo baixado. Se o Android pedir, permita "Instalar apps desconhecidos" para o navegador.
+          3. Toque em **Instalar** e depois em **Abrir**.
+
+          Passo a passo com fotos e solução de problemas: [COMO_INSTALAR.md](https://github.com/$GITHUB_REPOSITORY/blob/$GITHUB_SHA/COMO_INSTALAR.md).
+
+          - Versão: $VERSAO (build $GITHUB_RUN_NUMBER)
+          - Android mínimo: 7.0
+          - Assinatura: $([ "$ASSINATURA" = "teste" ] && echo "chave de testes (versão de teste)" || echo "chave própria")
+          - O arquivo .aab serve apenas para enviar à Google Play Store.
+          NOTAS
+          gh release create "$TAG" saida/*.apk saida/*.aab --target "$GITHUB_SHA" \
+            --title "Agenda Compartilhada $VERSAO (build $GITHUB_RUN_NUMBER)" --notes-file notas.md $EXTRA
