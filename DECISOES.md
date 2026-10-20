@@ -241,3 +241,30 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 **Decisão.** Testar migrations, RLS e funções com PGlite (PostgreSQL real compilado para WebAssembly, roda dentro do Node), simulando o `auth.uid()` do Supabase.
 
 **Motivo.** Permite testar permissões de verdade (usuário A não vê dados de B, visualizador não edita, removido perde acesso) sem Docker e sem acessar o projeto de produção. Roda no GitHub Actions em segundos.
+
+**Limitação.** O PGlite não é idêntico ao Supabase hospedado (não tem o serviço de Auth, o Realtime nem as extensões do provedor). Por isso o guia de deploy pede que, depois de aplicar as migrations no projeto real, se rode o verificador de segurança do painel (Advisors).
+
+## D21 APK só para processadores ARM
+
+**Decisão.** O APK e o AAB são compilados apenas para `armeabi-v7a` e `arm64-v8a`.
+
+**Motivo.** O primeiro build com as 4 arquiteturas gerou um APK de 92 MB. Praticamente todos os celulares Android usam ARM; x86/x86_64 servem quase só para emuladores. Cortar as duas reduz o download e o tempo de build.
+
+**Consequência.** O APK não instala em emulador x86 do Android Studio. Quem desenvolve pode rodar com `npx expo run:android`, que compila para a arquitetura do emulador.
+
+## D22 Lista fechada de permissões do Android
+
+**Decisão.** Bibliotecas trazem permissões que o app não usa (contadores de ícone de várias marcas, biometria, push do Google, rastreio de instalação). Todas foram bloqueadas em `app.json` (`blockedPermissions`) e o workflow **Gerar APK Android** falha se aparecer qualquer permissão fora desta lista:
+
+| Permissão | Por que o app precisa | Aparece para a pessoa? |
+|---|---|---|
+| INTERNET | Falar com o servidor | Não |
+| ACCESS_NETWORK_STATE | Saber se está online ou offline | Não |
+| ACCESS_WIFI_STATE | Exigida pela biblioteca de estado da rede | Não |
+| POST_NOTIFICATIONS | Mostrar lembretes (Android 13 ou mais novo) | Sim, uma vez |
+| RECEIVE_BOOT_COMPLETED | Reagendar lembretes depois que o celular reinicia | Não |
+| VIBRATE | Vibrar no lembrete | Não |
+| WAKE_LOCK | Entregar o lembrete com a tela apagada | Não |
+| DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | Interna do Android, protege o próprio app | Não |
+
+**Motivo.** Requisito do prompt: não adicionar permissões desnecessárias. A checagem automática impede que uma atualização de biblioteca traga uma permissão nova sem ninguém perceber.
