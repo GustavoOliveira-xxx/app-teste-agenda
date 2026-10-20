@@ -47,4 +47,8 @@ export const PRIVACY_POLICY: { title: string; body: string }[] = [
     title: 'Idade',
     body: 'O app é destinado a maiores de 18 anos ou ao uso com acompanhamento de um responsável.',
   },
+  {
+    title: 'Responsável e contato',
+    body: 'Responsável pelo tratamento dos dados: Gustavo Oliveira dos Santos. Para exercer seus direitos, use Perfil > Privacidade e dados ou o contato indicado na política completa (arquivo POLITICA_DE_PRIVACIDADE.md, no repositório do projeto).',
+  },
 ];

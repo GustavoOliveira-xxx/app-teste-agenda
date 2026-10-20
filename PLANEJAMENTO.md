@@ -189,11 +189,11 @@ Ver [ROADMAP.md](ROADMAP.md). Ordem sugerida: push remoto, exportação ICS, ane
 | 4 | Eventos: CRUD, detalhes, filtros, calendário, validações, privacidade | Alta | Concluída |
 | 5 | Recorrência e lembretes | Alta | Concluída |
 | 6 | Sincronização: cache, offline, fila, retry, conflitos | Alta | Concluída |
-| 7 | Segurança e qualidade: RLS, limites, auditoria, testes, erros | Média | Concluída |
-| 8 | Build e distribuição: APK, AAB, CI/CD, instruções | Média | Configurada (o APK é gerado no GitHub Actions) |
+| 7 | Segurança e qualidade: RLS, limites, auditoria, testes, erros | Média | Concluída (147 testes automáticos) |
+| 8 | Build e distribuição: APK, AAB, CI/CD, instruções | Média | Concluída: APK (48 MB) e AAB (37 MB) gerados no GitHub Actions. Publicação na página Releases aguarda o servidor ativo |
 | 9 | Publicação no GitHub | Baixa | Concluída nesta branch |
 
-O status real e verificado de cada item está em [CHECKLIST.md](CHECKLIST.md).
+"Concluída" aqui quer dizer que o código e os testes automáticos da fase estão prontos. O uso real no celular depende de reativar o servidor Supabase (bloqueio B1). O status verificado de cada critério está em [CHECKLIST.md](CHECKLIST.md).
 
 ## 15. Estrutura do repositório
 
