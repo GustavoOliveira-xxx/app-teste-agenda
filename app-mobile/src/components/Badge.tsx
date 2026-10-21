@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { radius, spacing } from '@/theme/tokens';
+import { fonte, radius, spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
@@ -22,7 +22,7 @@ export function Badge({ label, tone = 'neutral', icon }: { label: string; tone?:
   return (
     <View style={[styles.badge, { backgroundColor: bg }]}>
       {icon && <Icon name={icon} size={14} color={fg} />}
-      <AppText variant="caption" style={{ color: fg, fontWeight: '600' }}>
+      <AppText variant="caption" style={{ color: fg, ...fonte('semi') }}>
         {label}
       </AppText>
     </View>

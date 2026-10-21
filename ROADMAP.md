@@ -23,7 +23,7 @@ O que fica para depois da primeira versão, com o impacto de cada item. A arquit
 | Baixa | Login com Apple | Obrigatório só se houver login social no iOS |
 | Baixa | PDF | Impressão de agenda; pouco pedido |
 
-## Detalhamento das integrações (seção 18 do prompt)
+## Detalhamento das integrações
 
 Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos), **baixo** (alguns dólares por mês ou taxa única), **variável** (depende do volume).
 

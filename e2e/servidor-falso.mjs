@@ -137,7 +137,6 @@ export async function criarServidorFalso() {
     }
     if (caminho === '/auth/v1/user') return resposta(200, usuarios[uidDoToken(headers)] ?? null);
     if (caminho === '/auth/v1/logout') return vazio;
-
     const uid = uidDoToken(headers);
     if (caminho.startsWith('/rest/v1/rpc/')) {
       const nome = caminho.slice('/rest/v1/rpc/'.length);
@@ -187,6 +186,26 @@ export async function criarServidorFalso() {
       } catch (e) {
         registro.push(`get ${tabela} ERRO ${e.message}`);
         return resposta(400, { code: e.code, message: e.message });
+      }
+    }
+    if (caminho.startsWith('/rest/v1/') && metodo === 'POST') {
+      // Inserção (ex.: criar agenda): só as colunas enviadas; as demais ficam com o valor padrão.
+      const tabela = caminho.slice('/rest/v1/'.length);
+      const colunas = Object.keys(corpo).filter((c) => /^[a-z_]+$/.test(c));
+      if (!/^[a-z_]+$/.test(tabela) || !colunas.length) return resposta(400, { message: 'inserção inválida' });
+      const retorno = (url.searchParams.get('select') ?? '*').replace(/[^a-z_,*]/g, '') || '*';
+      const sql =
+        `insert into public.${tabela} (${colunas.join(', ')}) ` +
+        `select ${colunas.join(', ')} from json_populate_record(null::public.${tabela}, $1::json) ` +
+        `returning ${retorno}`;
+      try {
+        const { rows: linhas } = await comoUsuario(uid, sql, [JSON.stringify(corpo)]);
+        registro.push(`post ${tabela}`);
+        const umSo = (headers['accept'] ?? '').includes('vnd.pgrst.object');
+        return resposta(201, umSo ? linhas[0] : linhas);
+      } catch (e) {
+        registro.push(`post ${tabela} ERRO ${e.message}`);
+        return resposta(400, { code: e.code, message: e.message, details: null, hint: null });
       }
     }
     registro.push(`${metodo} ${caminho} (não simulado)`);

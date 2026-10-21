@@ -184,7 +184,7 @@ erDiagram
 **Índices:** (`calendar_id`, `starts_at`, `ends_at`) sem excluídos; séries recorrentes por agenda; `created_by`. **Acesso:** ver seção "Privacidade" em [DECISOES.md](DECISOES.md#d11-privacidade-de-eventos).
 
 ### `recurrence_exceptions`
-**Finalidade:** alterações ou cancelamentos de uma ocorrência. Chave única (`event_id`, `original_date`). Campos de substituição opcionais: `title`, `description`, `location`, `starts_at`/`ends_at` (ambos ou nenhum). Substitui `event_recurrences` + `recurrence_exceptions` do prompt (D16).
+**Finalidade:** alterações ou cancelamentos de uma ocorrência. Chave única (`event_id`, `original_date`). Campos de substituição opcionais: `title`, `description`, `location`, `starts_at`/`ends_at` (ambos ou nenhum). Substitui as tabelas planejadas `event_recurrences` + `recurrence_exceptions` (D16).
 
 ### `event_attendees`
 **Finalidade:** participantes escolhidos. PK (`event_id`, `user_id`); `response` (pending, accepted, declined, tentative). Participante precisa ser membro ativo.

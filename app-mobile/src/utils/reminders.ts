@@ -1,6 +1,6 @@
 import { t } from '@/i18n';
 
-/** Opções da seção 13 do prompt (minutos antes do evento). */
+/** Opções de antecedência dos lembretes (minutos antes do evento). */
 export const REMINDER_PRESETS = [0, 5, 10, 15, 30, 60, 120, 1440];
 
 export function reminderLabel(minutes: number): string {

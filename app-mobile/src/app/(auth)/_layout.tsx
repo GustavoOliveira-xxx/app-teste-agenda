@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { fonte } from '@/theme/tokens';
 
 export default function AuthLayout() {
   const { colors } = useAppTheme();
@@ -10,6 +11,7 @@ export default function AuthLayout() {
       screenOptions={{
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
+        headerTitleStyle: fonte('semi'),
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
       }}

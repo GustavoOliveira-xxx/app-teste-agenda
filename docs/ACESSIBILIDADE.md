@@ -1,8 +1,8 @@
 # Acessibilidade
 
-Este documento mostra como o app atende a seção 25 do prompt (acessibilidade): o que foi feito, onde está no código, o que ficou incompleto e como testar com o celular na mão.
+O que o app faz em acessibilidade, onde está no código, o que ficou incompleto e como testar com o celular na mão.
 
-> **Aviso honesto:** tudo o que está aqui foi conferido **lendo o código** e calculando as cores. **Nada foi testado ainda em um celular real com o TalkBack** (o leitor de tela do Android), com fonte no tamanho máximo ou com simuladores de daltonismo. O [roteiro de teste manual](#roteiro-de-teste-manual-de-acessibilidade) no fim deste arquivo existe justamente para isso.
+> Tudo o que está aqui foi conferido **lendo o código** e calculando as cores. **Nada foi testado ainda em um celular real com o TalkBack** (o leitor de tela do Android), com fonte no tamanho máximo ou com simuladores de daltonismo. O [roteiro de teste manual](#roteiro-de-teste-manual-de-acessibilidade) no fim deste arquivo existe justamente para isso.
 
 ## Como ler os status
 
@@ -14,7 +14,7 @@ Este documento mostra como o app atende a seção 25 do prompt (acessibilidade):
 
 ## Resumo
 
-Dos 12 itens da seção 25:
+Dos 12 itens de acessibilidade:
 
 - **Atendidos (7):** tamanho de fonte ajustável, rótulos acessíveis, não depender só de cores, mensagens compreensíveis, navegação previsível, textos alternativos para imagens e redução de animações.
 - **Parciais (5):** contraste, leitor de tela, áreas de toque, foco visível e daltonismo.
@@ -28,13 +28,13 @@ Os problemas mais importantes que continuam abertos:
 
 Já corrigidos durante a revisão desta documentação: texto do botão de perigo no tema escuro (era 2,28:1, agora 8,00:1), escolha automática de texto claro ou escuro sobre as cores de agenda (`readableTextOn()`), áreas de toque das bolinhas de cor, do seletor Mês/Semana/Dia/Lista e das perguntas da Ajuda (agora 48 dp), borda dos campos de formulário e do interruptor desligado (nova cor `inputBorder`, era 1,41:1 e 1,53:1, agora 3,34:1 e 3,20:1) e uso da preferência "remover animações" nos diálogos, listas de opções e no seletor de data.
 
-## Requisitos da seção 25
+## Requisitos de acessibilidade
 
 Os caminhos de arquivo são relativos a `app-mobile/`.
 
 | Requisito | Como está implementado | Status |
 |---|---|---|
-| Contraste adequado | As cores ficam em `src/theme/tokens.ts`, com uma paleta clara (`lightPalette`) e uma escura (`darkPalette`). Textos principais, textos secundários, botão principal, mensagens de erro, avisos e etiquetas passam de 4,5:1 nos dois temas (números reais na [tabela de contraste](#contraste-medido-wcag)). O componente `Badge.tsx` e o `OfflineBanner.tsx` usam pares de cor "suave + forte" que também passam. O botão de perigo usa a cor `dangerText`, própria de cada tema (`src/components/Button.tsx`). Sobre as cores de agenda, `readableTextOn()` escolhe entre texto branco e quase preto o que tiver mais contraste. | **Parcial:** barras e bolinhas de algumas cores de agenda ficam abaixo de 3:1 contra o cartão (detalhes abaixo). |
+| Contraste adequado | As cores ficam em `src/theme/marca.ts`, com uma paleta clara e uma escura. Textos principais, textos secundários, botão principal, mensagens de erro, avisos e etiquetas passam de 4,5:1 nos dois temas (conferido pelo teste descrito em [Contraste](#contraste-wcag)). O componente `Badge.tsx` e o `OfflineBanner.tsx` usam pares de cor "suave + forte" que também passam. O botão de perigo usa a cor `dangerText`, própria de cada tema (`src/components/Button.tsx`). Sobre as cores de agenda, `readableTextOn()` escolhe entre texto branco e quase preto o que tiver mais contraste. | **Parcial:** barras e bolinhas de algumas cores de agenda ficam abaixo de 3:1 contra o cartão (detalhes abaixo). |
 | Tamanho de fonte ajustável | Todo texto passa pelo `src/components/AppText.tsx`, que usa o `Text` padrão do React Native. Ele acompanha o tamanho de fonte escolhido nas configurações do Android, e **nenhum lugar do código desliga isso** (não existe `allowFontScaling={false}`). Para não quebrar o layout, só alguns textos em espaços pequenos têm limite (`maxFontSizeMultiplier`): iniciais do avatar (1,2x em `Avatar.tsx`), cabeçalho dos dias da semana (1,2x) e número do dia (1,3x) em `MonthGrid.tsx`, o sinal "+" de "mais eventos" (1x) e as opções do seletor de visualização (1,4x em `SegmentedControl.tsx`). Os componentes usam altura **mínima** (`minHeight`), não altura fixa, então crescem com o texto. | **Atendido** (o app não tem uma opção própria de tamanho de fonte: usa a do celular). |
 | Leitor de tela | Os componentes informam papel, nome e estado ao TalkBack: `accessibilityRole` (botão, aba, caixa de seleção, opção de rádio, cabeçalho, alerta, barra de progresso), `accessibilityLabel` e `accessibilityState` (marcado, selecionado, desativado, ocupado, expandido). Títulos viram "cabeçalho" automaticamente em `AppText.tsx`. Mudanças importantes são anunciadas: mensagens rápidas (toasts) com `AccessibilityInfo.announceForAccessibility` em `Feedback.tsx`; erros de campo, faixa "sem internet", estado de erro, título do período no calendário e resultados da busca com `accessibilityLiveRegion` (`TextField.tsx`, `DateTimeField.tsx`, `OfflineBanner.tsx`, `StateViews.tsx`, `screens/calendar/CalendarScreen.tsx`, `screens/misc/SearchScreen.tsx`, `screens/sync/SyncScreen.tsx`); erro de login e cadastro com prioridade alta (`assertive`) em `screens/auth/LoginScreen.tsx` e `SignupScreen.tsx`. Diálogos e listas de opções abrem numa janela própria (`Modal`) com `accessibilityViewIsModal` (`Feedback.tsx`, `OptionSheet.tsx`). | **Parcial:** está no código, mas **nunca foi testado com o TalkBack** num aparelho. Pontos a conferir: o toast pode ser lido duas vezes (tem anúncio e região viva ao mesmo tempo); a mensagem "Muitas tentativas. Aguarde..." do login não é anunciada sozinha. |
 | Rótulos acessíveis | `Button.tsx` usa o próprio texto como rótulo. `IconButton.tsx` (botão só com ícone) **exige** um rótulo: o TypeScript não deixa criar sem ele. O botão flutuante "+" (`FAB.tsx`) diz "Novo evento". Campos (`TextField.tsx`, `SelectField.tsx`, `DateTimeField.tsx`, `SwitchRow.tsx`) dizem o nome do campo e o valor atual, por exemplo "Hora de início: 14:00". Cada dia da grade mensal (`MonthGrid.tsx`) diz a data por extenso, se é hoje e quantos eventos tem. Cada linha de evento (`EventRow.tsx`) diz título, horário, agenda, local e as etiquetas (cancelado, repete, privado, aguardando envio, conflito). A aba "Avisos" diz quantos não lidos existem (`src/app/(app)/(tabs)/_layout.tsx`). O código de convite é soletrado letra por letra (`screens/invites/InviteScreen.tsx`). Os dias da semana na repetição são lidos por extenso ("segunda-feira", em `screens/events/EventFormScreen.tsx`). | **Atendido** |
@@ -54,44 +54,18 @@ Os caminhos de arquivo são relativos a `app-mobile/`.
 | Tema escuro | `app.json` declara `"userInterfaceStyle": "automatic"`. O `ThemeProvider.tsx` escolhe a paleta clara ou escura conforme a preferência da pessoa em **Perfil > Preferências > Tema** ("Automático (do celular)", "Claro" ou "Escuro"). Barra de status, cabeçalhos e abas também seguem o tema (`src/app/_layout.tsx` e layouts). Os componentes pegam as cores do tema (`useAppTheme()`), inclusive o texto do botão de perigo (`dangerText`). | **Atendido** (a borda fraca dos campos vale para os dois temas e está em "Contraste"). |
 | Idioma | Textos em português do Brasil, com estrutura pronta para outros idiomas (`src/i18n/`). | **Atendido** |
 
-## Contraste medido (WCAG)
+## Contraste (WCAG)
 
-Os números abaixo foram **calculados** a partir das cores de `app-mobile/src/theme/tokens.ts`, usando a fórmula de luminância relativa da WCAG 2.1 (a mesma usada por verificadores como o WebAIM Contrast Checker). Valores arredondados para duas casas.
+As cores do app ficam em `app-mobile/src/theme/marca.ts`. O teste automático `src/theme/__tests__/marca.test.ts` calcula o contraste (fórmula de luminância relativa da WCAG 2.1) e falha se algum par ficar abaixo do mínimo, nos temas claro e escuro:
 
-Mínimos usados (nível AA):
-- **4,5:1** para texto comum;
-- **3:1** para contornos e elementos gráficos necessários para entender a tela (critério 1.4.11).
+- **4,5:1** para texto: texto principal e secundário sobre os três fundos, texto sobre a cor principal, texto do botão de perigo, cor principal usada como texto (sobre o cartão e sobre o fundo de item selecionado), mensagens de erro, avisos e etiquetas de sucesso;
+- **3:1** para a borda dos campos de formulário (critério 1.4.11).
 
-| Par de cores | Onde aparece | Mínimo | Tema claro | Tema escuro |
-|---|---|---|---|---|
-| Texto principal sobre o fundo | Quase todo o texto | 4,5 | 15,89:1 (passa) | 16,00:1 (passa) |
-| Texto principal sobre cartão (`surface`) | Cartões, listas, campos | 4,5 | 16,88:1 (passa) | 14,52:1 (passa) |
-| Texto secundário (`textMuted`) sobre o fundo | Horários, legendas | 4,5 | 6,41:1 (passa) | 8,62:1 (passa) |
-| Texto secundário sobre cartão | Subtítulos de lista, dicas | 4,5 | 6,81:1 (passa) | 7,82:1 (passa) |
-| Texto secundário sobre `surfaceAlt` | Etiqueta neutra, seletor Mês/Semana | 4,5 | 6,01:1 (passa) | 6,83:1 (passa) |
-| **Botão principal**: texto (`primaryText`) sobre `primary` | Salvar, Entrar, Criar, botão "+", dia escolhido | 4,5 | 6,02:1 (passa) | 7,73:1 (passa) |
-| Cor primária como texto sobre cartão | Botões secundários, aba ativa, links | 4,5 | 6,02:1 (passa) | 7,12:1 (passa) |
-| Cor primária como texto sobre o fundo | Botões "fantasma" (ex.: Cancelar) | 4,5 | 5,67:1 (passa) | 7,84:1 (passa) |
-| Primária sobre `primarySoft` | Opção marcada (chip) | 4,5 | 5,10:1 (passa) | 5,50:1 (passa) |
-| Vermelho de erro (`danger`) sobre cartão | Mensagens de erro em campos | 4,5 | 5,85:1 (passa) | 7,39:1 (passa) |
-| Vermelho de erro sobre o fundo | Erro de login e cadastro | 4,5 | 5,50:1 (passa) | 8,14:1 (passa) |
-| Vermelho sobre `dangerSoft` | Etiqueta "Cancelado" | 4,5 | 5,12:1 (passa) | 6,51:1 (passa) |
-| Verde (`success`) sobre `successSoft` | Etiquetas de sucesso | 4,5 | 4,70:1 (passa) | 7,57:1 (passa) |
-| Aviso (`warning`) sobre `warningSoft` | Faixa "Sem internet", "Aguardando envio", "Conflito de horário" | 4,5 | 5,76:1 (passa) | 8,49:1 (passa) |
-| Aviso sobre o fundo | Alerta de conflito no formulário de evento | 4,5 | 5,96:1 (passa) | 11,64:1 (passa) |
-| **Botão de perigo**: `dangerText` sobre `danger` | Excluir, Remover, Sair da agenda, escolhas de exclusão de evento recorrente | 4,5 | 5,85:1 (passa; `#FFFFFF` sobre `#C2261F`) | 8,00:1 (passa; `#2A0B09` sobre `#FF8A80`) |
-| Toast de sucesso (cor do fundo sobre `success`) | "Evento criado." etc. | 4,5 | 5,03:1 (passa) | 10,39:1 (passa) |
-| Toast de erro (cor do fundo sobre `danger`) | Mensagens rápidas de erro | 4,5 | 5,50:1 (passa) | 8,14:1 (passa) |
-| Toast informativo (cor do fundo sobre `text`) | Mensagens rápidas neutras | 4,5 | 15,89:1 (passa) | 16,00:1 (passa) |
-| Borda de foco (`focus`) sobre cartão | Campo de texto em foco | 3 | 8,99:1 (passa) | 11,02:1 (passa) |
-| Borda de campo (`inputBorder`) sobre cartão | Contorno dos campos sem foco, interruptor desligado | 3 | 3,34:1 (passa; `#858D9B` sobre `#FFFFFF`) | 3,20:1 (passa; `#646C7E` sobre `#1A1D24`) |
-| Anel de "hoje" (`today`) sobre o fundo | Grade mensal | 3 | 5,67:1 (passa) | 7,84:1 (passa) |
-
-Sobre a borda dos campos: o cartão e o fundo quase não se diferenciam (1,06:1 no claro e 1,10:1 no escuro), então a borda é o que mostra onde o campo está. Por isso os campos usam `inputBorder`, mais forte que a borda decorativa dos cartões (`border`).
+Assim, ao trocar a identidade visual, o próprio teste aponta se algum texto ficou difícil de ler.
 
 ### Cores das agendas
 
-As 10 cores de `CALENDAR_COLORS` aparecem como barra lateral do evento, bolinhas na grade mensal, avatar com iniciais e opções do seletor de cor. Para o ✓ do seletor e as iniciais do avatar, a função `readableTextOn()` (`src/theme/tokens.ts`) calcula o contraste com branco e com quase preto (`#111318`) e escolhe o maior.
+As 10 cores de `CALENDAR_COLORS` aparecem como barra lateral do evento, bolinhas na grade mensal, avatar com iniciais e opções do seletor de cor. Para o ✓ do seletor e as iniciais do avatar, a função `readableTextOn()` (`src/theme/tokens.ts`) calcula o contraste com branco e com quase preto e escolhe o maior.
 
 | Cor | Texto escolhido sobre a cor (✓ do seletor, iniciais do avatar) | Cor sobre cartão claro | Cor sobre cartão escuro |
 |---|---|---|---|
@@ -107,11 +81,10 @@ As 10 cores de `CALENDAR_COLORS` aparecem como barra lateral do evento, bolinhas
 | Índigo `#5B5BD6` | branco, 5,37:1 | 5,37:1 | 3,14:1 |
 
 Como interpretar:
-- O ✓ do seletor e as iniciais do avatar passam de 4,5:1 em todas as cores (o Rosa fica no limite, 4,51:1). A cor padrão de avatar e de agenda nova agora é o Azul `#3358D4` (6,02:1 com branco).
+- O ✓ do seletor e as iniciais do avatar passam de 4,5:1 em todas as cores (o Rosa fica no limite, 4,51:1). A cor inicial da "Minha agenda" e dos avatares é o Azul `#3358D4` (6,02:1 com branco).
 - Barras e bolinhas coloridas são complemento (o nome da agenda aparece escrito). Ficam abaixo de 3:1 contra o cartão o **Laranja** no tema claro (2,97:1) e o **Azul** no tema escuro (2,80:1).
 
-Correções sugeridas (ainda **não** aplicadas):
-- Borda dos campos: usar uma cor mais forte só para contornos de campos (por exemplo a cor `textMuted`, que dá 6,81:1 no claro e 7,82:1 no escuro).
+Correção sugerida (ainda **não** aplicada):
 - Barras e bolinhas de agenda: desenhar um contorno fino na cor do texto secundário, para que fiquem visíveis em qualquer cor e tema.
 
 ## Roteiro de teste manual de acessibilidade
@@ -210,21 +183,17 @@ Limitações que **não foram resolvidas na primeira versão**:
 
 1. **Nenhum teste em aparelho real com TalkBack, fonte grande ou simulador de daltonismo.** Tudo foi verificado lendo o código e calculando cores. O roteiro acima precisa ser executado antes de considerar a acessibilidade validada.
 2. **Sem testes automáticos de acessibilidade.** A biblioteca `@testing-library/react-native` está instalada, mas nenhum teste renderiza telas ou confere rótulos (veja [TESTES.md](TESTES.md)).
-3. **Borda dos campos abaixo de 3:1** nos dois temas (`border` em `src/theme/tokens.ts`).
-4. **Preferência "remover animações" detectada mas ignorada** (`reduceMotion` em `src/theme/ThemeProvider.tsx` não é usado).
-5. **Nome das cores não aparece na tela**, só é lido pelo leitor de tela (`colorName()` não é usado).
-6. **Dias da grade mensal menores que 48 dp de largura** em telas com menos de 368 dp.
-7. **Sem contorno de foco próprio** em botões e itens de lista para quem navega por teclado físico ou "Acesso com interruptor".
-8. **Barras e bolinhas de agenda** abaixo de 3:1 contra o cartão em duas cores (Laranja no claro, Azul no escuro); impacto pequeno, porque o nome da agenda aparece escrito.
-9. **Sem ajuste de tamanho de fonte dentro do app:** o app segue o tamanho escolhido no Android.
-10. **Somente português do Brasil** nesta versão.
+3. **Nome das cores não aparece na tela**, só é lido pelo leitor de tela (`colorName()` não é usado).
+4. **Dias da grade mensal menores que 48 dp de largura** em telas com menos de 368 dp.
+5. **Sem contorno de foco próprio** em botões e itens de lista para quem navega por teclado físico ou "Acesso com interruptor".
+6. **Barras e bolinhas de agenda** abaixo de 3:1 contra o cartão em duas cores (Laranja no claro, Azul no escuro); impacto pequeno, porque o nome da agenda aparece escrito.
+7. **Sem ajuste de tamanho de fonte dentro do app:** o app segue o tamanho escolhido no Android.
+8. **Somente português do Brasil** nesta versão.
 
 ## Próximos passos sugeridos
 
 Em ordem de impacto:
 
 1. Executar o roteiro manual em pelo menos um celular Android com TalkBack e registrar os resultados.
-2. Usar uma cor mais forte na borda dos campos (mudança pequena em `tokens.ts` e `TextField.tsx`).
-3. Usar `reduceMotion` para trocar `animationType` de `slide`/`fade` para `none` nos `Modal`.
-4. Mostrar o nome da cor escrito no seletor de cor (usar `colorName()`).
-5. Criar testes automáticos simples de acessibilidade com `@testing-library/react-native` (por exemplo, conferir que todo botão tem rótulo).
+2. Mostrar o nome da cor escrito no seletor de cor (usar `colorName()`).
+3. Criar testes automáticos simples de acessibilidade com `@testing-library/react-native` (por exemplo, conferir que todo botão tem rótulo).

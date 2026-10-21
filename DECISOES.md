@@ -18,7 +18,7 @@ Cada decisão segue o formato: **contexto**, **opções**, **decisão**, **motiv
 - [D13 Armazenamento seguro da sessão](#d13-armazenamento-seguro-da-sessão)
 - [D14 Geração do APK](#d14-geração-do-apk)
 - [D15 Estado global](#d15-estado-global)
-- [D16 Tabelas do prompt que foram adaptadas](#d16-tabelas-do-prompt-que-foram-adaptadas)
+- [D16 Tabelas planejadas que foram adaptadas](#d16-tabelas-planejadas-que-foram-adaptadas)
 - [D17 E-mail e confirmação de conta](#d17-e-mail-e-confirmação-de-conta)
 - [D18 Autoria, licença e repositório](#d18-autoria-licença-e-repositório)
 - [D19 Agenda pessoal criada no cadastro](#d19-agenda-pessoal-criada-no-cadastro)
@@ -95,13 +95,13 @@ Cada decisão segue o formato: **contexto**, **opções**, **decisão**, **motiv
 
 **Decisão.** Expo Router (padrão atual do Expo). As rotas ficam em `src/app/` e são finas: cada arquivo só aponta para a tela real em `src/screens/`.
 
-**Motivo.** Funciona como páginas de um site (cada arquivo é um endereço), o que é intuitivo para quem vem de HTML. Separar rota e tela mantém a estrutura pedida no prompt (`screens/`, `navigation/`).
+**Motivo.** Funciona como páginas de um site (cada arquivo é um endereço), o que é intuitivo para quem vem de HTML. Separar rota e tela mantém a organização em `screens/` e `navigation/`.
 
 ## D05 Onde ficam as permissões
 
 **Decisão.** Toda autorização é verificada **no banco**, com Row Level Security (RLS) e funções `SECURITY DEFINER` que conferem o papel de quem chama. O app também esconde botões que a pessoa não pode usar, mas isso é só conforto visual.
 
-**Motivo.** Regras 8, 9 e 13 do prompt: o backend precisa recusar alterações não autorizadas mesmo que o cliente seja modificado.
+**Motivo.** Regras 8, 9 e 13 de [REGRAS_DE_NEGOCIO.md](REGRAS_DE_NEGOCIO.md): o backend precisa recusar alterações não autorizadas mesmo que o cliente seja modificado.
 
 **Consequências.** Inserir membros diretamente na tabela é proibido; só funções como `accept_invitation` conseguem. Isso também impede adicionar alguém "em silêncio" (regra 8 dos convites).
 
@@ -122,7 +122,7 @@ Cada decisão segue o formato: **contexto**, **opções**, **decisão**, **motiv
 
 **Opções.** (a) gerar todas as ocorrências no banco; (b) regra + ocorrências virtuais + exceções; (c) materialização sob demanda.
 
-**Motivo.** A opção (b) não cria infinitas linhas no banco (o prompt proíbe), é o padrão usado por Google Calendar e pelo formato ICS (facilita exportar no futuro) e funciona offline.
+**Motivo.** A opção (b) não cria infinitas linhas no banco, é o padrão usado por Google Calendar e pelo formato ICS (facilita exportar no futuro) e funciona offline.
 
 **Detalhes.**
 - Suportado: diário, semanal, quinzenal (semanal a cada 2), mensal, anual, dias da semana específicos, intervalo, data final, quantidade, sem fim.
@@ -135,7 +135,7 @@ Cada decisão segue o formato: **contexto**, **opções**, **decisão**, **motiv
 **Decisão.**
 - Leitura offline: cache local (AsyncStorage) de agendas, membros e eventos já sincronizados.
 - Escrita de eventos: **sempre** passa por uma fila local (outbox), mesmo online. Se houver internet, a fila é enviada na hora.
-- Cada operação tem `id` único (UUID), data local, tipo, entidade, payload, status, tentativas, erro e data da última tentativa (exatamente os campos da seção 15).
+- Cada operação tem `id` único (UUID), data local, tipo, entidade, payload, status, tentativas, erro e data da última tentativa.
 - O servidor registra cada `id` de operação processado (`sync_operations`). Reenvio da mesma operação devolve o mesmo resultado, sem duplicar (regra 17).
 - Eventos novos já nascem com ID gerado no aparelho, então reenviar uma criação não cria duplicata.
 - Conflitos: cada evento tem `version`. A edição envia a versão em que se baseou. Se o servidor tiver outra versão:
@@ -200,16 +200,16 @@ Regra 29 (criador não esconde evento de quem administra, salvo regra explícita
 
 **Motivo.** Menos conceitos que Redux, sem "mágica". Cada store é um arquivo simples com dados e funções.
 
-## D16 Tabelas do prompt que foram adaptadas
+## D16 Tabelas planejadas que foram adaptadas
 
-| Tabela pedida | O que foi feito | Por quê |
+| Tabela planejada | O que foi feito | Por quê |
 |---|---|---|
 | `users` | Usa `auth.users` do Supabase | Senhas com hash bcrypt, confirmação e recuperação prontas |
 | `sessions` | Usa `auth.sessions` do Supabase | O Supabase já controla sessões e revogação |
 | `event_recurrences` | Virou a coluna `events.recurrence_rule` | Relação 1 para 1; RRULE é padrão de mercado |
 | `attachments` | Não criada na V1 | Anexos estão fora do escopo; o desenho está no [ROADMAP.md](ROADMAP.md) |
 | `deleted_records` | Não criada | Exclusão lógica (`deleted_at`) e sincronização por janela completa já cobrem; seria necessária só em sincronização incremental |
-| Demais | Criadas como pedido | Ver [MODELO_DE_DADOS.md](MODELO_DE_DADOS.md) |
+| Demais | Criadas como planejado | Ver [MODELO_DE_DADOS.md](MODELO_DE_DADOS.md) |
 
 ## D17 E-mail e confirmação de conta
 
@@ -228,7 +228,6 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 - Autor: **Gustavo Oliveira dos Santos**, e-mail de commits informado pelo proprietário.
 - Repositório: `GustavoOliveira-xxx/app-teste-agenda` (já existente).
 - Licença: **MIT**.
-- Os commits são de autoria do proprietário. O assistente de IA aparece apenas como coautor técnico na mensagem do commit (linha `Co-Authored-By`), conforme a ferramenta utilizada.
 
 ## D19 Agenda pessoal criada no cadastro
 
@@ -267,7 +266,7 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 | WAKE_LOCK | Entregar o lembrete com a tela apagada | Não |
 | DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION | Interna do Android, protege o próprio app | Não |
 
-**Motivo.** Requisito do prompt: não adicionar permissões desnecessárias. A checagem automática impede que uma atualização de biblioteca traga uma permissão nova sem ninguém perceber.
+**Motivo.** O app não deve pedir permissões desnecessárias. A checagem automática impede que uma atualização de biblioteca traga uma permissão nova sem ninguém perceber.
 
 ## D23 Testes de tela na versão web, contra o banco real
 

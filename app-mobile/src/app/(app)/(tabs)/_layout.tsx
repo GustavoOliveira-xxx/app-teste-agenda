@@ -5,6 +5,7 @@ import { useLayout } from '@/hooks/useLayout';
 import { t } from '@/i18n';
 import { useDataStore } from '@/stores/dataStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
+import { fonte } from '@/theme/tokens';
 
 export default function TabsLayout() {
   const { colors } = useAppTheme();
@@ -21,8 +22,9 @@ export default function TabsLayout() {
         tabBarStyle: sideNav
           ? { backgroundColor: colors.surface, borderRightColor: colors.border, width: 240, minWidth: 240 }
           : { backgroundColor: colors.surface, borderTopColor: colors.border, minHeight: 60 },
-        tabBarLabelStyle: { fontSize: sideNav ? 15 : 12, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: sideNav ? 15 : 12, ...fonte('medio') },
         headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: fonte('semi'),
         headerTintColor: colors.text,
       }}
     >

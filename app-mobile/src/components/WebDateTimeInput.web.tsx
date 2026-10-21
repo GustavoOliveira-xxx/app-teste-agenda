@@ -3,6 +3,7 @@
 // O valor trocado é sempre AAAA-MM-DD ou HH:mm, como no celular.
 import { createElement } from 'react';
 
+import { marca } from '@/theme/marca';
 import { MIN_TOUCH, radius, typography } from '@/theme/tokens';
 
 import type { WebDateTimeInputProps } from './WebDateTimeInput';
@@ -29,7 +30,7 @@ export function WebDateTimeInput({ mode, value, onChange, label, dark, colors }:
       color: colors.text,
       // 16px evita o zoom automático do iPhone ao tocar no campo.
       fontSize: typography.body.fontSize,
-      fontFamily: 'inherit',
+      fontFamily: marca.fonte.familias.regular ?? 'inherit',
       colorScheme: dark ? 'dark' : 'light',
     },
   });

@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
@@ -9,6 +9,7 @@ import { useFeedback } from '@/components/Feedback';
 import { ListItem } from '@/components/ListItem';
 import { Screen } from '@/components/Screen';
 import { env } from '@/config/env';
+import { useAvailableUpdate } from '@/hooks/useAvailableUpdate';
 import { t } from '@/i18n';
 import { endSession } from '@/services/session';
 import { useAuthStore } from '@/stores/authStore';
@@ -20,6 +21,7 @@ export default function ProfileScreen() {
   const email = useAuthStore((s) => s.session?.user.email ?? '');
   const pending = useSyncStore((s) => s.outbox.length);
   const { confirm } = useFeedback();
+  const update = useAvailableUpdate();
 
   const logout = async () => {
     const ok = await confirm({
@@ -50,6 +52,15 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Card>
+      {update && (
+        <Card padded={false}>
+          <ListItem
+            icon="download-outline"
+            title={t('profile.updateAvailable', { version: update.version, build: update.build })}
+            onPress={() => void Linking.openURL(update.url)}
+          />
+        </Card>
+      )}
       <Card padded={false}>
         <ListItem
           icon="person-outline"

@@ -18,7 +18,7 @@ import * as api from '@/services/api';
 import { useUserId } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useUiStore } from '@/stores/uiStore';
-import { spacing } from '@/theme/tokens';
+import { radius, spacing } from '@/theme/tokens';
 import { DEFAULT_FILTERS } from '@/utils/filters';
 import { canEditCalendarSettings, canInvite, isOwner } from '@/utils/permissions';
 
@@ -203,7 +203,7 @@ export default function CalendarDetailScreen() {
 
 const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  swatch: { width: 40, height: 40, borderRadius: 12 },
+  swatch: { width: 40, height: 40, borderRadius: radius.lg },
   flex: { flex: 1 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   actions: { gap: spacing.sm },

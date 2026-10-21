@@ -12,6 +12,24 @@ O número da compilação (build) cresce a cada APK gerado e aparece em **Perfil
 
 Nada ainda.
 
+## [1.2.0] (2026-10-21)
+
+### Corrigido
+
+- No computador (versão web publicada no GitHub Pages), o app mostrava "Sem internet" mesmo conectado e bloqueava criar agenda, gerar convite e outras ações. O teste de conexão agora usa um arquivo do próprio site.
+- Depois de uma falha de rede passageira, o app volta a ficar online sozinho (confere de novo a cada 15 segundos).
+- A versão web guarda todos os arquivos na instalação e abre sem internet desde o primeiro acesso.
+
+### Adicionado
+
+- Aviso de versão nova no app Android, com botão para baixar o APK.
+- Arquivo de identidade visual (`src/theme/marca.ts`): cores, fonte própria, cantos, sombra e detalhes de estilo num lugar só. Passo a passo em `docs/DESIGN.md`.
+- Teste automático de contraste das cores da marca.
+
+### Alterado
+
+- Visual neutro, pronto para receber uma identidade: tons de cinza, cantos menores, sem ícones dentro dos botões, títulos de seção sem letras maiúsculas e ícones provisórios.
+
 ## [1.1.0] (2026-10-21)
 
 Funciona em iPhone, iPad e computador, e a tela se adapta ao tamanho.

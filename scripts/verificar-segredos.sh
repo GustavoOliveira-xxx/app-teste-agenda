@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Procura segredos que NUNCA deveriam estar no repositório (seção 20 do prompt).
+# Procura segredos que NUNCA deveriam estar no repositório.
 # Uso (na raiz do projeto): bash scripts/verificar-segredos.sh
 # Sai com erro (código 1) se encontrar algo suspeito.
 set -euo pipefail

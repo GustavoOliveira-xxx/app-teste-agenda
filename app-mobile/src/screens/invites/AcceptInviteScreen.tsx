@@ -13,7 +13,7 @@ import { strings, t } from '@/i18n';
 import type { InvitationPreview } from '@/models/types';
 import { syncNow } from '@/offline/syncEngine';
 import * as api from '@/services/api';
-import { spacing } from '@/theme/tokens';
+import { radius, spacing } from '@/theme/tokens';
 import { formatDateTime } from '@/utils/dates';
 import { toFriendlyError } from '@/utils/errors';
 import { formatInviteCode, validateInviteCode } from '@/validation/invite';
@@ -125,6 +125,6 @@ export default function AcceptInviteScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  swatch: { width: 40, height: 40, borderRadius: 12 },
+  swatch: { width: 40, height: 40, borderRadius: radius.lg },
   flex: { flex: 1 },
 });

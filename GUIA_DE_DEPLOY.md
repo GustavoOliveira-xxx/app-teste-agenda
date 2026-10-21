@@ -66,7 +66,7 @@ O plano gratuito permite **2 projetos ativos** por pessoa. Sua conta já tem 2 p
 
 4. Confira: **Table Editor** deve listar tabelas como `profiles`, `calendars`, `calendar_members`, `invitations` e `events`, cada uma com o selo de "RLS enabled".
 
-**Alternativas para quem programa:** `npx supabase link --project-ref SEU_REF` e `npx supabase db push` na raiz do projeto (pede a senha do banco no terminal; não a salve em arquivos). Ou peça a um assistente com o conector do Supabase para aplicar as migrations por você.
+**Alternativas para quem programa:** `npx supabase link --project-ref SEU_REF` e `npx supabase db push` na raiz do projeto (pede a senha do banco no terminal; não a salve em arquivos).
 
 **Dados de demonstração (opcional, só para projeto de testes):** o arquivo [`supabase/seed.sql`](supabase/seed.sql) cria 4 pessoas fictícias (`ana.demo@exemplo.test` e outras) com a senha `Demo@2026!`, uma agenda compartilhada, eventos passados, futuros, recorrentes, privados e cancelados, lembretes, comentários e histórico. Ele só roda em banco **sem nenhum usuário**. **Não use em produção**: a senha das contas de demonstração é pública.
 

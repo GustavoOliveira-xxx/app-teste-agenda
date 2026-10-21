@@ -6,7 +6,7 @@ import { useLayout } from '@/hooks/useLayout';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { fonte, MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
 import { DIALOG_MAX_WIDTH } from '@/utils/layout';
 import { normalizeText } from '@/utils/text';
 
@@ -118,7 +118,7 @@ export function OptionSheet<T>({
                   ]}
                 >
                   <View style={styles.flex}>
-                    <AppText style={{ fontWeight: selected ? '700' : '400' }}>{item.label}</AppText>
+                    <AppText style={fonte(selected ? 'semi' : 'regular')}>{item.label}</AppText>
                     {item.description ? (
                       <AppText variant="small" tone="muted">
                         {item.description}

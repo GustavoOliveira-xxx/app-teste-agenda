@@ -8,6 +8,8 @@ export const env = {
   appVersion: Constants.expoConfig?.version ?? '1.0.0',
   /** Número da compilação (versionCode). O GitHub Actions troca a cada build. */
   appBuild: Constants.expoConfig?.android?.versionCode ?? 1,
+  /** Repositório do GitHub (dono/nome) onde o APK é publicado, para avisar de versão nova. */
+  releasesRepo: process.env.EXPO_PUBLIC_RELEASES_REPO ?? '',
   isDev: __DEV__,
 };
 

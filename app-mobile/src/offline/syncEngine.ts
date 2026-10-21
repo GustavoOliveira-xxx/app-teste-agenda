@@ -1,4 +1,4 @@
-// Motor de sincronização (seção 15 do prompt).
+// Motor de sincronização.
 //
 // Quando a conexão volta (ou a cada alteração, se houver internet):
 //  1. confere a sessão (login);
