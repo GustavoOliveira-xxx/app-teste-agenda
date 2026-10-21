@@ -99,6 +99,18 @@ test('service worker ativo no escopo do site', async () => {
   assert.equal(escopo, origem + BASE);
 });
 
+test('instalação guarda todos os arquivos do app (abre sem internet desde o 1º acesso)', async () => {
+  const faltando = await page.evaluate(async () => {
+    const { scope } = await navigator.serviceWorker.ready;
+    const lista = await (await fetch(new URL('precache.json', scope))).json();
+    const ausentes = [];
+    for (const arquivo of lista) if (!(await caches.match(new URL(arquivo, scope).href))) ausentes.push(arquivo);
+    return { total: lista.length, ausentes };
+  });
+  assert.ok(faltando.total > 0, 'precache.json vazio');
+  assert.deepEqual(faltando.ausentes, []);
+});
+
 test('link direto para uma tela funciona (404.html)', async () => {
   await page.reload();
   await page.goto(origem + BASE + 'login');

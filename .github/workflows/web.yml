@@ -92,6 +92,8 @@ jobs:
           # assim um link direto (ex.: .../calendars) também abre o app.
           cp dist-site/index.html dist-site/404.html
           touch dist-site/.nojekyll
+          # Lista de arquivos que o service worker guarda na instalação (modo offline).
+          node ../scripts/lista-precache.mjs dist-site
           du -sh dist-site
 
       - name: Testar a versão instalável (abre, instala, funciona sem internet)
