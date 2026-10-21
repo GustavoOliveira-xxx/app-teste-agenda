@@ -70,6 +70,9 @@ jobs:
           echo "Subpasta do site: ${BASE:-/ (raiz)}"
           if [ "$TIPO" = "workflow" ]; then
             echo "ativo=true" >> "$GITHUB_OUTPUT"
+          elif [ "$TIPO" = "legacy" ]; then
+            echo "ativo=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=GitHub Pages com a origem errada::O Pages está em 'Deploy from a branch'. Troque para Settings > Pages > Source: GitHub Actions e rode este workflow de novo (GUIA_DE_DEPLOY.md, parte 6)."
           else
             echo "ativo=false" >> "$GITHUB_OUTPUT"
             echo "::warning title=GitHub Pages desligado::O site será gerado e testado, mas não publicado. Para publicar: Settings > Pages > Source: GitHub Actions, depois rode este workflow de novo (GUIA_DE_DEPLOY.md, parte 6)."
