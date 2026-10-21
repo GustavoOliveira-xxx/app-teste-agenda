@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { fonte, MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
 import { centeredInset, DIALOG_MAX_WIDTH } from '@/utils/layout';
 
 import { AppText } from './AppText';
@@ -168,7 +168,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             },
           ]}
         >
-          <AppText style={{ color: colors.background, fontWeight: '600', flex: 1 }}>
+          <AppText style={{ color: colors.background, ...fonte('medio'), flex: 1 }}>
             {toastState.message}
           </AppText>
           {toastState.action ? (
@@ -182,7 +182,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
               style={styles.toastAction}
             >
               <AppText
-                style={{ color: colors.background, fontWeight: '800', textDecorationLine: 'underline' }}
+                style={{ color: colors.background, ...fonte('semi'), textDecorationLine: 'underline' }}
               >
                 {toastState.action.label}
               </AppText>

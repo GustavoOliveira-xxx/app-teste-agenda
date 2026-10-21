@@ -104,7 +104,9 @@ Depois de instalar, volte em **Configurações > Apps > Acesso especial > Instal
 
 ### Como atualizar
 
-1. Baixe o APK mais novo da página Releases (passos 1 a 5). O Android vai mostrar **"Deseja instalar uma atualização?"**. Toque em **Instalar**.
+O app do Android **não se atualiza sozinho** (ele não vem da Play Store). A partir da versão 1.2.0, quando sai uma versão nova, o app avisa ao abrir ("Há uma versão nova do app") e mostra **Baixar versão nova** no Perfil. Tocar ali baixa o APK novo.
+
+1. Baixe o APK mais novo pelo aviso ou pela página Releases (passos 1 a 5). O Android vai mostrar da página Releases (passos 1 a 5). **"Deseja instalar uma atualização?"**. Toque em **Instalar**.
 2. Seus dados continuam: eles ficam no servidor e o app sincroniza de novo.
 3. Se aparecer **"App não instalado"** ou **"o pacote está em conflito"**, o APK novo foi assinado com outra chave (por exemplo, a versão de testes foi trocada pela versão com chave própria). Desinstale a versão antiga e instale a nova. Os dados estão no servidor; alterações feitas offline e ainda não enviadas serão perdidas, então abra o app com internet antes de desinstalar.
 

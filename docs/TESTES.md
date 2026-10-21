@@ -1,6 +1,6 @@
 # Testes
 
-Este documento explica como o projeto é testado, o que já roda sozinho, como rodar cada teste no seu computador e como testar o app com o celular na mão (roteiro manual). Atende a seção 28 do prompt.
+Este documento explica como o projeto é testado, o que já roda sozinho, como rodar cada teste no seu computador e como testar o app com o celular na mão (roteiro manual).
 
 ## Resumo em números
 
@@ -219,7 +219,7 @@ bash scripts/verificar-segredos.sh
 - **Resultado esperado:** `OK: nenhum segredo encontrado nos arquivos versionados.`
 - **Se falhar:** o script mostra o arquivo suspeito. Remova o segredo e siga o procedimento do [SEGURANCA.md](../SEGURANCA.md#procedimento-para-revogar-credenciais-expostas).
 
-## Requisitos da seção 28 e onde estão cobertos
+## Requisitos de teste e onde estão cobertos
 
 Legenda: os nomes de arquivo `0N_*.test.mjs` ficam em `supabase/tests/`; os `*.test.ts` ficam em `app-mobile/src/**/__tests__/`. "M01" e similares são os cenários do [roteiro manual](#roteiro-de-teste-manual).
 
@@ -283,9 +283,9 @@ npm test           # roda os 5 testes; capturas em e2e/saida/
 
 O navegador usado é o Chrome/Chromium do computador: informe o caminho em `CHROMIUM_PATH` (no Linux, por exemplo, `CHROMIUM_PATH=/usr/bin/google-chrome npm test`).
 
-**No Android (emulador ou celular), nenhum é automatizado.** Não há Detox, Maestro ou Appium configurado: exigiria emulador e servidor dentro do GitHub Actions, lento e instável para esta primeira versão. Os cenários do prompt ficam no roteiro manual (os marcados com "web" também são cobertos, em parte, pelos testes de tela acima):
+**No Android (emulador ou celular), nenhum é automatizado.** Não há Detox, Maestro ou Appium configurado: exigiria emulador e servidor dentro do GitHub Actions, lento e instável para esta primeira versão. Os cenários de ponta a ponta ficam no roteiro manual (os marcados com "web" também são cobertos, em parte, pelos testes de tela acima):
 
-| # | Cenário pedido | Status | Roteiro manual |
+| # | Cenário | Status | Roteiro manual |
 |---|---|---|---|
 | 1 | Criar usuário | Não automatizado | M01 |
 | 2 | Fazer login | Parcial: web, com o servidor de testes | M02 |
@@ -553,7 +553,7 @@ Copie esta tabela para cada rodada de testes.
 | M02 | | | | | |
 | ... | | | | | |
 
-## Relação com os critérios de aceitação (seção 38)
+## Relação com os critérios de aceitação
 
 | Critério | Evidência automática | Evidência manual |
 |---|---|---|

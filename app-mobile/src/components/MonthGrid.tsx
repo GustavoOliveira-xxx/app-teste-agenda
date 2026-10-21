@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { strings, t } from '@/i18n';
 import type { DateKey } from '@/models/types';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { radius } from '@/theme/tokens';
+import { fonte, radius } from '@/theme/tokens';
 import { dateKeyParts, formatLongDate, monthMatrix } from '@/utils/dates';
 
 import { AppText } from './AppText';
@@ -82,7 +82,7 @@ export const MonthGrid = memo(function MonthGrid({
                     maxFontSizeMultiplier={1.3}
                     style={{
                       color: isSelected ? colors.primaryText : outside ? colors.textMuted : colors.text,
-                      fontWeight: isToday || isSelected ? '700' : '400',
+                      ...fonte(isToday || isSelected ? 'semi' : 'regular'),
                       opacity: outside && !isSelected ? 0.6 : 1,
                     }}
                   >

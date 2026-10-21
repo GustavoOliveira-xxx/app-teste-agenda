@@ -1,6 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 
-import { readableTextOn } from '@/theme/tokens';
+import { fonte, readableTextOn } from '@/theme/tokens';
 import { initials } from '@/utils/text';
 
 import { AppText } from './AppText';
@@ -18,7 +18,7 @@ export function Avatar({ name, color, size = 40 }: { name: string; color: string
         style={{
           color: readableTextOn(color),
           fontSize: size * 0.4,
-          fontWeight: '700',
+          ...fonte('semi'),
           lineHeight: size * 0.5,
         }}
       >

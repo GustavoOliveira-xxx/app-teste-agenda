@@ -97,7 +97,7 @@ app-teste-agenda/
 └── .github/workflows/           CI/CD
 ```
 
-Observação sobre a sugestão do prompt: a pasta `backend/` (API própria) virou `supabase/`, porque o backend escolhido é gerenciado (D02). Não existem `controllers/` ou `middlewares/`: o papel deles é cumprido pelas regras RLS e funções SQL.
+Observação sobre as pastas: em vez de uma pasta `backend/` (API própria), o projeto tem `supabase/`, porque o backend escolhido é gerenciado (D02). Não existem `controllers/` ou `middlewares/`: o papel deles é cumprido pelas regras RLS e funções SQL.
 
 ## Autorização em camadas
 

@@ -67,7 +67,9 @@ jobs:
             echo "::warning title=Servidor não configurado::Cadastre as Variables EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY (GUIA_DE_DEPLOY.md). Sem elas o app abre na tela 'Servidor não configurado'."
           fi
           # O arquivo .env só existe dentro desta máquina temporária do GitHub.
-          printf 'EXPO_PUBLIC_SUPABASE_URL=%s\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\n' "$SUPABASE_URL" "$SUPABASE_KEY" > .env
+          # EXPO_PUBLIC_RELEASES_REPO: onde o app procura versões novas para avisar quem usa.
+          printf 'EXPO_PUBLIC_SUPABASE_URL=%s\nEXPO_PUBLIC_SUPABASE_ANON_KEY=%s\nEXPO_PUBLIC_RELEASES_REPO=%s\n' \
+            "$SUPABASE_URL" "$SUPABASE_KEY" "$GITHUB_REPOSITORY" > .env
 
       - name: Definir o número da versão (versionCode cresce a cada build)
         run: |

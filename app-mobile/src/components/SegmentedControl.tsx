@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { radius, spacing } from '@/theme/tokens';
+import { fonte, radius, spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 
@@ -38,7 +38,7 @@ export function SegmentedControl<T extends string>({
               variant="small"
               maxFontSizeMultiplier={1.4}
               style={{
-                fontWeight: selected ? '700' : '500',
+                ...fonte(selected ? 'semi' : 'medio'),
                 color: selected ? colors.primary : colors.textMuted,
               }}
             >

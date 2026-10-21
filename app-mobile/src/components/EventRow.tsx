@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { t } from '@/i18n';
 import type { DateFormat, Occurrence, TimeFormat } from '@/models/types';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { fonte, MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 import { formatOccurrenceTime } from '@/utils/dates';
 
 import { AppText } from './AppText';
@@ -114,6 +114,6 @@ const styles = StyleSheet.create({
   },
   bar: { width: 6, alignSelf: 'stretch' },
   body: { flex: 1, paddingVertical: spacing.sm, gap: 2 },
-  title: { fontWeight: '600' },
+  title: { ...fonte('semi') },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: 2 },
 });

@@ -1,6 +1,6 @@
 # Regras de negócio
 
-Cada regra da seção 19 do prompt, onde ela é garantida e qual teste automático a comprova.
+Cada regra de negócio, onde ela é garantida e qual teste automático a comprova.
 
 **Legenda de onde a regra vive**
 - **RLS**: regra de acesso no banco (não dá para burlar pelo app).

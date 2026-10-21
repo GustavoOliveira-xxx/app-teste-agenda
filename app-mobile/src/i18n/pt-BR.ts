@@ -638,6 +638,7 @@ export const ptBR = {
     sync: 'Sincronização',
     diagnostics: 'Diagnóstico (desenvolvimento)',
     about: 'Versão {version} (build {build})',
+    updateAvailable: 'Baixar versão nova ({version}, build {build})',
     saved: 'Perfil atualizado.',
   },
   preferences: {
@@ -725,6 +726,10 @@ export const ptBR = {
   privacyPolicy: {
     title: 'Política de privacidade',
     version: 'Versão {version}',
+  },
+  updates: {
+    available: 'Há uma versão nova do app ({version}).',
+    download: 'Baixar',
   },
   diagnostics: {
     title: 'Diagnóstico',

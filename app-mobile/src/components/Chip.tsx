@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { radius, spacing } from '@/theme/tokens';
+import { fonte, radius, spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
@@ -38,7 +38,7 @@ export function Chip({
     >
       {color && <View style={[styles.dot, { backgroundColor: color }]} />}
       {selected && <Icon name="checkmark" size={16} color={colors.primary} />}
-      <AppText variant="small" style={{ color: selected ? colors.primary : colors.text, fontWeight: '600' }}>
+      <AppText variant="small" style={{ color: selected ? colors.primary : colors.text, ...fonte('medio') }}>
         {label}
       </AppText>
     </Pressable>

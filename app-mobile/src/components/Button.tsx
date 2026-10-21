@@ -1,7 +1,8 @@
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
+import { marca } from '@/theme/marca';
+import { fonte, MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
@@ -61,9 +62,9 @@ export function Button({
         {loading ? (
           <ActivityIndicator color={palette.fg} />
         ) : (
-          icon && <Icon name={icon} size={20} color={palette.fg} />
+          icon && marca.iconesNosBotoes && <Icon name={icon} size={20} color={palette.fg} />
         )}
-        <AppText variant="label" style={{ color: palette.fg, fontSize: 16 }}>
+        <AppText variant="label" style={{ color: palette.fg, fontSize: 16, ...fonte('semi') }}>
           {title}
         </AppText>
       </View>

@@ -7,7 +7,7 @@ Aplicativo de **agenda compartilhada** para **Android, iPhone, iPad e computador
 > 1. **Quero instalar:** siga o [COMO_INSTALAR.md](COMO_INSTALAR.md) (Android, iPhone, iPad ou computador).
 > 2. **Quero colocar o app no ar pela primeira vez** (servidor, APK, site, chave de assinatura): siga o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md). São cliques no painel do Supabase e do GitHub, sem programar.
 > 3. **Algo deu errado:** veja o [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
-> 4. **O que está pronto e o que falta:** veja o [CHECKLIST.md](CHECKLIST.md).
+> 4. **O que fica para as próximas versões:** veja o [ROADMAP.md](ROADMAP.md).
 
 ## Onde funciona
 
@@ -180,8 +180,6 @@ Integrações futuras (Google Calendar, exportação ICS, push remoto, anexos, l
 - **App nativo de iPhone** não foi compilado nem testado (exige conta paga da Apple). No iPhone, use a versão web instalável.
 - **Versão web:** testada automaticamente no Chrome (tamanhos de celular, tablet e computador); ainda não conferida num iPhone de verdade.
 
-Lista completa, com status de cada requisito: [CHECKLIST.md](CHECKLIST.md).
-
 ## Licença
 
 [MIT](LICENSE). Você pode usar, copiar e modificar, mantendo o aviso de copyright.
@@ -189,5 +187,4 @@ Lista completa, com status de cada requisito: [CHECKLIST.md](CHECKLIST.md).
 ## Créditos
 
 - Autor e proprietário: **Gustavo Oliveira dos Santos**.
-- Desenvolvido com o apoio do Claude Code (assistente de programação da Anthropic), que aparece como coautor técnico nos commits.
 - Bibliotecas de código aberto listadas em `app-mobile/package.json` e `supabase/package.json`, cada uma com sua licença.

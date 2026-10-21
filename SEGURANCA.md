@@ -1,6 +1,6 @@
 # Segurança
 
-## O que está implementado (seção 20 do prompt)
+## O que está implementado
 
 | Item | Como |
 |---|---|

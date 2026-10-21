@@ -22,6 +22,8 @@ const WEB = process.env.WEB_DIR ?? join(aqui, '..', 'app-mobile', 'dist-e2e');
 const SAIDA = join(aqui, 'saida');
 const API = 'https://demonstracao.supabase.co';
 const AGENDA = 'c0000000-0000-4000-8000-000000000001';
+// Como no GitHub Pages: o app fica numa subpasta e a raiz do domínio responde 404.
+const SUBPASTA = '/app-teste-agenda';
 
 let site;
 let base;
@@ -32,7 +34,12 @@ const erros = [];
 function servirSite(pasta) {
   const tipos = { '.js': 'text/javascript', '.html': 'text/html', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json', '.ttf': 'font/ttf' };
   return http.createServer((req, res) => {
-    let arquivo = join(pasta, decodeURIComponent(new URL(req.url, 'http://x').pathname));
+    const caminho = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    if (caminho !== SUBPASTA && !caminho.startsWith(`${SUBPASTA}/`)) {
+      res.writeHead(404);
+      return res.end();
+    }
+    let arquivo = join(pasta, caminho.slice(SUBPASTA.length));
     if (!arquivo.startsWith(pasta) || !existsSync(arquivo) || statSync(arquivo).isDirectory()) {
       arquivo = join(pasta, 'index.html');
     }
@@ -86,7 +93,7 @@ before(async () => {
   servidor = await criarServidorFalso();
   site = servirSite(WEB);
   await new Promise((ok) => site.listen(0, ok));
-  base = `http://localhost:${site.address().port}`;
+  base = `http://localhost:${site.address().port}${SUBPASTA}`;
   navegador = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
 });
 
@@ -191,6 +198,20 @@ test('computador: menu lateral, mês e eventos do dia lado a lado', async () => 
   const titulo = await page.getByText('Jantar de aniversário').first().boundingBox();
   assert.ok(titulo && titulo.x > 200, 'o conteúdo deveria ficar centralizado, não colado na borda');
   await foto(page, '19-computador-evento');
+
+  // Com conexão, o app não pode se achar offline (no GitHub Pages a raiz do domínio dá 404).
+  assert.equal(await page.getByText('Sem internet', { exact: false }).count(), 0, 'aviso "Sem internet" com conexão');
+  // Criar uma agenda e gerar um convite para ela pelo computador.
+  await ir(page, '/calendar/new');
+  await page.locator('input').first().fill('Agenda do computador');
+  await page.getByRole('button', { name: 'Criar agenda' }).click();
+  await visivel(page, 'Agenda do computador');
+  const novaAgenda = page.url().match(/calendar\/([0-9a-f-]{36})/)?.[1];
+  assert.ok(novaAgenda, `não abriu a agenda criada: ${page.url()}`);
+  await ir(page, `/calendar/${novaAgenda}/invite`);
+  await page.getByRole('button', { name: 'Gerar convite' }).click();
+  await page.getByText(/^[0-9A-Z]{4}-[0-9A-Z]{4}-[0-9A-Z]{4}$/).waitFor({ timeout: 15_000 });
+  await foto(page, '21-computador-convite');
   await page.context().close();
 });
 

@@ -1,5 +1,5 @@
 -- =====================================================================
--- Dados de demonstração (seção 35 do prompt)
+-- Dados de demonstração
 --
 -- ATENÇÃO
 --   * Use apenas em ambiente de desenvolvimento ou demonstração.

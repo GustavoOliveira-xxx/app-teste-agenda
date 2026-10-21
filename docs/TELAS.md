@@ -1,6 +1,6 @@
 # Telas
 
-Este documento mostra todas as telas do Agenda Compartilhada, como se vai de uma para outra, os fluxos principais e o que cada tela faz. Ele responde ao pedido da seção 23 do prompt ("mapa de navegação, fluxos principais e descrição detalhada de cada tela").
+Este documento mostra todas as telas do Agenda Compartilhada, como se vai de uma para outra, os fluxos principais e o que cada tela faz.
 
 Tudo aqui foi conferido **lendo o código** em `app-mobile/src` e pelos testes de tela da versão web (capturas em [capturas/](capturas/)). O app ainda não foi usado de ponta a ponta num celular com o servidor real (veja o [README](../README.md)). Quando algo existe só em parte, isso está dito na tabela.
 
@@ -226,7 +226,7 @@ Convites enviados para o e-mail da pessoa também aparecem em **Convites recebid
 5. A pessoa digita **EXCLUIR**; só então o botão **Excluir minha conta para sempre** fica ativo.
 6. Depois da exclusão aparece "Sua conta foi excluída.", os dados do aparelho são apagados e o app volta para Boas-vindas.
 
-## As 36 telas da seção 23
+## As 36 telas previstas
 
 Legenda da coluna "Quem acessa": os papéis são Proprietário, Administrador, Editor, Colaborador e Visualizador (detalhes em [REGRAS_DE_NEGOCIO.md](../REGRAS_DE_NEGOCIO.md#papéis-e-permissões-resumo)). Rotas abaixo são relativas a `app-mobile/src/app/` e componentes a `app-mobile/src/`.
 
@@ -271,7 +271,7 @@ Legenda da coluna "Quem acessa": os papéis são Proprietário, Administrador, E
 
 **Resumo:** 34 telas implementadas (várias delas como parte de outra tela ou como componente reutilizado, como dito na tabela) e 2 parciais (calendário semanal e diário, que não têm grade de horários). Nenhuma das 36 está ausente.
 
-### Telas extras (não pedidas na seção 23)
+### Telas extras (além das 36 previstas)
 
 | Rota | Componente | Para que serve | Quem acessa |
 |---|---|---|---|
@@ -319,4 +319,4 @@ Só está listado o que foi conferido no código. Os componentes usados são `Lo
 - **Exportação:** o texto da tela fala em "arquivo", mas o app envia o JSON como texto pelo menu de compartilhamento do Android. O mesmo vale para "Exportar eventos (JSON)" nas configurações da agenda, que usa os eventos guardados no aparelho.
 - **Diagnóstico** aparece no Perfil para todas as pessoas, não só para quem desenvolve.
 - **Ajuda** só está disponível depois do login.
-- **Sem capturas nem wireframes:** este documento é a "descrição detalhada" que a seção 23 aceita no lugar dos wireframes.
+- **Sem capturas nem wireframes:** a descrição detalhada de cada tela neste documento faz o papel dos wireframes.

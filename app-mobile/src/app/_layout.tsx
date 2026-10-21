@@ -7,6 +7,7 @@ import {
   ThemeProvider as NavThemeProvider,
   type ErrorBoundaryProps,
 } from 'expo-router';
+import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
@@ -20,6 +21,7 @@ import { configureNotifications } from '@/services/localNotifications';
 import { endSession, startSession } from '@/services/session';
 import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/stores/authStore';
+import { marca } from '@/theme/marca';
 import { ThemeProvider, useAppTheme } from '@/theme/ThemeProvider';
 
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -70,6 +72,9 @@ export default function RootLayout() {
   const userId = useAuthStore((s) => s.session?.user.id ?? null);
   const themePref = useAuthStore((s) => s.account?.preferences.theme ?? 'system');
   useNetworkSync(!!userId);
+  // Fonte própria da marca (se houver); sem ela, a lista é vazia e nada é carregado.
+  const [fontsLoaded, fontError] = useFonts(marca.fonte.arquivos);
+  const ready = initialized && (fontsLoaded || !!fontError);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -94,10 +99,10 @@ export default function RootLayout() {
   }, [userId]);
 
   useEffect(() => {
-    if (initialized) void SplashScreen.hideAsync().catch(() => undefined);
-  }, [initialized]);
+    if (ready) void SplashScreen.hideAsync().catch(() => undefined);
+  }, [ready]);
 
-  if (!initialized) return null;
+  if (!ready) return null;
 
   return (
     <SafeAreaProvider>
