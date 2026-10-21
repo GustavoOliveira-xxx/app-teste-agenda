@@ -1,11 +1,20 @@
 // Diálogo de confirmação (ações destrutivas) e mensagens rápidas (toast).
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import {
+  AccessibilityInfo,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TextInput,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { centeredInset, DIALOG_MAX_WIDTH } from '@/utils/layout';
 
 import { AppText } from './AppText';
 import { Button } from './Button';
@@ -42,6 +51,8 @@ const FeedbackContext = createContext<FeedbackApi>({
 export function FeedbackProvider({ children }: { children: ReactNode }) {
   const { colors, reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
+  // Mensagem rápida: largura de celular, centralizada em telas grandes.
+  const toastInset = centeredInset(useWindowDimensions().width, DIALOG_MAX_WIDTH, spacing.lg);
   const [dialog, setDialog] = useState<(ConfirmOptions & { resolve: (r: ConfirmResult) => void }) | null>(
     null,
   );
@@ -146,6 +157,8 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             styles.toast,
             {
               bottom: insets.bottom + 80,
+              left: toastInset,
+              right: toastInset,
               backgroundColor:
                 toastState.tone === 'error'
                   ? colors.danger
@@ -186,14 +199,18 @@ export function useFeedback(): FeedbackApi {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, justifyContent: 'center', padding: spacing.xl },
-  dialog: { borderRadius: radius.lg, padding: spacing.xl, gap: spacing.md },
+  backdrop: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
+  dialog: {
+    width: '100%',
+    maxWidth: DIALOG_MAX_WIDTH,
+    borderRadius: radius.lg,
+    padding: spacing.xl,
+    gap: spacing.md,
+  },
   actions: { gap: spacing.sm, marginTop: spacing.sm },
   input: { borderWidth: 1, borderRadius: radius.md, minHeight: MIN_TOUCH, paddingHorizontal: spacing.md },
   toast: {
     position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
     borderRadius: radius.md,
     padding: spacing.md,
     flexDirection: 'row',

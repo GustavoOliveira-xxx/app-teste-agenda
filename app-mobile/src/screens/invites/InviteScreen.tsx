@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Share, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Badge } from '@/components/Badge';
@@ -20,6 +20,7 @@ import { useRemoteData } from '@/hooks/useRemoteData';
 import { strings, t } from '@/i18n';
 import type { CreatedInvitation, InvitationSummary, Role } from '@/models/types';
 import * as api from '@/services/api';
+import { shareMessage } from '@/services/share';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { radius, spacing } from '@/theme/tokens';
 import { formatDateTime } from '@/utils/dates';
@@ -136,7 +137,9 @@ export default function InviteScreen() {
               <Button
                 title={t('common.share')}
                 icon="share-social-outline"
-                onPress={() => Share.share({ message: shareText })}
+                onPress={async () => {
+                  if ((await shareMessage(shareText)) === 'copied') toast(t('common.copiedToShare'));
+                }}
               />
             </View>
           </View>

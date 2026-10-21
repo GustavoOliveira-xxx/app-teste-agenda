@@ -6,6 +6,7 @@ import { Button } from '@/components/Button';
 import { Chip } from '@/components/Chip';
 import { TextField } from '@/components/TextField';
 import { t } from '@/i18n';
+import { notificationsSupported } from '@/services/localNotifications';
 import { spacing } from '@/theme/tokens';
 import { REMINDER_PRESETS, reminderLabel } from '@/utils/reminders';
 
@@ -34,6 +35,11 @@ export function ReminderPicker({
       <AppText variant="small" tone="muted">
         {t('events.remindersHint')} {t('reminders.max')}
       </AppText>
+      {!notificationsSupported && (
+        <AppText variant="small" tone="warning">
+          {t('reminders.webNotice')}
+        </AppText>
+      )}
       <View style={styles.chips}>
         {[...REMINDER_PRESETS, ...customValues].map((m) => (
           <Chip

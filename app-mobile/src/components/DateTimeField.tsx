@@ -1,16 +1,17 @@
 import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import { useState } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { t } from '@/i18n';
 import type { DateFormat, DateKey, TimeFormat } from '@/models/types';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 import { dateKeyParts, formatClock, formatDateKey, makeDateKey } from '@/utils/dates';
 
 import { AppText } from './AppText';
 import { Button } from './Button';
 import { Icon } from './Icon';
+import { WebDateTimeInput } from './WebDateTimeInput';
 
 type Props = {
   label: string;
@@ -28,9 +29,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
  * o fuso do evento é aplicado depois, na conversão para o servidor.
  */
 export function DateTimeField(props: Props) {
-  const { colors, reduceMotion } = useAppTheme();
+  const { colors, dark, reduceMotion } = useAppTheme();
   const [iosOpen, setIosOpen] = useState(false);
-  const [webText, setWebText] = useState(props.value);
 
   const asDate = (): Date => {
     if (props.mode === 'date') {
@@ -71,25 +71,24 @@ export function DateTimeField(props: Props) {
   };
 
   if (Platform.OS === 'web') {
-    // No navegador (usado só para testes) um campo de texto simples basta.
+    // Navegador (iPhone, computador): o seletor de data/hora do próprio navegador.
     return (
       <View style={styles.wrapper}>
         <AppText variant="label">{props.label}</AppText>
-        <TextInput
-          accessibilityLabel={props.label}
-          value={webText}
-          onChangeText={setWebText}
-          onBlur={() => {
-            const ok =
-              props.mode === 'date' ? /^\d{4}-\d{2}-\d{2}$/.test(webText) : /^\d{2}:\d{2}$/.test(webText);
-            if (ok) (props.onChange as (v: string) => void)(webText);
-            else setWebText(props.value);
+        <WebDateTimeInput
+          mode={props.mode}
+          value={props.value}
+          onChange={props.onChange as (v: string) => void}
+          label={props.label}
+          dark={dark}
+          colors={{
+            text: colors.text,
+            surface: colors.surface,
+            border: props.error ? colors.danger : colors.inputBorder,
           }}
-          placeholder={props.mode === 'date' ? 'AAAA-MM-DD' : 'HH:mm'}
-          style={[styles.field, typography.body, { color: colors.text, borderColor: colors.inputBorder }]}
         />
         {props.error ? (
-          <AppText variant="small" tone="danger">
+          <AppText variant="small" tone="danger" accessibilityLiveRegion="polite">
             {props.error}
           </AppText>
         ) : null}

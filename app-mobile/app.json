@@ -4,13 +4,16 @@
     "slug": "agenda-compartilhada",
     "scheme": "agendacompartilhada",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "description": "Agenda compartilhada para casais, famílias, amigos e equipes.",
     "ios": {
       "bundleIdentifier": "com.gustavooliveira.agendacompartilhada",
-      "supportsTablet": false
+      "supportsTablet": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.gustavooliveira.agendacompartilhada",
@@ -66,7 +69,13 @@
     "web": {
       "favicon": "./assets/favicon.png",
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "lang": "pt-BR",
+      "name": "Agenda Compartilhada",
+      "shortName": "Agenda",
+      "themeColor": "#3358D4",
+      "backgroundColor": "#F7F8FA",
+      "description": "Agenda compartilhada para casais, famílias, amigos e equipes."
     },
     "plugins": [
       "expo-router",

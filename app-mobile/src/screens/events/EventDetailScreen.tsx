@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Linking, Share, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
@@ -21,6 +21,7 @@ import { useRemoteData } from '@/hooks/useRemoteData';
 import { strings, t } from '@/i18n';
 import type { CalendarEvent, EventStatus, Occurrence } from '@/models/types';
 import * as api from '@/services/api';
+import { shareMessage } from '@/services/share';
 import {
   deleteEvent,
   duplicateEvent,
@@ -293,10 +294,10 @@ export default function EventDetailScreen() {
     router.replace({ pathname: '/event/[id]/edit', params: { id: newId, scope: 'all' } });
   };
 
-  const share = () =>
-    Share.share({
-      message: [title, time, occurrence.location, event.url].filter(Boolean).join('\n'),
-    });
+  const share = async () => {
+    const message = [title, dateLabel, time, occurrence.location, event.url].filter(Boolean).join('\n');
+    if ((await shareMessage(message)) === 'copied') toast(t('common.copiedToShare'));
+  };
 
   const saveReminders = async () => {
     if (!reminders) return;

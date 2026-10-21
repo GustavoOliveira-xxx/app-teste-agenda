@@ -1,6 +1,6 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
-import { Share, View } from 'react-native';
+import { View } from 'react-native';
 
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
@@ -17,6 +17,7 @@ import { strings, t } from '@/i18n';
 import type { Calendar, ConflictPolicy, Role } from '@/models/types';
 import { syncNow } from '@/offline/syncEngine';
 import * as api from '@/services/api';
+import { saveJsonFile } from '@/services/share';
 import { useDataStore } from '@/stores/dataStore';
 import { spacing } from '@/theme/tokens';
 import { ASSIGNABLE_ROLES, isOwner } from '@/utils/permissions';
@@ -26,7 +27,7 @@ import { validateCalendar } from '@/validation/calendar';
 import { CalendarFormFields, type CalendarFormValues } from './CalendarFormFields';
 
 function SettingsForm({ calendar }: { calendar: Calendar }) {
-  const { confirm } = useFeedback();
+  const { confirm, toast } = useFeedback();
   const { run, busy } = useAction();
   const owner = isOwner(calendar.my_role);
   const [basic, setBasic] = useState<CalendarFormValues>({
@@ -112,10 +113,8 @@ function SettingsForm({ calendar }: { calendar: Calendar }) {
 
   const exportEvents = async () => {
     const events = Object.values(useDataStore.getState().events).filter((e) => e.calendar_id === calendar.id);
-    await Share.share({
-      title: calendar.name,
-      message: JSON.stringify({ calendar: basic, events }, null, 2),
-    });
+    const saved = await saveJsonFile(`${calendar.name}.json`, { calendar: basic, events });
+    if (saved === 'copied') toast(t('common.copiedToShare'));
   };
 
   return (

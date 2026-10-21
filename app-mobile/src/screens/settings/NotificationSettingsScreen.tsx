@@ -39,6 +39,11 @@ export default function NotificationSettingsScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('notificationSettings.title') }} />
+      {!notificationsSupported && (
+        <Card>
+          <AppText tone="warning">{t('reminders.webNotice')}</AppText>
+        </Card>
+      )}
       {notificationsSupported && (
         <Card>
           <AppText variant="label">{t('notificationSettings.systemPermission')}</AppText>
