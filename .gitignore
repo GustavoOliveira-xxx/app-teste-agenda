@@ -24,6 +24,7 @@ credentials.json
 dist/
 dist-ci/
 dist-e2e/
+dist-site/
 web-build/
 coverage/
 app-mobile/android/

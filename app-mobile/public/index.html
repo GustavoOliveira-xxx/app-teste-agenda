@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="%LANG_ISO_CODE%">
+  <head>
+    <meta charset="utf-8" />
+    <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+    <!-- viewport-fit=cover: ocupa a tela toda no iPhone (o app respeita o entalhe e a barra de gestos) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>%WEB_TITLE%</title>
+    <!-- Instalar na tela de início (iPhone: Safari > Compartilhar > Adicionar à Tela de Início) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Agenda" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+    <style id="expo-reset">
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        overflow: hidden;
+        background-color: #f7f8fa;
+      }
+      @media (prefers-color-scheme: dark) {
+        body {
+          background-color: #111318;
+        }
+      }
+      #root {
+        display: flex;
+        height: 100%;
+        flex: 1;
+      }
+    </style>
+    <script>
+      // Liga o manifesto, o ícone do iPhone e o modo offline. O endereço base vem do
+      // próprio script do app, então funciona na raiz do site ou numa subpasta
+      // (ex.: GitHub Pages). Em desenvolvimento (expo start) não faz nada.
+      document.addEventListener('DOMContentLoaded', function () {
+        var app = document.querySelector('script[src*="/_expo/static/js/"]');
+        if (!app) return;
+        var base = app.getAttribute('src').split('_expo/static/js/')[0];
+        function link(rel, href) {
+          var el = document.createElement('link');
+          el.rel = rel;
+          el.href = base + href;
+          document.head.appendChild(el);
+        }
+        link('manifest', 'manifest.webmanifest');
+        link('apple-touch-icon', 'icons/apple-touch-icon.png');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register(base + 'sw.js', { scope: base }).catch(function () {});
+        }
+      });
+    </script>
+  </head>
+
+  <body>
+    <noscript>Ative o JavaScript para usar a Agenda Compartilhada.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

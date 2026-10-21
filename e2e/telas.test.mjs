@@ -41,12 +41,14 @@ function servirSite(pasta) {
   });
 }
 
-async function abrirSessao(tema = 'light') {
+async function abrirSessao(tema = 'light', viewport = { width: 390, height: 844 }) {
   const ctx = await navegador.newContext({
-    viewport: { width: 390, height: 844 },
+    viewport,
     colorScheme: tema,
     locale: 'pt-BR',
     timezoneId: 'America/Sao_Paulo',
+    // O service worker (modo offline) é testado em site.test.mjs; aqui ele atrapalharia a simulação do servidor.
+    serviceWorkers: 'block',
   });
   await ctx.route(`${API}/**`, async (route) => route.fulfill(await servidor.responder(route.request())));
   await ctx.routeWebSocket(/realtime/, () => {}); // tempo real fica de fora destes testes
@@ -169,6 +171,37 @@ test('visualizador: vê "Ocupado" no lugar de detalhes e não vê eventos privad
   assert.equal(await page.getByText('Consulta médica').count(), 0, 'detalhes de evento "ocupado" vazaram');
   assert.equal(await page.getByText('Comprar presente').count(), 0, 'evento privado apareceu');
   await foto(page, '17-visualizador-escuro');
+  await page.context().close();
+});
+
+test('computador: menu lateral, mês e eventos do dia lado a lado', async () => {
+  const page = await abrirSessao('light', { width: 1280, height: 800 });
+  await entrar(page, 'ana.demo@exemplo.test');
+  // Menu lateral: o item "Agendas" fica na coluna da esquerda, no alto da tela.
+  const item = await page.getByText('Agendas', { exact: true }).first().boundingBox();
+  assert.ok(item && item.x < 240 && item.y < 300, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
+  // Duas colunas: a grade do mês à esquerda e o título do dia (cabeçalho) à direita.
+  const dia = page.getByRole('heading', { name: /-feira|sábado|domingo/i }).first();
+  await dia.waitFor({ timeout: 15_000 });
+  const caixa = await dia.boundingBox();
+  assert.ok(caixa && caixa.x > 640, `lista do dia deveria estar na coluna da direita: ${JSON.stringify(caixa)}`);
+  await foto(page, '18-computador-agenda');
+  await ir(page, `/event/${servidor.eventos['Jantar de aniversário']}`);
+  await visivel(page, 'Restaurante Central');
+  const titulo = await page.getByText('Jantar de aniversário').first().boundingBox();
+  assert.ok(titulo && titulo.x > 200, 'o conteúdo deveria ficar centralizado, não colado na borda');
+  await foto(page, '19-computador-evento');
+  await page.context().close();
+});
+
+test('tablet: menu lateral e formulário centralizado', async () => {
+  const page = await abrirSessao('light', { width: 820, height: 1180 });
+  await entrar(page, 'ana.demo@exemplo.test');
+  const item = await page.getByText('Perfil', { exact: true }).first().boundingBox();
+  assert.ok(item && item.x < 240 && item.y < 400, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
+  await ir(page, '/event/new');
+  await visivel(page, 'Título');
+  await foto(page, '20-tablet-novo-evento');
   await page.context().close();
 });
 

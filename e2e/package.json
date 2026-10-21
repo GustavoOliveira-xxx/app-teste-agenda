@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "preparar": "cd ../app-mobile && EXPO_PUBLIC_SUPABASE_URL=https://demonstracao.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_teste_automatico_de_telas npx expo export --platform web --output-dir dist-e2e",
-    "test": "node --test --test-concurrency=1 telas.test.mjs"
+    "test": "node --test --test-concurrency=1 telas.test.mjs",
+    "preparar:site": "cd ../app-mobile && SITE_BASE_PATH=/app-teste-agenda EXPO_PUBLIC_SUPABASE_URL=https://demonstracao.supabase.co EXPO_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_teste_automatico_de_telas npx expo export --platform web --output-dir dist-site && cp dist-site/index.html dist-site/404.html",
+    "test:site": "node --test --test-concurrency=1 site.test.mjs"
   },
   "devDependencies": {
     "playwright-core": "1.64.1"
