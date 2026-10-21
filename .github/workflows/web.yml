@@ -1,0 +1,120 @@
+# Publica a versão web do app no GitHub Pages: abre no navegador de qualquer
+# sistema (iPhone, iPad, Android, Windows, Mac, Linux) e pode ser instalada na
+# tela de início ("Adicionar à Tela de Início" no iPhone).
+#
+# Uma vez só: Settings > Pages > Build and deployment > Source: "GitHub Actions".
+# Depois disso, cada mudança no app na branch principal publica o site sozinha.
+# Passo a passo em GUIA_DE_DEPLOY.md (parte 6).
+name: Publicar versão web
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["**"]
+    paths:
+      - "app-mobile/**"
+      - "e2e/**"
+      - ".github/workflows/web.yml"
+  pull_request:
+    paths:
+      - "app-mobile/**"
+      - "e2e/**"
+      - ".github/workflows/web.yml"
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: Gerar e testar o site
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      pages: ${{ steps.pages.outputs.ativo }}
+    env:
+      EXPO_NO_TELEMETRY: 1
+      CHROMIUM_PATH: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            app-mobile/package-lock.json
+            e2e/package-lock.json
+
+      - name: Instalar dependências
+        run: |
+          npm ci --prefix app-mobile
+          npm ci --prefix e2e
+
+      - name: Definir a subpasta do site
+        run: |
+          REPO="${GITHUB_REPOSITORY#*/}"
+          # Site de usuário (nome.github.io) fica na raiz; os demais, em /nome-do-repositorio.
+          if [[ "$REPO" == *.github.io ]]; then BASE=""; else BASE="/$REPO"; fi
+          echo "SITE_BASE_PATH=$BASE" >> "$GITHUB_ENV"
+          echo "Subpasta: ${BASE:-/}"
+
+      - name: Gerar o site
+        working-directory: app-mobile
+        env:
+          EXPO_PUBLIC_SUPABASE_URL: ${{ vars.EXPO_PUBLIC_SUPABASE_URL }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.EXPO_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$EXPO_PUBLIC_SUPABASE_URL" ] || [ -z "$EXPO_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::warning title=Servidor não configurado::Cadastre as Variables EXPO_PUBLIC_SUPABASE_URL e EXPO_PUBLIC_SUPABASE_ANON_KEY (GUIA_DE_DEPLOY.md). Sem elas o site abre na tela 'Servidor não configurado'."
+          fi
+          npx expo export --platform web --output-dir dist-site
+          # GitHub Pages devolve o 404.html para endereços que não são arquivos:
+          # assim um link direto (ex.: .../calendars) também abre o app.
+          cp dist-site/index.html dist-site/404.html
+          touch dist-site/.nojekyll
+          du -sh dist-site
+
+      - name: Testar a versão instalável (abre, instala, funciona sem internet)
+        working-directory: e2e
+        env:
+          SITE_DIR: ${{ github.workspace }}/app-mobile/dist-site
+          BASE_PATH: ${{ env.SITE_BASE_PATH }}/
+        run: npm run test:site
+
+      - name: O GitHub Pages está ligado?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type > pages.txt 2>/dev/null && grep -q workflow pages.txt; then
+            echo "ativo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ativo=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=GitHub Pages desligado::O site foi gerado e testado, mas não publicado. Para publicar: Settings > Pages > Source: GitHub Actions, depois rode este workflow de novo (GUIA_DE_DEPLOY.md, parte 6)."
+          fi
+
+      - name: Preparar o site para publicação
+        if: steps.pages.outputs.ativo == 'true' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: app-mobile/dist-site
+
+  publicar:
+    name: Publicar no GitHub Pages
+    needs: site
+    if: needs.site.outputs.pages == 'true' && github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Publicar
+        id: deploy
+        uses: actions/deploy-pages@v4

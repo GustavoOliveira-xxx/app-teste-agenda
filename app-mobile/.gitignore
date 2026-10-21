@@ -8,6 +8,7 @@ node_modules/
 dist/
 dist-ci/
 dist-e2e/
+dist-site/
 web-build/
 expo-env.d.ts
 

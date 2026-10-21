@@ -6,3 +6,4 @@ coverage
 .expo
 dist-ci
 dist-e2e
+dist-site
