@@ -4,6 +4,7 @@ Organizado por onde o problema aparece. Procure pela mensagem exata (Ctrl+F) que
 
 - [No app (celular)](#no-app-celular)
 - [Instalação do APK](#instalação-do-apk)
+- [Versão web (iPhone, iPad e computador)](#versão-web-iphone-ipad-e-computador)
 - [Servidor (Supabase)](#servidor-supabase)
 - [GitHub Actions](#github-actions)
 - [Desenvolvimento (computador)](#desenvolvimento-computador)
@@ -90,6 +91,20 @@ Toque em **Tentar de novo**. Se repetir, abra **Perfil > Diagnóstico (desenvolv
 
 Veja a tabela de [problemas comuns do COMO_INSTALAR.md](COMO_INSTALAR.md#problemas-comuns) (APK incompatível, espaço, instalação bloqueada, versão antiga, conflito de assinatura).
 
+## Versão web (iPhone, iPad e computador)
+
+| Problema | O que fazer |
+|---|---|
+| **Página não encontrada (404)** no endereço do site | O site ainda não foi publicado: ligue o GitHub Pages e rode o workflow **Publicar versão web** ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)). |
+| **"Servidor não configurado"** no site | Faltam as Variables do Supabase (parte 2.1 do guia). Cadastre e rode o workflow de novo. |
+| **iPhone: não aparece "Adicionar à Tela de Início"** | Abra o link no Safari (links abertos dentro do WhatsApp ou do Instagram usam um navegador interno: toque em "Abrir no Safari"). A opção fica no botão **Compartilhar**, rolando a lista. |
+| **Computador: não aparece a opção de instalar** | Use Chrome ou Edge. O Firefox de computador não instala sites como app (use pelos favoritos). O Safari do Mac usa **Arquivo > Adicionar ao Dock**. |
+| **Lembrete não tocou** | Esperado nesta versão: no navegador os lembretes ficam salvos, mas não tocam (só no app Android). Veja o [ROADMAP.md](ROADMAP.md). |
+| **Uma novidade não apareceu depois de publicada** | O app atualiza ao abrir. Feche completamente (no iPhone, deslize o app para cima na troca de apps) e abra de novo; se preciso, repita uma vez. |
+| **Saí do app e meus dados sumiram / pede login de novo** | A versão web guarda a sessão no navegador. Limpar os dados do navegador, usar janela anônima ou o iPhone apagar dados de sites pouco usados faz sair da conta. Os dados continuam no servidor: entre de novo. Use o ícone instalado na tela de início para evitar isso. |
+| **Abri um link e não aparece "voltar"** | Toque no ícone de **casa** no canto de cima para ir ao início. |
+| **Usei um domínio próprio e o site ficou em branco** | Rode o workflow **Publicar versão web** de novo depois de configurar o domínio: ele passa a gerar o site na raiz. |
+
 ## Servidor (Supabase)
 
 ### Erro ao aplicar as migrations
@@ -147,6 +162,14 @@ Clique na execução e veja qual job ficou vermelho:
 | Assinar com a chave própria | Secrets errados | "Keystore was tampered with, or password was incorrect": senha errada. "alias ... does not exist": confira `ANDROID_KEY_ALIAS`. Base64 inválido: gere o `.b64` de novo (uma linha só) |
 | Conferir permissões | Uma biblioteca nova trouxe uma permissão fora da lista aprovada | Bloqueie em `app-mobile/app.json` (`blockedPermissions`) ou, se for necessária, registre o motivo em [DECISOES.md](DECISOES.md) e libere no workflow |
 | Publicar na página Releases | Já existe uma release com essa tag (acontece ao usar **Re-run** numa execução que já publicou) | Em vez de **Re-run**, use **Run workflow** de novo (gera um número novo) ou apague a release antiga |
+
+### "Publicar versão web" falhou
+
+| Passo com X | Causa provável | Solução |
+|---|---|---|
+| Gerar o site | Erro de código ou de configuração do app | O mesmo erro aparece no job "App" do workflow Qualidade; corrija lá |
+| Testar a versão instalável | O site gerado não abre, não pode ser instalado ou não funciona sem internet | Rode localmente na pasta `e2e`: `npm run preparar:site` e `npm run test:site`. A versão antiga do site continua no ar |
+| Publicar no GitHub Pages | Pages não ligado com a fonte "GitHub Actions", ou a branch não é a principal | Settings > Pages > Source: GitHub Actions. Em Settings > Environments > github-pages, confira se a branch principal é permitida |
 
 ### Aviso "Servidor não configurado" ou "Chave de testes"
 

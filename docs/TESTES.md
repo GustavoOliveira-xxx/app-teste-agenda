@@ -9,15 +9,16 @@ Resultado conferido em 20/10/2026, rodando os comandos abaixo neste repositório
 | O quê | Pasta e comando | Arquivos | Testes | Resultado | Tempo |
 |---|---|---|---|---|---|
 | Testes do banco (integração) | `supabase`: `npm test` | 8 | **69** | 69 passaram, 0 falharam | cerca de 3 min 30 s |
-| Testes do app (unitários) | `app-mobile`: `npm test -- --ci` | 8 | **73** | 73 passaram, 0 falharam | poucos segundos |
+| Testes do app (unitários) | `app-mobile`: `npm test -- --ci` | 9 | **78** | 78 passaram, 0 falharam | poucos segundos |
 | Tipos (TypeScript) | `app-mobile`: `npm run typecheck` | | | sem erros | |
 | Lint (ESLint) | `app-mobile`: `npm run lint` | | | sem erros | |
 | Formatação (Prettier) | `app-mobile`: `npm run format:check` | | | "All matched files use Prettier code style!" | |
 | Segredos no repositório | raiz: `bash scripts/verificar-segredos.sh` | | | "OK: nenhum segredo encontrado nos arquivos versionados." | |
-| Testes de tela (versão web, ponta a ponta) | `e2e`: `npm run preparar` e `npm test` | 1 | **5** | 5 passaram, 0 falharam | cerca de 30 s (mais 1 a 2 min para gerar a versão web) |
+| Testes de tela (versão web: celular, tablet e computador) | `e2e`: `npm run preparar` e `npm test` | 1 | **7** | 7 passaram, 0 falharam | cerca de 40 s (mais 1 a 2 min para gerar a versão web) |
+| Versão instalável (PWA) | `e2e`: `npm run preparar:site` e `npm run test:site` | 1 | **6** | 6 passaram, 0 falharam | cerca de 20 s (mais 1 a 2 min para gerar o site) |
 | Testes de interface no Android (emulador ou celular) | | 0 | **0** | não automatizados; use o [roteiro manual](#roteiro-de-teste-manual) | |
 
-**Total automatizado: 147 testes** (69 do banco + 73 do app + 5 de tela).
+**Total automatizado: 160 testes** (69 do banco + 78 do app + 7 de tela + 6 da versão instalável).
 
 > **Importante:** os testes de tela abrem a **versão web** do app (o mesmo código do APK) num navegador com tamanho de celular, ligada a um "Supabase de mentira" que usa o **banco real** do projeto (PGlite com as migrations e os dados de demonstração). Eles não usam um celular Android de verdade, nem o Supabase Auth real, nem as notificações do Android. Isso continua no roteiro manual deste documento.
 
@@ -37,7 +38,7 @@ Pense numa pirâmide com três andares:
     /   Unitários    \
    /------------------\ Base: testes de funções isoladas
                         Muitos, rápidos (segundos), sem rede e sem celular.
-                        AQUI: 73 testes em app-mobile/src.
+                        AQUI: 78 testes em app-mobile/src.
 ```
 
 - **Base (unitários):** testam pedaços pequenos de lógica, como "converter 10h de São Paulo para o horário universal" ou "calcular as repetições de um evento mensal no dia 31". São muitos, rodam em segundos e apontam exatamente onde está o erro.
@@ -88,7 +89,8 @@ A escolha foi colocar o esforço onde o risco é maior: regras de permissão e p
 | `src/utils/__tests__/errors.test.ts` | 5 | Mensagens de erro amigáveis: códigos do servidor viram frases sem detalhes internos; falta de internet é erro temporário; erros de login; erro desconhecido vira mensagem genérica; e-mails, tokens e senhas são removidos antes de ir para o registro (log). |
 | `src/offline/__tests__/outbox.test.ts` | 13 | **Fila offline (9):** alterações num evento ainda não enviado entram na criação; criar e excluir antes de enviar não manda nada; duas edições viram uma; não mexe no que já está sendo enviado; envia na ordem e segura o resto se houver conflito; falha temporária espera cada vez mais e para depois de várias tentativas; erro permanente não tenta de novo sozinho; app fechado durante o envio devolve a operação para a fila; a tela mostra as alterações locais por cima dos dados do servidor. **Mesclagem de conflitos (4):** campos diferentes mantêm os dois lados; mesmo campo com valores diferentes vira conflito para a pessoa decidir; os dois chegaram ao mesmo valor; horário é tratado como bloco. |
 | `src/services/__tests__/reminders.test.ts` | 5 | **Planejamento dos lembretes** (`planReminders` em `src/services/localNotifications.ts`): cada lembrete fica no horário do evento menos a antecedência; ignora lembretes que já passaram, eventos cancelados e concluídos; só agenda os próximos 30 dias, inclusive em eventos que se repetem; sem lembretes, nada é agendado. **Textos** (`reminderLabel` em `src/utils/reminders.ts`): "No horário do evento", "15 minutos antes", "1 hora antes", "2 dias antes" etc. |
-| **Total** | **73** | |
+| `src/utils/__tests__/layout.test.ts` | 5 | **Tamanhos de tela**: celular (abas embaixo, uma coluna), tablet (menu lateral, diálogos no centro), computador (duas colunas), limites exatos das faixas e centralização de blocos. |
+| **Total** | **78** | |
 
 O arquivo `src/utils/__tests__/fixtures.ts` não é um teste: guarda um evento fictício reutilizado pelos outros arquivos.
 
@@ -118,8 +120,10 @@ O workflow **Qualidade** roda sozinho a cada envio (`push`), em todo pull reques
 |---|---|---|
 | **Verificar segredos** | raiz | `bash scripts/verificar-segredos.sh` |
 | **Banco de dados (regras de acesso)** | `supabase` | Node 22, `npm ci`, `npm test` (os 69 testes do banco) |
-| **App (tipos, lint, testes, empacotamento)** | `app-mobile` | Node 22, `npm ci`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test -- --ci` (os 73 testes) e `npx expo export --platform android --output-dir dist-ci` (garante que o JavaScript do app Android compila) |
-| **Telas (versão web, ponta a ponta)** | `e2e` | Node 22, `npm ci` em `supabase`, `app-mobile` e `e2e`, `npm run preparar` (gera a versão web) e `npm test` (os 5 testes de tela, usando o Chrome da máquina do GitHub). As capturas de cada etapa ficam em **Artifacts > capturas-das-telas** |
+| **App (tipos, lint, testes, empacotamento)** | `app-mobile` | Node 22, `npm ci`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm test -- --ci` (os 78 testes) e `npx expo export --platform android --output-dir dist-ci` (garante que o JavaScript do app Android compila) |
+| **Telas (versão web, ponta a ponta)** | `e2e` | Node 22, `npm ci` em `supabase`, `app-mobile` e `e2e`, `npm run preparar` (gera a versão web) e `npm test` (os 7 testes de tela, usando o Chrome da máquina do GitHub). As capturas de cada etapa ficam em **Artifacts > capturas-das-telas** |
+
+O workflow `.github/workflows/web.yml` ("Publicar versão web") gera o site e roda os **6 testes da versão instalável** (`e2e/site.test.mjs`) antes de publicar: abre na subpasta do site, manifesto e ícones, service worker, link direto via `404.html` e abertura sem internet. Se algum falhar, o site não é publicado.
 
 O workflow `.github/workflows/android.yml` ("Gerar APK Android") **não roda testes**: ele só compila o APK e o AAB. Por isso, confira se o Qualidade está verde antes de distribuir um APK.
 
@@ -170,14 +174,14 @@ npm test
 # Finalidade: instalar as dependências (só na primeira vez ou depois de atualizar o projeto)
 npm ci
 
-# Finalidade: rodar os 73 testes unitários
+# Finalidade: rodar os 78 testes unitários
 npm test -- --ci
 ```
 
 - **Resultado esperado:**
   ```
   Test Suites: 8 passed, 8 total
-  Tests:       73 passed, 73 total
+  Tests:       78 passed, 78 total
   ```
 - **Outras formas úteis:**
   ```bash
@@ -265,6 +269,8 @@ Legenda: os nomes de arquivo `0N_*.test.mjs` ficam em `supabase/tests/`; os `*.t
 | Senha errada | Aparece "E-mail ou senha incorretos." |
 | Proprietária (Ana) | Entra; calendário do mês e lista; evento privado de outra pessoa **não** aparece; detalhes do evento com data e local; membros com papéis; gera um código de convite no formato `XXXX-XXXX-XXXX`; abre novo evento, agendas, avisos, perfil, sincronização, histórico, busca, filtros e ajuda |
 | Visualizador (Davi, tema escuro) | Vê "Ocupado" no lugar dos detalhes de um evento marcado como ocupado e **não** vê o evento privado |
+| Computador (1280 x 800) | Menu lateral à esquerda; mês e eventos do dia em duas colunas; detalhes do evento centralizados |
+| Tablet (820 x 1180) | Menu lateral; formulário de novo evento centralizado |
 | Sem erros | Nenhum erro de JavaScript em nenhuma tela e nenhuma chamada ao servidor falhou |
 
 Como rodar no computador:
@@ -551,7 +557,7 @@ Copie esta tabela para cada rodada de testes.
 
 | Critério | Evidência automática | Evidência manual |
 |---|---|---|
-| Testes principais passarem | 69 testes do banco e 73 do app passando (resumo no topo) | |
+| Testes principais passarem | 69 testes do banco, 78 do app, 7 de tela e 6 da versão instalável passando (resumo no topo) | |
 | Permissões funcionarem | `02`, `03`, `04`, `06` e `permissions.test.ts` | M07 (passo 4), M14 |
 | Usuário removido perder acesso | `02_agendas_membros.test.mjs`, `07_avisos_lgpd.test.mjs` | M13 |
 | Eventos recorrentes conforme escopo | `recurrence.test.ts`, `05_sincronizacao.test.mjs` | M09 |

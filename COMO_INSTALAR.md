@@ -1,13 +1,17 @@
-# Como instalar o Agenda Compartilhada no celular
+# Como instalar o Agenda Compartilhada
 
-Este guia é para quem **não programa**. Existem dois caminhos:
+Este guia é para quem **não programa**. Escolha pelo aparelho:
 
-- **Opção A: instalar o arquivo APK** (disponível agora, para testes e para grupos de pessoas conhecidas).
-- **Opção B: instalar pela Google Play Store** (só depois que o app for publicado e aprovado pelo Google).
+| Seu aparelho | Caminho |
+|---|---|
+| Celular ou tablet **Android** | **Opção A: arquivo APK** (app completo, com lembretes que tocam) ou a opção C |
+| **iPhone** ou **iPad** | **Opção C: versão web instalável** (ícone na tela de início, funciona sem internet) |
+| **Computador** (Windows, Mac, Linux) | **Opção C**: no navegador ou instalado como aplicativo |
+| Qualquer aparelho, pela loja | **Opção B: Google Play Store** (só depois que o app for publicado) |
 
 > **Antes de tudo:** o app precisa de um servidor configurado para funcionar. Se você é a pessoa responsável pelo projeto e ainda não fez isso, siga primeiro o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md). Se você recebeu o link de alguém, pode seguir direto.
 
-## O que você precisa
+## O que você precisa (opção A, Android)
 
 | Item | Requisito |
 |---|---|
@@ -121,6 +125,46 @@ Ainda **não disponível**. Será possível só depois que o app for publicado e
 
 Se você instalou pelo APK de testes, será preciso desinstalar antes de instalar pela loja (as assinaturas são diferentes).
 
+## Opção C: iPhone, iPad, computador ou qualquer celular (versão web)
+
+É o mesmo app, aberto pelo navegador e instalado na tela de início. Fica com ícone próprio, abre em tela cheia, funciona sem internet depois do primeiro acesso e se atualiza sozinho. No computador, mostra menu lateral e calendário em duas colunas.
+
+**Endereço:** <https://gustavooliveira-xxx.github.io/app-teste-agenda/> (ou o link que a pessoa responsável enviou).
+
+> O endereço só funciona depois que a pessoa responsável publicar o site ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)).
+
+### No iPhone ou iPad
+
+1. Abra o endereço no **Safari** (em versões recentes do iOS, Chrome e Edge também funcionam).
+2. Toque no botão **Compartilhar** (quadrado com uma seta para cima, embaixo no iPhone ou em cima no iPad).
+3. Role a lista e toque em **Adicionar à Tela de Início**.
+4. Confira o nome ("Agenda") e toque em **Adicionar**.
+5. Abra pelo novo ícone **Agenda** na tela de início (não pelo Safari) e crie sua conta ou entre.
+
+### No Android (sem instalar o APK)
+
+1. Abra o endereço no **Chrome**.
+2. Toque no menu **⋮** (três pontos, no canto de cima) > **Instalar app** (ou **Adicionar à tela inicial**).
+3. Confirme em **Instalar**. O ícone aparece junto dos outros apps.
+
+### No computador
+
+- **Chrome ou Edge (Windows, Mac, Linux):** abra o endereço e clique no ícone de **instalar** no fim da barra de endereço (um monitor com uma seta), ou no menu **⋮** > **Transmitir, salvar e compartilhar** > **Instalar página como app**. O app passa a abrir numa janela própria.
+- **Safari no Mac:** menu **Arquivo** > **Adicionar ao Dock**.
+- **Firefox:** use pelo navegador mesmo (salve nos favoritos); o Firefox de computador não instala sites como app.
+
+### O que muda em relação ao app Android
+
+- **Os lembretes não tocam** nesta versão: ficam salvos no evento, mas o aviso no horário só existe no app Android. Mudanças feitas por outras pessoas aparecem na aba **Avisos**.
+- Use sempre o **ícone instalado**: o iPhone pode apagar os dados de sites que ficam muitas semanas sem uso no Safari, e isso não acontece com apps adicionados à tela de início.
+- Em **computador compartilhado**, toque em **Perfil > Sair** ao terminar: os dados ficam guardados no navegador.
+
+### Como atualizar, ver a versão e remover
+
+- **Atualizar:** é automático. Se uma novidade não aparecer, feche o app (no iPhone, deslize ele para cima na troca de apps) e abra de novo.
+- **Versão:** no fim da tela **Perfil**.
+- **Remover:** pressione o ícone e toque em **Remover** ou **Apagar** (iPhone) ou **Desinstalar** (Android); no computador, abra o app e use o menu **⋮** > **Desinstalar**. Isso não exclui sua conta (use **Perfil > Privacidade e dados > Excluir minha conta** para isso).
+
 ## Problemas comuns
 
 | Problema | O que fazer |
@@ -135,5 +179,9 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 | **Erro de login** | Confira e-mail e senha (a senha diferencia maiúsculas). Use **Esqueci minha senha**. Depois de várias tentativas erradas, o app pede para esperar um pouco antes de tentar de novo. Se a conta foi criada mas pede confirmação, procure o código no e-mail (inclusive no spam). |
 | **API indisponível** ("Sem conexão com o servidor" ou "O servidor demorou para responder") | Pode ser falta de internet ou o servidor pausado. No plano gratuito, o Supabase pausa projetos sem uso por cerca de uma semana; a pessoa responsável precisa reativar no painel ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#servidor-pausado-ou-fora-do-ar)). |
 | **Banco não configurado** ("Servidor não configurado" ou erros ao entrar) | O APK foi gerado sem o endereço do servidor, ou o banco ainda não recebeu as tabelas. A pessoa responsável deve seguir o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md) (partes 1 e 2) e gerar um APK novo. |
+
+| **iPhone: não aparece "Adicionar à Tela de Início"** | Abra no Safari (não dentro do WhatsApp ou do Instagram, que usam um navegador próprio: toque em "Abrir no Safari"). Role a lista do botão Compartilhar até o fim. |
+| **Versão web: lembrete não tocou** | É esperado nesta versão: só o app Android toca lembretes ([opção C](#o-que-muda-em-relação-ao-app-android)). |
+| **Versão web: página não encontrada (404)** | O site ainda não foi publicado. A pessoa responsável deve seguir o [GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema). |
 
 Outros problemas: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

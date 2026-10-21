@@ -54,13 +54,26 @@ jobs:
           npm ci --prefix app-mobile
           npm ci --prefix e2e
 
-      - name: Definir a subpasta do site
+      - name: O GitHub Pages está ligado? Em qual endereço?
+        id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           REPO="${GITHUB_REPOSITORY#*/}"
-          # Site de usuário (nome.github.io) fica na raiz; os demais, em /nome-do-repositorio.
-          if [[ "$REPO" == *.github.io ]]; then BASE=""; else BASE="/$REPO"; fi
+          # Sem Pages ligado a API responde 404: trata como "{}".
+          INFO=$(gh api "repos/$GITHUB_REPOSITORY/pages" 2>/dev/null) || INFO='{}'
+          TIPO=$(echo "$INFO" | jq -r '.build_type // ""')
+          DOMINIO=$(echo "$INFO" | jq -r '.cname // ""')
+          # Domínio próprio ou site de usuário (nome.github.io): raiz. Senão: /nome-do-repositorio.
+          if [ -n "$DOMINIO" ] || [[ "$REPO" == *.github.io ]]; then BASE=""; else BASE="/$REPO"; fi
           echo "SITE_BASE_PATH=$BASE" >> "$GITHUB_ENV"
-          echo "Subpasta: ${BASE:-/}"
+          echo "Subpasta do site: ${BASE:-/ (raiz)}"
+          if [ "$TIPO" = "workflow" ]; then
+            echo "ativo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ativo=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=GitHub Pages desligado::O site será gerado e testado, mas não publicado. Para publicar: Settings > Pages > Source: GitHub Actions, depois rode este workflow de novo (GUIA_DE_DEPLOY.md, parte 6)."
+          fi
 
       - name: Gerar o site
         working-directory: app-mobile
@@ -84,18 +97,6 @@ jobs:
           SITE_DIR: ${{ github.workspace }}/app-mobile/dist-site
           BASE_PATH: ${{ env.SITE_BASE_PATH }}/
         run: npm run test:site
-
-      - name: O GitHub Pages está ligado?
-        id: pages
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if gh api "repos/$GITHUB_REPOSITORY/pages" --jq .build_type > pages.txt 2>/dev/null && grep -q workflow pages.txt; then
-            echo "ativo=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ativo=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=GitHub Pages desligado::O site foi gerado e testado, mas não publicado. Para publicar: Settings > Pages > Source: GitHub Actions, depois rode este workflow de novo (GUIA_DE_DEPLOY.md, parte 6)."
-          fi
 
       - name: Preparar o site para publicação
         if: steps.pages.outputs.ativo == 'true' && github.event_name != 'pull_request'

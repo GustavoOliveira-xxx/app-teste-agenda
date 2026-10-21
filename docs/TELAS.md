@@ -2,7 +2,9 @@
 
 Este documento mostra todas as telas do Agenda Compartilhada, como se vai de uma para outra, os fluxos principais e o que cada tela faz. Ele responde ao pedido da seção 23 do prompt ("mapa de navegação, fluxos principais e descrição detalhada de cada tela").
 
-Tudo aqui foi conferido **lendo o código** em `app-mobile/src`. Ainda não existem capturas de tela nem wireframes desenhados, e o app ainda não foi usado de ponta a ponta num celular com o servidor real (veja o [README](../README.md)). Quando algo existe só em parte, isso está dito na tabela.
+Tudo aqui foi conferido **lendo o código** em `app-mobile/src` e pelos testes de tela da versão web (capturas em [capturas/](capturas/)). O app ainda não foi usado de ponta a ponta num celular com o servidor real (veja o [README](../README.md)). Quando algo existe só em parte, isso está dito na tabela.
+
+**Em telas grandes** (tablet e computador) as mesmas telas mudam de arrumação: as quatro abas viram um menu lateral, o conteúdo fica numa coluna centralizada e, no computador, a visão Mês mostra o calendário e os eventos do dia lado a lado. Detalhes em [DESIGN.md, Tamanhos de tela](DESIGN.md#tamanhos-de-tela).
 
 Documentos relacionados: [ARQUITETURA.md](../ARQUITETURA.md) (como as peças se encaixam), [REGRAS_DE_NEGOCIO.md](../REGRAS_DE_NEGOCIO.md) (papéis e permissões) e [DESIGN.md](DESIGN.md) (cores, componentes e textos).
 

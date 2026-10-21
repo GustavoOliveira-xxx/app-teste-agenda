@@ -14,11 +14,12 @@ Situação real de cada item pedido no prompt (seções 38 e 40), conferida em *
 **Como cada item foi verificado:**
 
 - **Banco:** 69 testes de integração com o banco real (PGlite com as migrations), simulando cada pessoa logada ([docs/TESTES.md](docs/TESTES.md)).
-- **App:** 73 testes unitários (datas, recorrência, permissões, filtros, erros, validações, fila offline, lembretes).
-- **Telas:** 5 testes que abrem a versão web do app num navegador e percorrem as telas com as contas de demonstração, contra o banco real (pasta `e2e/`).
+- **App:** 78 testes unitários (datas, recorrência, permissões, filtros, erros, validações, fila offline, lembretes, tamanhos de tela).
+- **Telas:** 7 testes que abrem a versão web do app num navegador (tamanhos de celular, tablet e computador) e percorrem as telas com as contas de demonstração, contra o banco real (pasta `e2e/`).
+- **Versão instalável:** 6 testes do site como ele é publicado (subpasta, manifesto, ícones, service worker, link direto e abertura sem internet).
 - **APK:** gerado no GitHub Actions (build 4: APK de 48 MB e AAB de 37 MB, apenas as 8 permissões aprovadas).
 
-O que **nenhuma** verificação cobriu ainda: o app instalado num celular Android ligado ao Supabase de verdade. Isso depende de reativar o servidor (item B1 abaixo) e seguir o roteiro manual.
+O que **nenhuma** verificação cobriu ainda: o app instalado num celular Android ou num iPhone, ligado ao Supabase de verdade. Isso depende de reativar o servidor (item B1 abaixo) e seguir o roteiro manual.
 
 ## Bloqueio principal
 
@@ -53,15 +54,24 @@ O que **nenhuma** verificação cobriu ainda: o app instalado num celular Androi
 | 21 | Conflitos detectados ou tratados | ✅ Concluído | Banco: conflito por versão, exclusão concorrente (testes); app: mesclagem por campo e tela de resolução (testes da mesclagem) | |
 | 22 | Dados privados não vazarem | ✅ Concluído | Banco: privado, só participantes, ocupado, histórico sem título, avisos (testes); tela: visualizador vê "Ocupado" e não vê o privado (teste de tela) | Cache do aparelho não é criptografado (limitação documentada em SEGURANCA.md) |
 | 23 | Mensagens de erro compreensíveis | ✅ Concluído | Tradução de erros técnicos para mensagens em português (testes); senha errada na tela (teste de tela) | |
-| 24 | Testes principais passarem | ✅ Concluído | 147 testes passando localmente e no GitHub Actions | |
+| 24 | Testes principais passarem | ✅ Concluído | 160 testes passando localmente e no GitHub Actions | |
 | 25 | Documentação existir | ✅ Concluído | Os 13 documentos obrigatórios e mais 6 (lista abaixo) | |
 | 26 | APK puder ser gerado | ✅ Concluído | Workflow "Gerar APK Android": build 4 aprovado, APK 48 MB, AAB 37 MB | Assinado com a chave de testes até a parte 3 do GUIA_DE_DEPLOY |
 | 27 | Instalação documentada | ✅ Concluído | [COMO_INSTALAR.md](COMO_INSTALAR.md): opções A e B, 8 passos, riscos, atualizar, desinstalar, problemas comuns | |
-| 28 | GitHub preparado | ✅ Concluído | Workflows Qualidade e Gerar APK Android, `.gitignore`, `.env.example`, licença MIT, README | |
+| 28 | GitHub preparado | ✅ Concluído | Workflows Qualidade, Gerar APK Android e Publicar versão web, `.gitignore`, `.env.example`, licença MIT, README | |
 | 29 | Nenhum segredo versionado | ✅ Concluído | `scripts/verificar-segredos.sh` local e no CI a cada envio; nenhum `.env`, chave ou keystore no repositório | |
 | 30 | Autoria configurada | ✅ Concluído | Todos os commits com autor Gustavo Oliveira dos Santos; licença em nome do proprietário | O assistente aparece só como coautor técnico na mensagem do commit |
 
 **Resumo:** 22 concluídos, 8 parcialmente concluídos, 0 pendentes. Os parciais dependem quase todos do mesmo bloqueio (B1) e do roteiro manual num celular.
+
+## iPhone e todos os sistemas (pedido de 21/10/2026)
+
+| Item | Status | Como foi verificado | Se não concluído: motivo, risco e próximo passo |
+|---|---|---|---|
+| Layout responsivo (celular, tablet, computador) | ✅ Concluído | Testes de tela em 390, 820 e 1280 de largura; 5 testes das faixas de tamanho | |
+| Versão web instalável (iPhone, iPad, Android, computador) | 🟡 Parcial | Gerada e testada a cada envio (abre, instala, link direto, sem internet) no Chrome | **Motivo:** publicar exige ligar o GitHub Pages (1 clique do proprietário) e as Variables do Supabase (B1). Ainda não foi aberta num iPhone de verdade. **Próximo passo:** GUIA_DE_DEPLOY parte 6 e COMO_INSTALAR opção C |
+| Lembretes no iPhone e no computador | ⏳ Pendente | O app avisa na tela que eles não tocam no navegador | **Motivo:** exige Web Push (servidor de envio). **Risco:** quem usa só iPhone perde o aviso no horário. **Próximo passo:** ROADMAP |
+| App nativo na App Store | ⏳ Pendente | Passo a passo pronto | **Motivo:** exige a conta paga da Apple. **Próximo passo:** GUIA_DE_DEPLOY parte 7, se o proprietário decidir pagar |
 
 ## Entregáveis finais (seção 40)
 
@@ -105,5 +115,7 @@ O que **nenhuma** verificação cobriu ainda: o app instalado num celular Androi
 | E-mail de contato da política de privacidade | Decisão do proprietário | Política incompleta para a Play Store | Definir e preencher em POLITICA_DE_PRIVACIDADE.md (a política dentro do app aponta para esse arquivo) |
 | Calendário semanal e diário com grade de horários | Escolha de escopo: listas por dia são mais simples e acessíveis | Menos visual para quem tem muitos eventos no mesmo dia | ROADMAP |
 | Acessibilidade com TalkBack | Precisa de celular físico | Problemas só percebidos com leitor de tela | Roteiro em [docs/ACESSIBILIDADE.md](docs/ACESSIBILIDADE.md) |
-| iOS | Exige conta Apple paga | Nenhum para Android | GUIA_DE_DEPLOY parte 6 |
+| App nativo de iPhone (App Store) | Exige conta Apple paga; no iPhone já funciona a versão web instalável | Nenhum para quem usa a versão web | GUIA_DE_DEPLOY parte 7 |
+| Lembretes na versão web | Exigem Web Push (servidor de envio e agendamento) | No iPhone e no computador o lembrete não toca; o app avisa | ROADMAP |
+| Versão web conferida num iPhone de verdade | Testada só no Chrome (automático) | Diferenças do Safari no iPhone | Abrir o site no iPhone e seguir COMO_INSTALAR, opção C |
 | Play Store | Exige conta Google paga e teste fechado | Nenhum para distribuição por APK | GUIA_DE_DEPLOY parte 5 |

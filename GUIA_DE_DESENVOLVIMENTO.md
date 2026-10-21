@@ -185,11 +185,22 @@ npx expo run:android
 - **Esperado:** compila (a primeira vez demora de 10 a 20 minutos) e abre o app.
 - **Se falhar:** "SDK location not found": passo 6.2. Depois de usar, desfaça a alteração que o comando faz no `package.json` (`git checkout package.json`); a pasta `android/` gerada é ignorada pelo Git.
 
-Versão web (só para olhar telas; lembretes não funcionam na web):
+Versão web (a mesma usada no iPhone e no computador; lembretes não tocam na web):
 
 ```bash
 # Pasta: app-mobile
 npx expo start --web
+```
+
+- **Esperado:** abre o app no navegador. Para ver como fica em cada aparelho, use as ferramentas do navegador (F12 > ícone de celular) e troque a largura: menos de 600 é celular, a partir de 768 aparece o menu lateral e a partir de 1024 o calendário fica em duas colunas (`src/utils/layout.ts`).
+- O modo offline (service worker) só funciona no site gerado (`npx expo export --platform web`), não no `expo start`.
+
+Gerar o site como ele é publicado no GitHub Pages (numa subpasta):
+
+```bash
+# Pasta: app-mobile (com o .env preenchido)
+SITE_BASE_PATH=/app-teste-agenda npx expo export --platform web --output-dir dist-site
+cp dist-site/index.html dist-site/404.html
 ```
 
 ## 8. Ver os registros (logs)
@@ -223,7 +234,10 @@ npm test               # testes do banco com PGlite (permissões, convites, even
 npm run preparar       # gera a versão web do app (1 a 2 minutos)
 CHROMIUM_PATH=/usr/bin/google-chrome npm test
                        # testes de tela: login, calendário, evento, membros, convite e privacidade
-                       # Esperado: "# pass 5". Capturas de cada tela em e2e/saida/
+                       # Esperado: "# pass 7". Capturas de cada tela em e2e/saida/
+npm run preparar:site  # gera o site numa subpasta, como no GitHub Pages
+CHROMIUM_PATH=/usr/bin/google-chrome npm run test:site
+                       # versão instalável: manifesto, ícones, link direto, sem internet. Esperado: "# pass 6"
 ```
 
 - O teste de tela precisa do Chrome ou Chromium instalado. Informe o caminho em `CHROMIUM_PATH` (Windows: `C:\Program Files\Google\Chrome\Application\chrome.exe`, macOS: `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`). O comando `npm run preparar` usa a sintaxe de variáveis do Linux/macOS; no Windows, rode-o pelo Git Bash.
