@@ -278,3 +278,41 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 **Motivo.** Roda em cerca de 2 minutos sem emulador, usa o mesmo código das telas do APK e as mesmas regras de acesso do banco (migrations e seed reais). Pegou um problema real na primeira execução: a tela de detalhes do evento não mostrava a data.
 
 **Limitações.** Não exercita o Android nativo (seletores de data, notificações, armazenamento seguro), o Supabase Auth real nem o tempo real. Esses pontos seguem no roteiro manual de [docs/TESTES.md](docs/TESTES.md). Emulador Android no CI fica no [ROADMAP.md](ROADMAP.md).
+
+## D24 Versão web instalável para iPhone e computadores
+
+**Pergunta do proprietário.** "Pra iPhone, como faço? Se não tiver como, deixe o app responsivo pra todo tipo de sistema operacional."
+
+**Alternativas.**
+
+| Alternativa | Custo | Prós | Contras |
+|---|---|---|---|
+| (a) App nativo na App Store (EAS Build + TestFlight) | Anuidade da Apple (US$ 99) | Experiência nativa, lembretes que tocam | Exige conta paga; análise da Apple; não pôde ser testado aqui |
+| (b) Expo Go no iPhone | Gratuito | Rápido para quem desenvolve | Só funciona com o computador de quem programa ligado; não serve para usuários |
+| (c) **Versão web instalável (PWA)** no GitHub Pages | Gratuito | Mesmo código; iPhone, iPad, Android e computador; ícone na tela de início; abre sem internet; atualiza sozinha | Lembretes não tocam; sessão no armazenamento do navegador |
+
+**Decisão.** (c) agora, com o caminho de (a) documentado ([GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store)) para quando o proprietário quiser pagar a Apple.
+
+**Como funciona.**
+
+- `app-mobile/public/`: modelo da página com as marcações do iPhone, manifesto, ícones e um *service worker* que guarda os arquivos do app no aparelho. O endereço base é descoberto pelo próprio script do app, então o site funciona na raiz ou numa subpasta.
+- `app-mobile/app.config.js`: só ao gerar o site, define a subpasta (`SITE_BASE_PATH`), necessária no GitHub Pages (`/app-teste-agenda`).
+- Workflow **Publicar versão web**: gera o site, copia o `index.html` para `404.html` (links diretos), testa a instalação e o modo offline (`e2e/site.test.mjs`) e publica se o Pages estiver ligado. Com domínio próprio, publica na raiz.
+- No navegador, o app usa o seletor de data e hora do próprio navegador, copia o texto quando não há folha de compartilhamento e baixa um arquivo na exportação de dados.
+
+**Lembretes na web.** Exigiriam Web Push (servidor de envio, chaves VAPID, agendamento no Supabase). Ficou no [ROADMAP.md](ROADMAP.md); o app avisa na tela de lembretes e nas configurações de notificação que, no navegador, eles não tocam.
+
+## D25 Layout responsivo
+
+**Decisão.** Três faixas de largura em `app-mobile/src/utils/layout.ts` (testadas):
+
+| Largura | Faixa | Layout |
+|---|---|---|
+| Menos de 600 | Celular | Abas embaixo, uma coluna, listas de opções sobem de baixo |
+| 600 a 767 | Celular deitado, tablet pequeno | Abas embaixo, conteúdo centralizado, diálogos no centro |
+| 768 a 1023 | Tablet | Menu lateral, conteúdo centralizado |
+| 1024 ou mais | Computador, tablet grande deitado | Menu lateral, mês e eventos do dia lado a lado |
+
+Formulários e listas têm largura máxima de 720 (leitura confortável) e diálogos, de 520. O app passou a girar (retrato e paisagem) e a aceitar iPad.
+
+**Motivo.** Um único código para todas as telas, sem telas duplicadas. Os testes de tela conferem os tamanhos de celular, tablet e computador.

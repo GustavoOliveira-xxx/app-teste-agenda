@@ -7,7 +7,7 @@
 | Hash seguro de senhas | Supabase Auth (bcrypt). O app nunca grava a senha |
 | Tokens seguros | JWT de curta duração (1 hora) + token de renovação com rotação (Supabase Auth) |
 | Expiração e renovação de sessão | Renovação automática só com o app aberto (`startAutoRefresh`/`stopAutoRefresh`) |
-| Armazenamento seguro no aparelho | Sessão no `expo-secure-store` (Android Keystore), acessível só após o primeiro desbloqueio, sem backup em nuvem |
+| Armazenamento seguro no aparelho | Android: sessão no `expo-secure-store` (Android Keystore), acessível só após o primeiro desbloqueio, sem backup em nuvem. Versão web: sessão no armazenamento do navegador (`localStorage`), veja abaixo |
 | Validação no app e no servidor | `src/validation/*` + `CHECK`, gatilhos e funções no banco |
 | Consultas parametrizadas / SQL Injection | O app usa a API do Supabase (parâmetros nunca concatenados); funções SQL usam variáveis; a busca escapa `%` e `_` |
 | XSS | React Native exibe texto puro (não interpreta HTML); comentários têm caracteres de controle removidos; links só `http(s)` |
@@ -80,6 +80,17 @@ Por que a chave pública pode ir no APK: ela só permite o que as regras RLS per
 - [ ] Repositório sem `.env`, keystore ou backups.
 - [ ] Política de privacidade revisada (é um modelo técnico inicial).
 
+## Versão web (iPhone, iPad e computador)
+
+| Ponto | Como foi tratado |
+|---|---|
+| Onde fica a sessão | No `localStorage` do navegador, isolado por site (outros sites não leem). Não há cofre de senhas equivalente ao do Android no navegador |
+| Roubo de sessão por script injetado (XSS) | O app não monta HTML com texto do usuário (React Native Web mostra texto puro) e não carrega scripts de terceiros; só o próprio site e o Supabase |
+| Cache offline | O service worker guarda **só os arquivos do app** (código, ícones, fontes). Ele não intercepta as chamadas ao Supabase; os dados ficam no armazenamento do app, como no Android |
+| HTTPS | O GitHub Pages serve o site por HTTPS; o service worker só funciona em HTTPS |
+| Computador compartilhado | Os guias pedem para tocar em **Sair** ao terminar: isso apaga sessão, cache e fila deste navegador |
+| Chave pública no site | É a mesma do APK, pública por natureza; a proteção dos dados continua nas regras do banco (RLS) |
+
 ## Limitações conhecidas
 
 - **Chave de testes no APK padrão:** sem os Secrets de assinatura, o APK usa a chave de debug do template do React Native, que é pública. Serve para testes entre pessoas conhecidas; para distribuir, configure sua chave ([GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md)).
@@ -87,3 +98,4 @@ Por que a chave pública pode ir no APK: ela só permite o que as regras RLS per
 - **Cadastro aberto:** qualquer pessoa com o APK pode criar conta no seu projeto (só vê os próprios dados). Para fechar, desligue "Allow new users to sign up" no Supabase depois que todos tiverem conta.
 - **Sem 2FA** na V1 (planejado no roadmap).
 - **Dispositivo comprometido (root):** o cache local (AsyncStorage) não é criptografado; a sessão é. Em aparelho com root, os dados em cache podem ser lidos.
+- **Versão web:** a sessão fica no armazenamento do navegador, sem criptografia do sistema. Quem tiver acesso ao computador desbloqueado e ao navegador pode usar a sessão; por isso, em computador compartilhado, saia da conta.

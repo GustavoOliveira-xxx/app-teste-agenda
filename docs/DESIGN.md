@@ -18,7 +18,7 @@ Para a lista de telas, veja [TELAS.md](TELAS.md). Para as decisões técnicas, [
 | Acessível | Contraste calculado dos textos acima de 4,5:1 nos dois temas; rótulos para leitor de tela em botões só com ícone; informação nunca só por cor (etiquetas com texto, ✓ na opção escolhida, nome em cada cor); áreas de toque de 48 dp na maioria dos controles. Há exceções, listadas em [Limitações](#limitações) |
 | Consistente | Um único arquivo de tokens e 25 componentes reutilizados em todas as telas |
 | Responsivo | Layout em colunas flexíveis; etiquetas e filtros quebram linha; o texto acompanha o tamanho de fonte escolhido no celular; respeita as áreas seguras (entalhe e barra de gestos) |
-| Confortável em tela pequena | Botão principal no rodapé ao alcance do polegar; botão redondo "+" no canto inferior direito; campos avançados do evento escondidos em "Mais opções"; app só em retrato |
+| Confortável em tela pequena | Botão principal no rodapé ao alcance do polegar; botão redondo "+" no canto inferior direito; campos avançados do evento escondidos em "Mais opções"; em telas grandes, menu lateral e conteúdo centralizado (veja [Tamanhos de tela](#tamanhos-de-tela)) |
 
 ## Cores
 
@@ -156,6 +156,26 @@ A constante `MIN_TOUCH` vale **48 dp**, o mínimo recomendado pelo Android.
 | Erro (campo) | Borda de 2 dp em `danger` e a mensagem embaixo do campo, anunciada ao leitor de tela |
 | Selecionado | Filtros: borda e texto em `primary`, fundo `primarySoft` e um ✓; cores: contorno `focus` e ✓; opções de lista: texto em negrito e ícone de ✓; seletor Mês/Semana: fundo `surface`, texto em `primary` e negrito; dia do mês: círculo preenchido em `primary` |
 | Hoje | Anel de 2 dp na cor `today` em volta do número do dia; na semana, o título do dia ganha "· Hoje" em `primary` |
+
+## Tamanhos de tela
+
+O mesmo app se adapta ao celular, ao tablet e ao computador (decisão em [DECISOES.md, D25](../DECISOES.md#d25-layout-responsivo)). As faixas ficam em `src/utils/layout.ts` e são lidas pelo hook `useLayout()`, que acompanha a rotação do aparelho e o redimensionamento da janela.
+
+| Largura da tela | Navegação | Conteúdo | Diálogos e listas de opções |
+|---|---|---|---|
+| Menos de 600 (celular) | Abas embaixo | Uma coluna, ocupa a largura | Lista de opções sobe de baixo |
+| 600 a 767 | Abas embaixo | Coluna centralizada de até 720 | Cartão no centro, até 520 |
+| 768 a 1023 (tablet) | **Menu lateral** de 240, com rótulos ao lado dos ícones | Coluna centralizada de até 720 | Cartão no centro, até 520 |
+| 1024 ou mais (computador) | Menu lateral | No calendário (visão Mês): **mês à esquerda** (até 560) e **eventos do dia à direita**; demais telas em coluna centralizada | Cartão no centro, até 520 |
+
+Outros detalhes:
+
+- `Screen` aplica a largura máxima sozinho (propriedade `maxWidth`); o rodapé com o botão principal acompanha a mesma coluna.
+- A mensagem rápida (toast) fica com largura de celular, centralizada.
+- O app gira (retrato e paisagem) no Android e no iPad.
+- No navegador, campos de data e hora usam o seletor do próprio navegador (roleta no iPhone, calendário no computador), e telas abertas por link mostram um botão de casa para ir ao início.
+
+Capturas: [computador](capturas/15-computador-agenda.png), [evento no computador](capturas/16-computador-evento.png) e [tablet](capturas/17-tablet-novo-evento.png).
 
 ## Biblioteca de componentes
 
@@ -330,5 +350,5 @@ Itens da seção 24 que não foram feitos, ou foram feitos só em parte:
 4. **Áreas de toque:** em telas com menos de 368 dp de largura, os dias da grade do mês ficam com pouco menos de 48 dp de largura (a altura é 52).
 5. **Calendário semanal e diário sem grade de horários:** as duas visões são listas por dia.
 6. **Um idioma só:** a estrutura está pronta para outros idiomas, mas só existe português do Brasil; o seletor de idioma tem uma opção.
-7. **Tela grande e paisagem:** o app é só em retrato e não tem layout próprio para tablets.
+7. **Telas grandes:** semana e dia continuam como listas (sem grade de horários) também no computador; só a visão Mês usa duas colunas.
 8. **Visual conferido só na versão web:** há capturas em [capturas/](capturas/) (geradas pelos testes de tela na versão web, com dados fictícios), mas o visual ainda não foi conferido num celular físico.

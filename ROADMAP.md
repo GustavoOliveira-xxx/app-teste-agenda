@@ -8,6 +8,7 @@ O que fica para depois da primeira versão, com o impacto de cada item. A arquit
 |---|---|---|
 | **Alta** | Envio de e-mail de convite e SMTP próprio | Convidar por e-mail sem depender do código |
 | **Alta** | Push remoto (Firebase Cloud Messaging) | Avisar na hora quando alguém muda um evento, mesmo com o app fechado |
+| **Alta** | Lembretes na versão web (Web Push) | Lembretes que tocam no iPhone (app instalado na tela de início, iOS 16.4 ou mais novo) e no computador |
 | **Alta** | Exportação ICS (e assinatura de calendário) | Ver os eventos no Google Agenda ou no calendário do iPhone sem integração complexa |
 | **Alta** | Publicação na Play Store | Instalação e atualização mais fáceis e confiáveis |
 | Média | Login com Google | Cadastro em um toque |
@@ -181,7 +182,8 @@ Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos
 | Item | Situação atual | Próximo passo |
 |---|---|---|
 | Push remoto | Lembretes locais e central de avisos no app | FCM + tabela de tokens (já existe `devices`) + Edge Function ou gatilho que envia ao criar um aviso. Exige liberar a permissão de push do Google (hoje bloqueada, ver [DECISOES.md, D22](DECISOES.md#d22-lista-fechada-de-permissões-do-android)) |
-| iOS | Código compatível, não compilado | EAS Build, TestFlight, testes de notificações e do cofre de senhas no iPhone ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-iphone-ios)) |
+| Lembretes na versão web | Os lembretes ficam salvos, mas não tocam no navegador; o app avisa isso | Web Push: chaves VAPID (segredo só no servidor), tabela de inscrições por aparelho, Edge Function que envia, e agendamento (`pg_cron`) que dispara os lembretes no horário. Custo: gratuito para volume baixo. Privacidade: o endereço de push do navegador é um dado do aparelho; apagar ao sair |
+| App nativo de iPhone | Código compatível, não compilado; no iPhone usa-se a versão web instalável | Conta Apple Developer (paga), EAS Build, TestFlight, testes de notificações e do cofre de senhas no iPhone ([GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store)) |
 | Play Store | AAB gerado | Ficha da loja, teste fechado ([GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store)) |
 | Foto de perfil | Avatar com iniciais e cor | Storage + seletor de imagem do sistema |
 | Carência na exclusão de conta | Exclusão imediata | Agendar a exclusão (o campo já existe no banco) e permitir cancelar |

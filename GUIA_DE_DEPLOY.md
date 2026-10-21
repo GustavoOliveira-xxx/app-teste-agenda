@@ -1,13 +1,15 @@
 # Guia de deploy: colocar o app no ar
 
-Este guia leva o projeto do código até um APK funcionando no celular, **sem programar**. Tudo é feito pelo navegador, nos painéis do Supabase e do GitHub. A única parte que usa o terminal é opcional (chave de assinatura própria, parte 3).
+Este guia leva o projeto do código até o app funcionando no **Android** (APK), no **iPhone e no computador** (versão web instalável), **sem programar**. Tudo é feito pelo navegador, nos painéis do Supabase e do GitHub. A única parte que usa o terminal é opcional (chave de assinatura própria, parte 3).
 
 ```mermaid
 flowchart LR
   P1[Parte 1<br/>Servidor no Supabase] --> P2[Parte 2<br/>Ligar o GitHub ao servidor<br/>e gerar o APK]
-  P2 --> I[Instalar no celular<br/>COMO_INSTALAR.md]
+  P2 --> I[Instalar no Android<br/>COMO_INSTALAR.md]
+  P2 --> P6[Parte 6<br/>Versão web: iPhone,<br/>iPad e computador]
   P2 -. antes de distribuir .-> P3[Parte 3<br/>Chave de assinatura própria]
   P3 -. opcional .-> P5[Parte 5<br/>Play Store]
+  P6 -. opcional, pago .-> P7[Parte 7<br/>App nativo na App Store]
 ```
 
 | Parte | O que é | Tempo aproximado | Obrigatória? |
@@ -17,8 +19,9 @@ flowchart LR
 | 3 | Chave de assinatura própria | 15 min | Antes de distribuir para mais pessoas |
 | 4 | Lançar novas versões | 5 min | Quando houver mudanças |
 | 5 | Google Play Store | Dias (análise do Google) | Opcional |
-| 6 | iPhone | Não preparado nesta versão | Opcional |
-| 7 | Voltar atrás (rollback) | Conforme o caso | Se algo der errado |
+| 6 | Versão web (iPhone, iPad, computador, qualquer sistema) | 2 min + 5 min de espera | Para quem não usa Android |
+| 7 | App nativo para iPhone (App Store) | Dias (análise da Apple) | Opcional, pago |
+| 8 | Voltar atrás (rollback) | Conforme o caso | Se algo der errado |
 
 > **Nunca** cole em lugar nenhum do GitHub (código, issues, comentários) a senha do banco, a chave `secret`/`service_role` do Supabase ou a senha da chave de assinatura. Os únicos lugares certos para segredos são os **Secrets** do GitHub (parte 3) e o seu gerenciador de senhas. Detalhes em [SEGURANCA.md](SEGURANCA.md).
 
@@ -249,24 +252,88 @@ O arquivo para a loja é o **`.aab`** (gerado junto com o APK). A publicação e
 
 Observação: o app instalado pela loja terá a assinatura do Google, diferente do APK do GitHub. Quem migrar do APK para a loja precisa desinstalar antes.
 
-## Parte 6: iPhone (iOS)
+## Parte 6: versão web (iPhone, iPad, computador e qualquer sistema)
 
-O código foi escrito com Expo e é compatível com iOS, mas **nenhuma versão para iPhone foi gerada nem testada** neste projeto. O processo é diferente do Android e normalmente envolve:
+O mesmo app roda no navegador e pode ser **instalado na tela de início**, com ícone próprio, em tela cheia e abrindo mesmo sem internet. Funciona no iPhone, iPad, Android, Windows, Mac e Linux. É **gratuito**: o site fica no GitHub Pages, junto deste repositório. A tela se adapta ao tamanho: no celular, abas embaixo; no tablet e no computador, menu lateral e calendário em duas colunas.
 
-- **Apple Developer Program** (anuidade de US$ 99 na data deste guia);
-- **assinatura** com certificados da Apple e **provisioning profiles** (perfis que dizem quais aparelhos e contas podem rodar o app);
-- um Mac com Xcode **ou** o serviço de build na nuvem da Expo (**EAS Build**, `npx eas-cli@latest build -p ios`), que cuida dos certificados e tem uma cota gratuita limitada;
-- **TestFlight** para distribuir versões de teste;
-- envio para análise da **App Store**.
+> **Por que não um app de iPhone "de verdade"?** Para instalar um app nativo no iPhone de outras pessoas, a Apple exige uma conta paga de desenvolvedor (parte 7). A versão web resolve sem custo e com o mesmo código.
 
-O identificador do app para iOS já está em `app-mobile/app.json` (`com.gustavooliveira.agendacompartilhada`). Os próximos passos estão no [ROADMAP.md](ROADMAP.md).
+### 6.1 Ligar o GitHub Pages (uma vez só)
 
-## Parte 7: voltar atrás (rollback)
+1. No GitHub, abra o repositório > **Settings** > **Pages** (menu da esquerda).
+2. Em **Build and deployment** > **Source**, escolha **GitHub Actions**.
+
+Não precisa salvar nada mais: a escolha já vale.
+
+### 6.2 Publicar o site
+
+1. Confira se as Variables da parte 2.1 estão cadastradas (o site usa as mesmas do APK).
+2. Aba **Actions** > **Publicar versão web** > **Run workflow** > **Run workflow**.
+3. Em cerca de 5 minutos o site estará em:
+
+   **<https://gustavooliveira-xxx.github.io/app-teste-agenda/>**
+
+   O endereço também aparece no resumo da execução, no quadro **Publicar no GitHub Pages**.
+
+Depois disso, toda mudança no app enviada para a branch principal **publica o site sozinha**. Antes de publicar, o workflow testa se o site abre, se pode ser instalado e se funciona sem internet; se algum teste falhar, a versão antiga continua no ar.
+
+**Como saber se deu certo:** bolinha verde nos dois quadros (**Gerar e testar o site** e **Publicar no GitHub Pages**). Se aparecer o aviso **"GitHub Pages desligado"**, refaça o passo 6.1 e rode o workflow de novo.
+
+### 6.3 Instalar na tela de início
+
+Mande o endereço para as pessoas. O passo a passo para cada aparelho (iPhone, Android e computador) está no [COMO_INSTALAR.md, opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web).
+
+### 6.4 Diferenças em relação ao app Android
+
+| Recurso | App Android (APK) | Versão web (iPhone e computador) |
+|---|---|---|
+| Agendas, eventos, convites, permissões | Sim | Sim, igual |
+| Abrir sem internet e editar offline | Sim | Sim, depois do primeiro acesso |
+| Atualização automática com mudanças de outras pessoas | Sim | Sim |
+| **Lembretes que tocam no horário** | Sim | **Não** nesta versão (ficam salvos, mas não tocam; ver [ROADMAP.md](ROADMAP.md)) |
+| Onde a sessão fica guardada | Cofre do Android | Armazenamento do navegador ([SEGURANCA.md](SEGURANCA.md)) |
+| Atualizações | Baixar o APK novo | Automáticas (ao abrir o app) |
+
+### 6.5 Domínio próprio e outros serviços (opcional)
+
+- **Domínio próprio** (ex.: `agenda.seudominio.com.br`): Settings > Pages > **Custom domain**. O workflow percebe sozinho e passa a gerar o site na raiz do domínio.
+- **Netlify, Vercel ou Cloudflare Pages** também servem (planos gratuitos). Gere o site com `npx expo export --platform web` na pasta `app-mobile` (as Variables do Supabase como variáveis de ambiente) e configure o serviço para devolver o `index.html` em qualquer endereço. O GitHub Pages foi escolhido por já estar junto do código ([DECISOES.md, D24](DECISOES.md#d24-versão-web-instalável-para-iphone-e-computadores)).
+
+## Parte 7: app nativo para iPhone (App Store)
+
+O código é compatível com iOS (Expo), mas **nenhuma versão nativa para iPhone foi gerada nem testada** neste projeto. Só faça isto se quiser o app na App Store; para usar no iPhone, a parte 6 já basta.
+
+**O que é preciso:**
+
+- **Apple Developer Program**: anuidade de US$ 99 na data deste guia. Sem ela, a Apple não permite instalar um app nativo no iPhone de outras pessoas.
+- Uma conta gratuita na **Expo** (<https://expo.dev>). O serviço **EAS Build** compila o app na nuvem e cuida dos **certificados** e dos **provisioning profiles** (perfis que dizem quem pode instalar o app). **Não precisa de Mac.** A cota gratuita de builds é limitada; confira no site.
+
+**Passo a passo (no computador, pasta `app-mobile`, com Node.js instalado):**
+
+```bash
+# 1. Entrar na conta da Expo e ligar o projeto a ela (grava o id do projeto no app.json; faça commit depois)
+npx eas-cli@latest login
+npx eas-cli@latest init
+
+# 2. Gerar o app de iPhone na nuvem (pede o login da Apple na primeira vez e cria os certificados)
+npx eas-cli@latest build --platform ios
+
+# 3. Enviar para o App Store Connect (a versão aparece no TestFlight)
+npx eas-cli@latest submit --platform ios
+```
+
+4. **TestFlight**: no App Store Connect, adicione testadores; eles instalam o app **TestFlight** no iPhone e recebem o convite.
+5. **App Store**: preencha a ficha (descrição, capturas de tela do iPhone, política de privacidade com link público, questionário de privacidade) e envie para análise. A Apple exige que a exclusão de conta exista **dentro do app**: isso já está pronto (Perfil > Privacidade e dados).
+
+O identificador do app para iOS já está em `app-mobile/app.json` (`com.gustavooliveira.agendacompartilhada`), e o app já aceita iPad e telas deitadas. Antes de publicar, rode o roteiro de [docs/TESTES.md](docs/TESTES.md) num iPhone pelo TestFlight, principalmente lembretes e login.
+
+## Parte 8: voltar atrás (rollback)
 
 | Situação | O que fazer |
 |---|---|
 | APK novo com problema | Na página Releases, marque a release ruim como "Pre-release" ou exclua-a, para ninguém mais baixar. O Android não deixa instalar uma versão **mais antiga** por cima: quem precisar voltar desinstala e instala o APK anterior (os dados estão no servidor; alterações offline não enviadas se perdem). Melhor caminho: corrigir e gerar uma versão nova. |
 | Migration nova quebrou algo | As migrations não têm "desfazer" automático. Restaure o backup do passo 1.8 em um projeto novo, ou escreva uma migration de correção. Por isso o backup antes de cada mudança no banco. |
+| Site (versão web) com problema | Aba Actions > Publicar versão web: rode o workflow de novo a partir de um commit anterior (Run workflow > escolha a branch ou tag), ou desfaça o commit com problema. As pessoas recebem a correção ao abrir o app de novo. |
 | Configuração errada do Auth | Volte a chave no painel; nada no app precisa mudar. |
 | Chave pública exposta em lugar estranho | Ela já é pública por natureza; ainda assim, o procedimento de troca está em [SEGURANCA.md](SEGURANCA.md#procedimento-para-revogar-credenciais-expostas). |
 | Chave `secret`/`service_role`, senha do banco ou keystore vazada | Siga [SEGURANCA.md](SEGURANCA.md#procedimento-para-revogar-credenciais-expostas) imediatamente. |
@@ -278,9 +345,9 @@ Com o uso previsto (grupos pequenos), **tudo pode ficar no gratuito**. Valores e
 | Serviço | Gratuito | Quando passa a custar |
 |---|---|---|
 | Supabase | Plano Free: 2 projetos ativos, banco de 500 MB, pausa após cerca de 7 dias sem uso | Mais projetos, mais espaço, sem pausa e com backups: plano Pro (mensal) |
-| GitHub (repositório público) | Actions gratuito para repositórios públicos | Repositório privado tem cota mensal de minutos |
+| GitHub (repositório público) | Actions e Pages gratuitos para repositórios públicos | Repositório privado tem cota mensal de minutos |
 | E-mail (SMTP) | Planos gratuitos com limite diário | Volumes maiores |
 | Google Play | Não | Taxa única de cadastro |
-| Apple | Não | Anuidade |
+| Apple | Não (a versão web no iPhone é gratuita) | Anuidade, só para o app nativo na App Store |
 
-O app **não usa nenhum serviço pago** sem aviso; nenhuma etapa deste guia exige cartão de crédito, exceto as partes 5 e 6.
+O app **não usa nenhum serviço pago** sem aviso; nenhuma etapa deste guia exige cartão de crédito, exceto as partes 5 e 7.

@@ -3,7 +3,7 @@
     "name": "Agenda Compartilhada",
     "slug": "agenda-compartilhada",
     "scheme": "agendacompartilhada",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

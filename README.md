@@ -1,13 +1,23 @@
 # Agenda Compartilhada
 
-Aplicativo Android de **agenda compartilhada**: você cria agendas, convida pessoas e todo mundo vê os mesmos compromissos, sincronizados pela internet, cada pessoa com o nível de acesso que você escolher. Funciona para casal, família, amigos, república, equipe pequena, grupo de estudo, cuidadores e viagens.
+Aplicativo de **agenda compartilhada** para **Android, iPhone, iPad e computador**: você cria agendas, convida pessoas e todo mundo vê os mesmos compromissos, sincronizados pela internet, cada pessoa com o nível de acesso que você escolher. Funciona para casal, família, amigos, república, equipe pequena, grupo de estudo, cuidadores e viagens.
 
 > **Comece aqui (para quem não programa)**
 >
-> 1. **Quero instalar no celular:** siga o [COMO_INSTALAR.md](COMO_INSTALAR.md).
-> 2. **Quero colocar o app no ar pela primeira vez** (servidor, APK, chave de assinatura): siga o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md). São cliques no painel do Supabase e do GitHub, sem programar.
+> 1. **Quero instalar:** siga o [COMO_INSTALAR.md](COMO_INSTALAR.md) (Android, iPhone, iPad ou computador).
+> 2. **Quero colocar o app no ar pela primeira vez** (servidor, APK, site, chave de assinatura): siga o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md). São cliques no painel do Supabase e do GitHub, sem programar.
 > 3. **Algo deu errado:** veja o [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 > 4. **O que está pronto e o que falta:** veja o [CHECKLIST.md](CHECKLIST.md).
+
+## Onde funciona
+
+| Aparelho | Como usar | Lembretes que tocam |
+|---|---|---|
+| Android (celular e tablet) | App instalado pelo **APK** ([COMO_INSTALAR.md, opção A](COMO_INSTALAR.md#opção-a-instalação-do-apk)) | Sim |
+| iPhone e iPad | **Versão web instalável**: Safari > Compartilhar > Adicionar à Tela de Início ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Não nesta versão |
+| Computador (Windows, Mac, Linux) | No navegador ou instalado como aplicativo pelo Chrome, Edge ou Safari ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Não nesta versão |
+
+A tela se adapta ao tamanho: no celular, abas embaixo; no tablet, menu lateral; no computador, menu lateral com o mês e os eventos do dia lado a lado. Um app nativo de iPhone na App Store também é possível, mas exige conta paga da Apple ([GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store)).
 
 ## Que problema resolve
 
@@ -47,6 +57,10 @@ O mapa completo de telas está em [docs/TELAS.md](docs/TELAS.md).
 | Detalhes do evento e lembretes | Membros e papéis | Código de convite |
 | ![Avisos](docs/capturas/10-avisos.png) | ![Histórico](docs/capturas/11-historico.png) | ![Tema escuro](docs/capturas/13-agenda-tema-escuro.png) |
 | Avisos | Histórico da agenda | Tema escuro |
+
+**No computador** (menu lateral, mês e eventos do dia lado a lado):
+
+![Agenda no computador](docs/capturas/15-computador-agenda.png)
 
 Mais capturas em [`docs/capturas/`](docs/capturas/). **Como foram feitas:** a versão web do app (o mesmo código do APK) rodou num navegador com tamanho de celular, conectada a uma cópia local do banco com as migrations reais e os dados fictícios de demonstração (`supabase/seed.sql`), entrando como "Ana Demo". No celular o visual é o mesmo, com pequenas diferenças (por exemplo, os seletores de data e hora são os do Android).
 
@@ -90,7 +104,7 @@ scripts/             Verificação de segredos
 
 ## Requisitos
 
-**Para usar o app:** celular Android 7.0 ou mais novo, com processador ARM (praticamente todos), cerca de 150 MB livres e internet no primeiro acesso.
+**Para usar o app:** celular Android 7.0 ou mais novo (APK, cerca de 150 MB livres), ou qualquer aparelho com navegador atualizado (versão web: Safari no iPhone e iPad, Chrome, Edge ou Firefox no computador). Internet no primeiro acesso.
 
 **Para colocar no ar (sem programar):** conta gratuita no [Supabase](https://supabase.com) e a conta do GitHub onde está este repositório. Passo a passo no [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md).
 
@@ -123,11 +137,13 @@ npm ci && npm test
 # Pasta: app-mobile (testa datas, recorrência, permissões, filtros, validações, fila offline, lembretes)
 npm ci && npm run check   # tipos + lint + formatação + testes
 
-# Pasta: e2e (abre a versão web do app e percorre as telas principais)
+# Pasta: e2e (abre a versão web do app em tamanho de celular, tablet e computador)
 npm ci && npm run preparar && CHROMIUM_PATH=/caminho/do/chrome npm test
+# Pasta: e2e (versão instalável: manifesto, ícones, link direto e abertura sem internet)
+npm run preparar:site && CHROMIUM_PATH=/caminho/do/chrome npm run test:site
 ```
 
-São 147 testes automáticos (69 do banco, 73 do app e 5 de tela). Os mesmos rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
+São 160 testes automáticos (69 do banco, 78 do app, 7 de tela e 6 da versão instalável). Os mesmos rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
 
 ## Build, APK e AAB
 
@@ -141,7 +157,8 @@ Tamanho (build 4): APK de 48 MB e AAB de 37 MB. Android mínimo: 7.0. Permissõe
 
 - **Distribuição direta (APK):** página [Releases](https://github.com/GustavoOliveira-xxx/app-teste-agenda/releases) do repositório.
 - **Google Play Store (AAB):** requer conta de desenvolvedor e uma série de cadastros; o caminho está no [GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store).
-- **iPhone (iOS):** o código é compatível, mas a publicação exige conta Apple Developer paga; explicado no [GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-iphone-ios).
+- **Versão web (iPhone, iPad, computador):** publicada no GitHub Pages pelo workflow **Publicar versão web**, em <https://gustavooliveira-xxx.github.io/app-teste-agenda/> depois de ligar o Pages ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)).
+- **App nativo de iPhone (App Store):** o código é compatível, mas a publicação exige conta Apple Developer paga; explicado no [GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store).
 
 ## Problemas comuns
 
@@ -157,10 +174,11 @@ Integrações futuras (Google Calendar, exportação ICS, push remoto, anexos, l
 - **Não testado em celular físico** nem com o Supabase real: a lógica foi testada automaticamente (banco e app), as telas principais foram testadas automaticamente na versão web contra uma cópia local do banco, e o APK compila no GitHub. O uso no celular ainda precisa do roteiro manual de [docs/TESTES.md](docs/TESTES.md) (login real, notificações, offline, tempo real).
 - **E-mail:** sem um servidor de e-mail próprio (SMTP), o Supabase só envia e-mails para membros da equipe do projeto. Por isso o guia recomenda desligar a confirmação de e-mail no começo.
 - **Convite por e-mail não envia e-mail:** o convite fica registrado e aparece para a pessoa quando ela entra com aquele e-mail. O jeito principal de convidar é o código.
-- **Lembretes são locais:** cada celular agenda os próprios lembretes; não há push remoto do servidor nesta versão.
+- **Lembretes são locais:** cada celular Android agenda os próprios lembretes; não há push remoto do servidor nesta versão. **Na versão web (iPhone, iPad e computador) os lembretes não tocam.**
 - **APK de testes:** sem configurar sua chave, o APK usa a chave pública de testes do Android.
 - **Somente português do Brasil** nesta versão (a estrutura de tradução está pronta).
-- **iOS** não foi compilado nem testado.
+- **App nativo de iPhone** não foi compilado nem testado (exige conta paga da Apple). No iPhone, use a versão web instalável.
+- **Versão web:** testada automaticamente no Chrome (tamanhos de celular, tablet e computador); ainda não conferida num iPhone de verdade.
 
 Lista completa, com status de cada requisito: [CHECKLIST.md](CHECKLIST.md).
 
