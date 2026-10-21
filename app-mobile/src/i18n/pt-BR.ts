@@ -35,6 +35,8 @@ export const ptBR = {
     busy: 'Ocupado',
     requiresInternet: 'Esta ação precisa de internet. Conecte-se e tente de novo.',
     saved: 'Salvo!',
+    goHome: 'Ir para o início',
+    copiedToShare: 'Texto copiado. Cole onde quiser compartilhar.',
   },
   roles: {
     owner: 'Proprietário',
@@ -166,6 +168,8 @@ export const ptBR = {
   },
   reminders: {
     title: 'Lembretes',
+    webNotice:
+      'Na versão para navegador (iPhone e computador), os lembretes ficam salvos, mas não tocam. Eles tocam no app Android. Alterações feitas por outras pessoas aparecem na aba Avisos.',
     none: 'Sem lembrete',
     atTime: 'No horário do evento',
     minutesBefore: '{n} minutos antes',

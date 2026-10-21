@@ -3,6 +3,7 @@ import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import { Platform } from 'react-native';
 
+import { IconButton } from '@/components/IconButton';
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
 
@@ -30,12 +31,24 @@ export default function AppLayout() {
   useOpenEventFromNotification();
   return (
     <Stack
-      screenOptions={{
+      screenOptions={({ navigation }) => ({
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
-      }}
+        // No navegador, uma tela aberta direto por link (ou após recarregar) não tem
+        // "voltar": mostra um botão para o início.
+        headerLeft:
+          Platform.OS === 'web' && !navigation.canGoBack()
+            ? () => (
+                <IconButton
+                  icon="home-outline"
+                  label={t('common.goHome')}
+                  onPress={() => router.replace('/')}
+                />
+              )
+            : undefined,
+      })}
     >
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="filters" options={{ presentation: 'modal', title: t('filters.title') }} />

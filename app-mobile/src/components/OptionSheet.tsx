@@ -2,9 +2,12 @@ import { useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useLayout } from '@/hooks/useLayout';
+
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { DIALOG_MAX_WIDTH } from '@/utils/layout';
 import { normalizeText } from '@/utils/text';
 
 import { AppText } from './AppText';
@@ -40,6 +43,8 @@ export function OptionSheet<T>({
 }) {
   const { colors, reduceMotion } = useAppTheme();
   const insets = useSafeAreaInsets();
+  // Celular: a lista sobe de baixo. Tablet e computador: cartão no centro da tela.
+  const { centeredSheets } = useLayout();
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {
     const q = normalizeText(query);
@@ -52,13 +57,20 @@ export function OptionSheet<T>({
     <Modal
       visible={visible}
       transparent
-      animationType={reduceMotion ? 'none' : 'slide'}
+      animationType={reduceMotion ? 'none' : centeredSheets ? 'fade' : 'slide'}
       onRequestClose={onClose}
     >
-      <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
+      <View
+        style={[
+          styles.backdrop,
+          centeredSheets && styles.backdropCentered,
+          { backgroundColor: colors.overlay },
+        ]}
+      >
         <View
           style={[
             styles.sheet,
+            centeredSheets && styles.sheetCentered,
             { backgroundColor: colors.surface, paddingBottom: insets.bottom + spacing.md },
           ]}
           accessibilityViewIsModal
@@ -126,12 +138,14 @@ export function OptionSheet<T>({
 
 const styles = StyleSheet.create({
   backdrop: { flex: 1, justifyContent: 'flex-end' },
+  backdropCentered: { justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
   sheet: {
     maxHeight: '85%',
     borderTopLeftRadius: radius.lg,
     borderTopRightRadius: radius.lg,
     paddingTop: spacing.sm,
   },
+  sheetCentered: { width: '100%', maxWidth: DIALOG_MAX_WIDTH, borderRadius: radius.lg },
   header: { flexDirection: 'row', alignItems: 'center', paddingLeft: spacing.lg, paddingRight: spacing.xs },
   flex: { flex: 1 },
   search: {

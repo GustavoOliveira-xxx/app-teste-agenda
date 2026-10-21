@@ -13,6 +13,7 @@ import { OfflineBanner } from '@/components/OfflineBanner';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { EmptyState, LoadingState } from '@/components/StateViews';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
+import { useLayout } from '@/hooks/useLayout';
 import { useCalendarsMap, useOccurrences } from '@/hooks/useEventsView';
 import { t } from '@/i18n';
 import type { DateKey, Occurrence } from '@/models/types';
@@ -38,6 +39,7 @@ import {
   weekKeys,
 } from '@/utils/dates';
 import { activeFilterCount } from '@/utils/filters';
+import { CONTENT_MAX_WIDTH } from '@/utils/layout';
 import { canCreateEvents } from '@/utils/permissions';
 
 interface Section {
@@ -62,6 +64,7 @@ function groupByDay(list: Occurrence[], tz: string, days?: DateKey[]): Map<DateK
 
 export default function CalendarScreen() {
   const { colors } = useAppTheme();
+  const { twoPane } = useLayout();
   const navigation = useNavigation();
   const display = useDisplaySettings();
   const tz = display.timezone;
@@ -188,6 +191,9 @@ export default function CalendarScreen() {
 
   if (!hydrated) return <LoadingState />;
 
+  // Computador e tablet grande: mês e lista do dia lado a lado.
+  const twoPaneMonth = twoPane && viewMode === 'month';
+
   const refresh = <RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />;
 
   const header = (
@@ -237,11 +243,46 @@ export default function CalendarScreen() {
   const noCalendars = calendars.length === 0;
   const emptyMessage = nFilters ? t('calendarView.noResults') : t('calendarView.emptyMessage');
 
+  const dayEvents = (dayList: Occurrence[]) =>
+    dayList.length ? (
+      <View style={styles.list}>{dayList.map(renderRow)}</View>
+    ) : (
+      <AppText tone="muted">
+        {noCalendars ? t('calendars.emptyMessage') : t('calendarView.noEventsDay')}
+      </AppText>
+    );
+
   let content: React.ReactNode;
-  if (viewMode === 'month' || viewMode === 'day') {
+  if (twoPaneMonth) {
+    content = (
+      <View style={styles.panes}>
+        <ScrollView style={styles.leftPane} refreshControl={refresh} contentContainerStyle={styles.scroll}>
+          {header}
+          <MonthGrid
+            year={year}
+            month={month}
+            weekStartsOn={display.weekStartsOn}
+            selected={selected}
+            today={today}
+            days={monthDays}
+            onSelect={setSelected}
+          />
+        </ScrollView>
+        <ScrollView
+          style={[styles.rightPane, { borderLeftColor: colors.border }]}
+          contentContainerStyle={styles.scroll}
+        >
+          <AppText variant="heading" accessibilityRole="header" accessibilityLiveRegion="polite">
+            {capitalize(formatLongDate(selected))}
+          </AppText>
+          {dayEvents(byDay.get(selected) ?? [])}
+        </ScrollView>
+      </View>
+    );
+  } else if (viewMode === 'month' || viewMode === 'day') {
     const dayList = byDay.get(selected) ?? [];
     content = (
-      <ScrollView refreshControl={refresh} contentContainerStyle={styles.scroll}>
+      <ScrollView refreshControl={refresh} contentContainerStyle={[styles.scroll, styles.column]}>
         {header}
         {viewMode === 'month' && (
           <MonthGrid
@@ -257,20 +298,14 @@ export default function CalendarScreen() {
         <AppText variant="label" tone="muted" style={styles.dayTitle}>
           {capitalize(formatLongDate(selected))}
         </AppText>
-        {dayList.length ? (
-          <View style={styles.list}>{dayList.map(renderRow)}</View>
-        ) : (
-          <AppText tone="muted">
-            {noCalendars ? t('calendars.emptyMessage') : t('calendarView.noEventsDay')}
-          </AppText>
-        )}
+        {dayEvents(dayList)}
       </ScrollView>
     );
   } else if (viewMode === 'week') {
     const days = weekKeys(selected, display.weekStartsOn);
     const grouped = groupByDay(occurrences, tz, days);
     content = (
-      <ScrollView refreshControl={refresh} contentContainerStyle={styles.scroll}>
+      <ScrollView refreshControl={refresh} contentContainerStyle={[styles.scroll, styles.column]}>
         {header}
         {days.map((day) => {
           const list = grouped.get(day) ?? [];
@@ -309,7 +344,7 @@ export default function CalendarScreen() {
         keyExtractor={(item, index) => `${item.key}-${index}`}
         ListHeaderComponent={header}
         refreshControl={refresh}
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, styles.column]}
         stickySectionHeadersEnabled={false}
         initialNumToRender={15}
         windowSize={7}
@@ -356,6 +391,10 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 120 },
+  column: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' },
+  panes: { flex: 1, flexDirection: 'row' },
+  leftPane: { flex: 1, maxWidth: 560 },
+  rightPane: { flex: 1, borderLeftWidth: StyleSheet.hairlineWidth },
   controls: { gap: spacing.md, marginBottom: spacing.sm },
   periodRow: { flexDirection: 'row', alignItems: 'center' },
   headerActions: { flexDirection: 'row', alignItems: 'center' },

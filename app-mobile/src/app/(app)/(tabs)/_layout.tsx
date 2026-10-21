@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router/js-tabs';
 
 import { Icon } from '@/components/Icon';
+import { useLayout } from '@/hooks/useLayout';
 import { t } from '@/i18n';
 import { useDataStore } from '@/stores/dataStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
@@ -8,13 +9,19 @@ import { useAppTheme } from '@/theme/ThemeProvider';
 export default function TabsLayout() {
   const { colors } = useAppTheme();
   const unread = useDataStore((s) => s.notifications.filter((n) => !n.read_at).length);
+  // Tablet e computador: menu lateral. Celular: abas embaixo, ao alcance do polegar.
+  const { sideNav } = useLayout();
   return (
     <Tabs
       screenOptions={{
+        tabBarPosition: sideNav ? 'left' : 'bottom',
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border, minHeight: 60 },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarActiveBackgroundColor: sideNav ? colors.primarySoft : undefined,
+        tabBarStyle: sideNav
+          ? { backgroundColor: colors.surface, borderRightColor: colors.border, width: 240, minWidth: 240 }
+          : { backgroundColor: colors.surface, borderTopColor: colors.border, minHeight: 60 },
+        tabBarLabelStyle: { fontSize: sideNav ? 15 : 12, fontWeight: '600' },
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
       }}
