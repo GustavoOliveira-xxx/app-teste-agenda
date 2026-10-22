@@ -3,7 +3,7 @@ import { KeyboardAvoidingView, Platform, RefreshControl, ScrollView, StyleSheet,
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { spacing } from '@/theme/tokens';
+import { SCREEN_MARGIN, spacing } from '@/theme/tokens';
 import { CONTENT_MAX_WIDTH } from '@/utils/layout';
 
 import { OfflineBanner } from './OfflineBanner';
@@ -19,6 +19,8 @@ interface ScreenProps {
   showOfflineBanner?: boolean;
   /** Largura máxima do conteúdo em telas grandes (tablet, computador). */
   maxWidth?: number;
+  /** Respeitar a área do topo (telas sem barra de título). */
+  safeTop?: boolean;
 }
 
 /** Estrutura padrão de tela: fundo, margens, rolagem e aviso de sem internet. */
@@ -31,6 +33,7 @@ export function Screen({
   footer,
   showOfflineBanner = true,
   maxWidth = CONTENT_MAX_WIDTH,
+  safeTop,
 }: ScreenProps) {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -42,16 +45,34 @@ export function Screen({
         column,
         padded && styles.padded,
         { paddingBottom: spacing.huge + insets.bottom },
+        safeTop && { paddingTop: insets.top + spacing.lg },
       ]}
       keyboardShouldPersistTaps="handled"
       refreshControl={
-        onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined
+        onRefresh ? (
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={colors.surface}
+          />
+        ) : undefined
       }
     >
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.flex, column, padded && styles.padded]}>{children}</View>
+    <View
+      style={[
+        styles.flex,
+        column,
+        padded && styles.padded,
+        safeTop && { paddingTop: insets.top + spacing.lg },
+      ]}
+    >
+      {children}
+    </View>
   );
 
   return (
@@ -82,7 +103,11 @@ export function Screen({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   column: { width: '100%', alignSelf: 'center' },
-  padded: { padding: spacing.lg, gap: spacing.lg },
-  footer: { borderTopWidth: StyleSheet.hairlineWidth, padding: spacing.md },
+  padded: { paddingHorizontal: SCREEN_MARGIN, paddingTop: spacing.lg, gap: spacing.lg },
+  footer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: SCREEN_MARGIN,
+    paddingTop: spacing.md,
+  },
   footerContent: { gap: spacing.sm },
 });

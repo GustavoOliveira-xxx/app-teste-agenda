@@ -5,10 +5,12 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
+import { StarBurst } from '@/components/brand/Decor';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { useFeedback } from '@/components/Feedback';
 import { Icon } from '@/components/Icon';
+import { EnterItem, PressableScale, tapFeedback } from '@/components/motion';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { EmptyState } from '@/components/StateViews';
@@ -16,10 +18,11 @@ import { TextField } from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
 import { useCalendarMembers } from '@/hooks/useCalendarMembers';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
+import { useNow } from '@/hooks/useNow';
 import { useCalendarsMap, useEventsMap } from '@/hooks/useEventsView';
 import { useRemoteData } from '@/hooks/useRemoteData';
 import { strings, t } from '@/i18n';
-import type { CalendarEvent, EventStatus, Occurrence } from '@/models/types';
+import type { CalendarEvent, EventStatus, Member, Occurrence } from '@/models/types';
 import * as api from '@/services/api';
 import { shareMessage } from '@/services/share';
 import {
@@ -33,7 +36,7 @@ import {
 import { useUserId } from '@/stores/authStore';
 import { useSyncStore } from '@/stores/syncStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { spacing } from '@/theme/tokens';
+import { agendaColor, fonte, radius, SCREEN_MARGIN, spacing } from '@/theme/tokens';
 import { describeActivity } from '@/utils/activity';
 import { capitalize, formatDateTime, formatLongDate, formatOccurrenceTime, toDateKey } from '@/utils/dates';
 import { canComment, canEditEvent } from '@/utils/permissions';
@@ -53,6 +56,150 @@ function findOccurrence(event: CalendarEvent, date?: string): Occurrence | undef
   }
   const start = new Date(event.starts_at);
   return expandEvent(event, start, new Date(start.getTime() + 400 * 86_400_000))[0];
+}
+
+/** "1h 12min", "45 min" ou "3 dias". */
+function formatSpan(ms: number): string {
+  const minutes = Math.max(1, Math.round(ms / 60_000));
+  if (minutes < 60) return `${minutes} min`;
+  if (minutes < 48 * 60) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m ? `${h}h ${m}min` : `${h}h`;
+  }
+  return `${Math.round(minutes / 1440)} dias`;
+}
+
+const RESPONSE_TONE = {
+  accepted: 'primary',
+  tentative: 'warning',
+  declined: 'danger',
+  pending: 'neutral',
+} as const;
+
+/** "Você vai?": Vou, Talvez, Não vou. "Vou" estoura estrelas. */
+function Rsvp({ event, userId }: { event: CalendarEvent; userId: string }) {
+  const { colors } = useAppTheme();
+  const online = useSyncStore((s) => s.online);
+  const { run } = useAction();
+  const { data, reload } = useRemoteData(
+    () =>
+      online && event.version > 0
+        ? api.listAttendeeResponses(event.id)
+        : Promise.resolve({} as Record<string, api.AttendeeResponse>),
+    [event.id, online, event.version],
+    {} as Record<string, api.AttendeeResponse>,
+  );
+  const [burst, setBurst] = useState(0);
+  const mine = data?.[userId] ?? 'pending';
+  const answer = async (response: api.AttendeeResponse) => {
+    if (response === mine) return;
+    if (response === 'accepted') {
+      tapFeedback('success');
+      setBurst((b) => b + 1);
+    } else tapFeedback('select');
+    const result = await run(() => api.setMyResponse(event.id, userId, response), {
+      success: t('events.rsvpSaved'),
+    });
+    if (result.ok) void reload();
+  };
+  const options: { value: api.AttendeeResponse; label: string }[] = [
+    { value: 'accepted', label: t('events.rsvpGoing') },
+    { value: 'tentative', label: t('events.rsvpMaybe') },
+    { value: 'declined', label: t('events.rsvpNo') },
+  ];
+  return (
+    <View style={styles.gap}>
+      <SectionHeader title={t('events.rsvpTitle')} />
+      <View style={styles.rsvpRow} accessibilityRole="radiogroup" accessibilityLabel={t('events.rsvpTitle')}>
+        {options.map((o) => {
+          const selected = mine === o.value;
+          return (
+            <PressableScale
+              key={o.value}
+              onPress={() => void answer(o.value)}
+              disabled={!online}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selected, disabled: !online }}
+              accessibilityLabel={o.label}
+              style={[
+                styles.rsvp,
+                selected
+                  ? { backgroundColor: colors.primary, borderColor: colors.primary }
+                  : { borderColor: colors.inputBorder },
+                !online && { opacity: 0.5 },
+              ]}
+            >
+              {selected && <Icon name="checkmark" size={18} color={colors.primaryText} />}
+              <AppText style={[fonte('negrito'), { color: selected ? colors.primaryText : colors.text }]}>
+                {o.label}
+              </AppText>
+              {o.value === 'accepted' && <StarBurst trigger={burst} size={64} />}
+            </PressableScale>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+/** Participantes com a resposta de cada um. */
+function Participants({
+  event,
+  people,
+  onOpen,
+}: {
+  event: CalendarEvent;
+  people: Member[];
+  onOpen: () => void;
+}) {
+  const online = useSyncStore((s) => s.online);
+  const { data } = useRemoteData(
+    () =>
+      online && event.version > 0 && event.attendee_ids.length
+        ? api.listAttendeeResponses(event.id)
+        : Promise.resolve({} as Record<string, api.AttendeeResponse>),
+    [event.id, online, event.version, event.attendee_ids.length],
+    {} as Record<string, api.AttendeeResponse>,
+  );
+  const list = event.attendee_ids.map((id) => {
+    const m = people.find((p) => p.user_id === id);
+    return { id, name: m?.display_name ?? t('common.someone'), color: m?.avatar_color ?? '', me: !!m?.is_me };
+  });
+  const confirmed = list.filter((p) => data?.[p.id] === 'accepted').length;
+  return (
+    <View style={styles.gap}>
+      <SectionHeader
+        title={list.length ? `${t('events.participants')} · ${list.length}` : t('events.participants')}
+        right={
+          list.length ? (
+            <AppText variant="caption" tone="muted">
+              {t('events.confirmedCount', { n: confirmed })}
+            </AppText>
+          ) : undefined
+        }
+      />
+      {list.map((p, i) => {
+        const response = data?.[p.id] ?? 'pending';
+        return (
+          <EnterItem key={p.id} index={i} style={styles.person}>
+            <Avatar name={p.name} color={p.color} size={36} />
+            <AppText style={[styles.flex, fonte('semi')]}>
+              {p.me ? `${p.name} (${t('common.you').toLowerCase()})` : p.name}
+            </AppText>
+            <Badge label={strings.events.rsvpStatus[response]} tone={RESPONSE_TONE[response]} />
+          </EnterItem>
+        );
+      })}
+      <Button
+        title={t('events.participants')}
+        icon="people-outline"
+        variant="ghost"
+        compact
+        onPress={onOpen}
+      />
+    </View>
+  );
 }
 
 function Comments({ event, canWrite }: { event: CalendarEvent; canWrite: boolean }) {
@@ -196,9 +343,10 @@ function EventHistory({ event }: { event: CalendarEvent }) {
 
 export default function EventDetailScreen() {
   const { id, date } = useLocalSearchParams<{ id: string; date?: string }>();
-  const { colors } = useAppTheme();
+  const { colors, dark } = useAppTheme();
   const display = useDisplaySettings();
   const userId = useUserId();
+  const now = useNow(30_000);
   const { confirm, toast } = useFeedback();
   const events = useEventsMap();
   const calendars = useCalendarsMap();
@@ -306,53 +454,81 @@ export default function EventDetailScreen() {
     toast(t('common.saved'));
   };
 
+  const color = agendaColor(event.color ?? calendar?.color, dark) ?? colors.primary;
+  const startMs = occurrence.start.getTime();
+  const endMs = occurrence.end.getTime();
+  const isNow = !occurrence.allDay && event.status !== 'cancelled' && startMs <= now && endMs > now;
+  const soon = !occurrence.allDay && startMs > now && startMs - now < 24 * 3600_000;
+  const amAttendee = !!userId && event.attendee_ids.includes(userId);
+
   return (
     <Screen>
-      <Stack.Screen options={{ title: t('events.details') }} />
-      <Card>
-        <View style={styles.row}>
-          <View
-            style={[styles.colorBar, { backgroundColor: event.color ?? calendar?.color ?? colors.primary }]}
-          />
-          <View style={styles.flex}>
-            <AppText
-              variant="title"
-              selectable
-              style={event.status === 'cancelled' ? { textDecorationLine: 'line-through' } : undefined}
-            >
-              {title}
-            </AppText>
-            <AppText tone="muted">{calendar?.name}</AppText>
+      <Stack.Screen
+        options={{
+          title: t('events.details'),
+          headerTitle: '',
+          headerStyle: { backgroundColor: colors.surface },
+        }}
+      />
+      <View style={[styles.hero, { backgroundColor: colors.surface }]}>
+        <View style={styles.chips}>
+          <View style={[styles.calChip, { borderColor: colors.border }]}>
+            <View style={[styles.dot, { backgroundColor: color }]} />
+            <AppText variant="label">{calendar?.name}</AppText>
           </View>
+          {isNow && <Badge label={t('today.now')} tone="strong" />}
+          {event.status !== 'planned' && event.status !== 'confirmed' && (
+            <Badge
+              label={strings.eventStatus[event.status]}
+              tone={
+                event.status === 'cancelled' ? 'danger' : event.status === 'completed' ? 'success' : 'neutral'
+              }
+            />
+          )}
         </View>
-        {dateLabel ? (
-          <View style={styles.row}>
-            <Icon name="calendar-outline" size={20} color={colors.textMuted} />
-            <AppText style={styles.flex}>{dateLabel}</AppText>
-          </View>
-        ) : null}
+        <AppText
+          variant="display"
+          selectable
+          style={[styles.heroTitle, event.status === 'cancelled' && { textDecorationLine: 'line-through' }]}
+        >
+          {title}
+        </AppText>
         <View style={styles.row}>
-          <Icon name="time-outline" size={20} color={colors.textMuted} />
-          <AppText style={styles.flex}>{time}</AppText>
+          <Icon name="time-outline" size={22} color={colors.text} />
+          <View style={styles.flex}>
+            {dateLabel ? <AppText style={fonte('semi')}>{dateLabel}</AppText> : null}
+            <AppText style={dateLabel ? undefined : fonte('semi')}>{time}</AppText>
+            {isNow ? (
+              <AppText variant="caption" tone="muted">
+                {t('events.endsIn', { time: formatSpan(endMs - now) })}
+              </AppText>
+            ) : soon ? (
+              <AppText variant="caption" tone="muted">
+                {t('events.startsIn', { time: formatSpan(startMs - now) })}
+              </AppText>
+            ) : null}
+          </View>
         </View>
         {eventZoneTime ? (
           <AppText variant="small" tone="muted">
             {eventZoneTime}
           </AppText>
         ) : null}
+        {!event.is_masked && occurrence.location ? (
+          <View style={styles.row}>
+            <Icon name="location-outline" size={22} color={colors.text} />
+            <AppText style={styles.flex} selectable>
+              {occurrence.location}
+            </AppText>
+          </View>
+        ) : null}
         {rule ? (
           <View style={styles.row}>
-            <Icon name="repeat" size={20} color={colors.textMuted} />
+            <Icon name="repeat" size={22} color={colors.text} />
             <AppText style={styles.flex}>{describeRule(rule, occurrence.originalDate)}</AppText>
           </View>
         ) : null}
         <View style={styles.badges}>
-          <Badge
-            label={strings.eventStatus[event.status]}
-            tone={
-              event.status === 'cancelled' ? 'danger' : event.status === 'completed' ? 'success' : 'neutral'
-            }
-          />
           {!event.is_masked && <Badge label={strings.eventTypes[event.event_type]} />}
           {event.privacy !== 'members' && (
             <Badge label={strings.privacy[event.privacy]} icon="lock-closed-outline" />
@@ -362,27 +538,24 @@ export default function EventDetailScreen() {
             <Badge label={t('events.pendingBadge')} tone="warning" icon="cloud-upload-outline" />
           )}
         </View>
-      </Card>
+      </View>
+
+      {amAttendee && !event.is_masked && userId ? <Rsvp event={event} userId={userId} /> : null}
 
       {event.is_masked ? (
         <AppText tone="muted">{t('events.maskedMessage')}</AppText>
       ) : (
         <>
-          {(occurrence.location || event.address) && (
+          {event.address ? (
             <Card>
               <View style={styles.row}>
                 <Icon name="location-outline" size={20} color={colors.textMuted} />
-                <View style={styles.flex}>
-                  {occurrence.location ? <AppText selectable>{occurrence.location}</AppText> : null}
-                  {event.address ? (
-                    <AppText tone="muted" selectable>
-                      {event.address}
-                    </AppText>
-                  ) : null}
-                </View>
+                <AppText tone="muted" selectable style={styles.flex}>
+                  {event.address}
+                </AppText>
               </View>
             </Card>
-          )}
+          ) : null}
           {event.url ? (
             <Button
               title={t('events.openLink')}
@@ -396,23 +569,17 @@ export default function EventDetailScreen() {
               <AppText selectable>{occurrence.description}</AppText>
             </Card>
           ) : null}
+          <Participants
+            event={event}
+            people={people}
+            onOpen={() => router.push({ pathname: '/event/[id]/participants', params: { id: event.id } })}
+          />
           <Card>
             {event.assignee_id ? (
               <AppText>
                 {t('events.assignee')}: {nameOf(event.assignee_id)}
               </AppText>
             ) : null}
-            <Button
-              title={
-                event.attendee_ids.length
-                  ? `${t('events.participants')}: ${event.attendee_ids.map(nameOf).join(', ')}`
-                  : t('events.participants')
-              }
-              icon="people-outline"
-              variant="ghost"
-              compact
-              onPress={() => router.push({ pathname: '/event/[id]/participants', params: { id: event.id } })}
-            />
             <AppText variant="small" tone="muted">
               {t('events.createdBy', { name: nameOf(event.created_by) })}
             </AppText>
@@ -498,7 +665,40 @@ export default function EventDetailScreen() {
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   flex: { flex: 1 },
-  colorBar: { width: 6, alignSelf: 'stretch', borderRadius: 3 },
+  hero: {
+    marginHorizontal: -SCREEN_MARGIN,
+    marginTop: -spacing.lg,
+    paddingHorizontal: SCREEN_MARGIN,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxl,
+    borderBottomLeftRadius: radius.xl,
+    borderBottomRightRadius: radius.xl,
+    gap: spacing.md,
+  },
+  heroTitle: { marginBottom: spacing.xs },
+  chips: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
+  calChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+  },
+  dot: { width: 9, height: 9, borderRadius: 5 },
+  rsvpRow: { flexDirection: 'row', gap: spacing.sm },
+  rsvp: {
+    flex: 1,
+    minHeight: 48,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  person: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, minHeight: 44 },
   badges: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   gap: { gap: spacing.sm },
 });

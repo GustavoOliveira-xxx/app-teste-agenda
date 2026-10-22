@@ -1,6 +1,6 @@
 # Arquitetura
 
-Este documento explica como as peças do Agenda Compartilhada se encaixam. Para o porquê de cada escolha, veja [DECISOES.md](DECISOES.md).
+Este documento explica como as peças do SynCK se encaixam. Para o porquê de cada escolha, veja [DECISOES.md](DECISOES.md).
 
 ## Visão geral
 

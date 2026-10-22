@@ -99,7 +99,7 @@ jobs:
         run: |
           APK=android/app/build/outputs/apk/release/app-release.apk
           AAB=android/app/build/outputs/bundle/release/app-release.aab
-          NOME="agenda-compartilhada-v${VERSAO}-build${GITHUB_RUN_NUMBER}"
+          NOME="synck-v${VERSAO}-build${GITHUB_RUN_NUMBER}"
           mkdir -p ../saida
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.keystore"
@@ -170,4 +170,4 @@ jobs:
           - O arquivo .aab serve apenas para enviar à Google Play Store.
           NOTAS
           gh release create "$TAG" saida/*.apk saida/*.aab --target "$GITHUB_SHA" \
-            --title "Agenda Compartilhada $VERSAO (build $GITHUB_RUN_NUMBER)" --notes-file notas.md $EXTRA
+            --title "SynCK $VERSAO (build $GITHUB_RUN_NUMBER)" --notes-file notas.md $EXTRA

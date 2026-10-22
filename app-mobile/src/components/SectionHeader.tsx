@@ -1,21 +1,16 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { marca } from '@/theme/marca';
 import { spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 
+/** Título de seção em `overline` (caixa alta, 11/14). */
 export function SectionHeader({ title, right }: { title: string; right?: ReactNode }) {
   return (
     <View style={styles.row}>
-      <AppText
-        variant="label"
-        tone="muted"
-        accessibilityRole="header"
-        style={marca.titulosDeSecaoEmMaiusculas ? styles.upper : undefined}
-      >
-        {marca.titulosDeSecaoEmMaiusculas ? title.toUpperCase() : title}
+      <AppText variant="overline" tone="muted" accessibilityRole="header" style={styles.flex}>
+        {title}
       </AppText>
       {right}
     </View>
@@ -23,6 +18,12 @@ export function SectionHeader({ title, right }: { title: string; right?: ReactNo
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
-  upper: { letterSpacing: 0.6, fontSize: 13 },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+    gap: spacing.sm,
+  },
+  flex: { flexShrink: 1 },
 });

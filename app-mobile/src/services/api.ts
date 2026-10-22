@@ -282,6 +282,22 @@ export async function setEventAttendees(eventId: string, userIds: string[]) {
 
 // ------------------------------------------------- comentários e histórico
 
+export type AttendeeResponse = 'pending' | 'accepted' | 'declined' | 'tentative';
+
+/** Resposta de cada participante ("Você vai?"). */
+export async function listAttendeeResponses(eventId: string): Promise<Record<string, AttendeeResponse>> {
+  const rows = unwrap(
+    await supabase.from('event_attendees').select('event_id,user_id,response').eq('event_id', eventId),
+  ) as { event_id: string; user_id: string; response: AttendeeResponse }[];
+  return Object.fromEntries(rows.filter((r) => r.event_id === eventId).map((r) => [r.user_id, r.response]));
+}
+
+export async function setMyResponse(eventId: string, userId: string, response: AttendeeResponse) {
+  unwrap(
+    await supabase.from('event_attendees').update({ response }).eq('event_id', eventId).eq('user_id', userId),
+  );
+}
+
 export async function listComments(eventId: string): Promise<EventComment[]> {
   return unwrap(await supabase.rpc('list_event_comments', { p_event_id: eventId })) as EventComment[];
 }

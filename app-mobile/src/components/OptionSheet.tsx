@@ -75,6 +75,7 @@ export function OptionSheet<T>({
           ]}
           accessibilityViewIsModal
         >
+          {!centeredSheets && <View style={[styles.grabber, { backgroundColor: colors.border }]} />}
           <View style={styles.header}>
             <AppText variant="heading" style={styles.flex}>
               {title}
@@ -89,7 +90,11 @@ export function OptionSheet<T>({
               placeholderTextColor={colors.textMuted}
               accessibilityLabel={searchPlaceholder ?? t('common.search')}
               autoCorrect={false}
-              style={[styles.search, typography.body, { color: colors.text, borderColor: colors.border }]}
+              style={[
+                styles.search,
+                typography.body,
+                { color: colors.text, borderColor: colors.inputBorder },
+              ]}
             />
           )}
           <FlatList
@@ -141,19 +146,20 @@ const styles = StyleSheet.create({
   backdropCentered: { justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
   sheet: {
     maxHeight: '85%',
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
     paddingTop: spacing.sm,
   },
   sheetCentered: { width: '100%', maxWidth: DIALOG_MAX_WIDTH, borderRadius: radius.lg },
+  grabber: { width: 40, height: 4, borderRadius: 2, alignSelf: 'center', marginBottom: spacing.xs },
   header: { flexDirection: 'row', alignItems: 'center', paddingLeft: spacing.lg, paddingRight: spacing.xs },
   flex: { flex: 1 },
   search: {
     marginHorizontal: spacing.lg,
     marginBottom: spacing.sm,
     minHeight: MIN_TOUCH,
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
   },
   option: {

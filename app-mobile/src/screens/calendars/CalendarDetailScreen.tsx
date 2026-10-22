@@ -18,12 +18,14 @@ import * as api from '@/services/api';
 import { useUserId } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useUiStore } from '@/stores/uiStore';
-import { radius, spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/ThemeProvider';
+import { agendaColor, radius, spacing } from '@/theme/tokens';
 import { DEFAULT_FILTERS } from '@/utils/filters';
 import { canEditCalendarSettings, canInvite, isOwner } from '@/utils/permissions';
 
 export default function CalendarDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { dark } = useAppTheme();
   const calendar = useCalendar(id);
   const userId = useUserId();
   const { confirm } = useFeedback();
@@ -102,7 +104,7 @@ export default function CalendarDetailScreen() {
       <Stack.Screen options={{ title: calendar.name }} />
       <Card>
         <View style={styles.headerRow}>
-          <View style={[styles.swatch, { backgroundColor: calendar.color }]} />
+          <View style={[styles.swatch, { backgroundColor: agendaColor(calendar.color, dark) }]} />
           <View style={styles.flex}>
             <AppText variant="title">{calendar.name}</AppText>
             <AppText tone="muted">{strings.calendarKinds[calendar.kind]}</AppText>

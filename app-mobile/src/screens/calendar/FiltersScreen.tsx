@@ -16,7 +16,8 @@ import * as api from '@/services/api';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
 import { useUiStore } from '@/stores/uiStore';
-import { spacing } from '@/theme/tokens';
+import { useAppTheme } from '@/theme/ThemeProvider';
+import { agendaColor, spacing } from '@/theme/tokens';
 import { DEFAULT_FILTERS, type EventFilters, type Ownership, type PeriodFilter } from '@/utils/filters';
 
 const TYPES = Object.keys(strings.eventTypes) as EventType[];
@@ -27,6 +28,7 @@ function toggle<T>(list: T[], value: T): T[] {
 }
 
 export default function FiltersScreen() {
+  const { dark } = useAppTheme();
   const allCalendars = useDataStore((s) => s.calendars);
   const calendars = useMemo(() => allCalendars.filter((c) => !c.deleted_at), [allCalendars]);
   const cachedMembers = useDataStore((s) => s.members);
@@ -90,7 +92,7 @@ export default function FiltersScreen() {
           <Chip
             key={c.id}
             label={c.name}
-            color={c.color}
+            color={agendaColor(c.color, dark)}
             selected={filters.calendarIds.includes(c.id)}
             onPress={() => set('calendarIds', toggle(filters.calendarIds, c.id))}
           />

@@ -1,6 +1,6 @@
 # Telas
 
-Este documento mostra todas as telas do Agenda Compartilhada, como se vai de uma para outra, os fluxos principais e o que cada tela faz.
+Este documento mostra todas as telas do SynCK, como se vai de uma para outra, os fluxos principais e o que cada tela faz.
 
 Tudo aqui foi conferido **lendo o código** em `app-mobile/src` e pelos testes de tela da versão web (capturas em [capturas/](capturas/)). O app ainda não foi usado de ponta a ponta num celular com o servidor real (veja o [README](../README.md)). Quando algo existe só em parte, isso está dito na tabela.
 
@@ -40,10 +40,11 @@ flowchart TB
   end
 
   subgraph TABS["Com login: abas de (app)/(tabs)"]
-    TAg["Agenda<br/>(tabs)/index"]
+    THo["Hoje<br/>(tabs)/index"]
+    TAg["Calendário<br/>(tabs)/month"]
     TAs["Agendas<br/>(tabs)/calendars"]
-    TAv["Avisos<br/>(tabs)/notifications"]
     TPe["Perfil<br/>(tabs)/profile"]
+    TAv["Avisos (sino da tela Hoje)<br/>notifications"]
   end
 
   subgraph EVENTOS["Calendário e eventos"]
@@ -86,7 +87,7 @@ flowchart TB
   Abrir --> Splash
   Splash -->|APK sem servidor| NC
   Splash -->|sem sessão| AIdx
-  Splash -->|com sessão| TAg
+  Splash -->|com sessão| THo
   AIdx -->|sim| Onb
   AIdx -->|não| Wel
   Onb --> Wel
@@ -97,14 +98,17 @@ flowchart TB
   Sign -->|confirmação ligada| Ver
   Log -->|e-mail não confirmado| Ver
   Log --> Forgot
-  Sign -->|conta criada| TAg
-  Ver -->|código certo| TAg
-  Log -->|login certo| TAg
-  Forgot -->|nova senha salva| TAg
+  Sign -->|conta criada| THo
+  Ver -->|código certo| THo
+  Log -->|login certo| THo
+  Forgot -->|nova senha salva| THo
 
   TAg --> Search
   TAg --> Filters
-  TAg -->|ícone de nuvem| Sync
+  THo -->|faixa de sincronização| Sync
+  THo -->|sino| TAv
+  THo -->|botão +| EvNew
+  THo --> EvDet
   TAg -->|botão +| EvNew
   TAg --> EvDet
   TAg -->|sem agendas| CalNew
@@ -157,7 +161,7 @@ flowchart TB
 
 Observações sobre o mapa:
 
-- As quatro abas ficam sempre visíveis na parte de baixo. A aba **Avisos** mostra a quantidade de avisos não lidos (até "99+").
+- As quatro abas (Hoje, Calendário, Agendas e Perfil) ficam sempre visíveis na parte de baixo. Os **Avisos** abrem pelo sino da tela Hoje, que ganha um ponto coral quando há avisos não lidos.
 - **Filtros** abre como janela modal (por cima da Agenda). As demais telas abrem empilhadas, com botão de voltar.
 - Tocar num lembrete do Android abre direto os detalhes do evento (`src/app/(app)/_layout.tsx`).
 - Depois de sair da conta, a apresentação não aparece de novo: o app lembra neste aparelho que ela já foi vista e vai direto para Boas-vindas.
@@ -171,7 +175,7 @@ Observações sobre o mapa:
 3. Em **Boas-vindas**, toca em **Criar conta**.
 4. Em **Criar conta**, preenche nome, e-mail, senha e confirmação. Pode tocar em "Ler a Política de Privacidade" antes. Toca em **Criar conta**.
 5. Se a confirmação de e-mail estiver ligada no servidor, abre **Confirme seu e-mail**: a pessoa digita o código de 6 dígitos (pode pedir "Reenviar código").
-6. Com a sessão criada, o app troca sozinho para a área logada e abre a aba **Agenda**. O banco já cria uma agenda pessoal chamada "Minha agenda" para a conta nova.
+6. Com a sessão criada, o app troca sozinho para a área logada e abre a tela **Hoje**. O banco já cria uma agenda pessoal chamada "Minha agenda" para a conta nova.
 
 ### 2. Criar uma agenda e convidar alguém
 
@@ -195,7 +199,7 @@ Convites enviados para o e-mail da pessoa também aparecem em **Convites recebid
 
 ### 4. Criar um evento que se repete e editá-lo
 
-1. Na aba **Agenda**, escolhe um dia e toca no botão redondo **+** (ele só aparece se existir alguma agenda em que a pessoa pode criar eventos).
+1. Na tela **Hoje** ou na aba **Calendário**, escolhe um dia e toca no botão redondo **+** (ele só aparece se existir alguma agenda em que a pessoa pode criar eventos).
 2. Escolhe a agenda, o título, as datas e horas (ou "Dia inteiro").
 3. Em **Repetir**, escolhe uma opção pronta (Todos os dias, Toda semana, A cada 2 semanas, Todo mês, Todo ano) ou **Personalizar...**: frequência, intervalo (1 a 99), dias da semana e término (nunca, numa data ou após N vezes). Abaixo aparece um resumo em português da regra.
 4. Escolhe lembretes (até 5) e toca em **Salvar**. Aparece "Evento criado." (ou, sem internet, "Salvo neste aparelho. Será enviado quando houver internet.").
@@ -245,7 +249,7 @@ Legenda da coluna "Quem acessa": os papéis são Proprietário, Administrador, E
 | 11 | Calendário mensal | `(app)/(tabs)/index.tsx` | `screens/calendar/CalendarScreen.tsx` (modo "Mês") e `components/MonthGrid.tsx` | Grade do mês com até 3 pontinhos coloridos por dia (e "+" se houver mais) e a lista do dia escolhido logo abaixo | Qualquer pessoa logada | Implementada |
 | 12 | Calendário semanal | `(app)/(tabs)/index.tsx` | `CalendarScreen.tsx` (modo "Semana") | Os 7 dias da semana, cada um com sua lista de eventos, e setas para semana anterior e seguinte | Qualquer pessoa logada | Parcial: os dias aparecem como listas; não há grade de horários |
 | 13 | Calendário diário | `(app)/(tabs)/index.tsx` | `CalendarScreen.tsx` (modo "Dia") | Eventos de um dia, com setas para o dia anterior e o seguinte | Qualquer pessoa logada | Parcial: é uma lista do dia; não há linha do tempo por hora |
-| 14 | Lista de eventos | `(app)/(tabs)/index.tsx` | `CalendarScreen.tsx` (modo "Lista") | Eventos agrupados por dia, com as abas "Próximos" e "Passados" (180 dias para cada lado) | Qualquer pessoa logada | Implementada (é um modo da tela Agenda) |
+| 14 | Lista de eventos | `(app)/(tabs)/month.tsx` | `CalendarScreen.tsx` (modo "Lista") | Eventos agrupados por dia, com as abas "Próximos" e "Passados" (180 dias para cada lado) | Qualquer pessoa logada | Implementada (é um modo da tela Calendário) |
 | 15 | Criação de evento | `(app)/event/new.tsx` | `screens/events/EventFormScreen.tsx` e `ReminderPicker.tsx` | Agenda, título, dia inteiro, datas e horas, repetição, local e lembretes. Em "Mais opções": descrição, endereço, link, tipo, status, quem pode ver, cor, responsável, participantes e fuso | Colaborador ou acima, em agenda ativa | Implementada |
 | 16 | Edição de evento | `(app)/event/[id]/edit.tsx` | `EventFormScreen.tsx` (o mesmo formulário) | Mesmo formulário, preenchido; em evento repetido recebe o escopo escolhido (só esta, esta e as próximas, todas) | Proprietário e Administrador; Editor (os próprios, ou todos se a agenda permitir); Colaborador (só os próprios) | Implementada |
 | 17 | Detalhes do evento | `(app)/event/[id]/index.tsx` | `screens/events/EventDetailScreen.tsx` | Título, agenda, horário (e o horário no fuso do evento, se for outro), repetição, status, tipo, privacidade, local, link, descrição, responsável, participantes, quem criou; "Meus lembretes"; ações editar, concluir, cancelar, duplicar, compartilhar e excluir; comentários; histórico do evento | Membros que podem ver o evento. Evento "Ocupado" aparece só como "Ocupado". Ações só para quem pode editar; comentar só Colaborador ou acima | Implementada |

@@ -1,15 +1,16 @@
 import { router, useNavigation } from 'expo-router';
 import { useLayoutEffect } from 'react';
-import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { FlatList, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Icon, type IconName } from '@/components/Icon';
-import { ListItem } from '@/components/ListItem';
+import { EnterItem } from '@/components/motion';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { EmptyState } from '@/components/StateViews';
 import { useAction } from '@/hooks/useAction';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
+import { useNow } from '@/hooks/useNow';
 import { t } from '@/i18n';
 import type { AppNotification, NotificationType } from '@/models/types';
 import { syncNow } from '@/offline/syncEngine';
@@ -17,8 +18,25 @@ import * as api from '@/services/api';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { spacing } from '@/theme/tokens';
-import { formatDateTime } from '@/utils/dates';
+import { CALENDAR_COLORS, fonte, pastel, radius, SCREEN_MARGIN, spacing } from '@/theme/tokens';
+import { formatDateTime, formatRelative } from '@/utils/dates';
+import { CONTENT_MAX_WIDTH } from '@/utils/layout';
+
+/** Cor do ícone de cada tipo de aviso (eventos, pessoas, convites, remoções). */
+const TINTS: Record<NotificationType, number> = {
+  invite_received: 3,
+  invite_accepted: 3,
+  invite_declined: 1,
+  event_created: 0,
+  event_updated: 0,
+  event_cancelled: 1,
+  event_deleted: 1,
+  member_added: 4,
+  member_removed: 1,
+  role_changed: 4,
+  ownership_received: 2,
+  comment_added: 0,
+};
 
 const ICONS: Record<NotificationType, IconName> = {
   invite_received: 'mail-outline',
@@ -44,6 +62,7 @@ export default function NotificationsScreen() {
   const syncing = useSyncStore((s) => s.syncing);
   const { run } = useAction();
   const unread = notifications.filter((n) => !n.read_at).length;
+  const now = useNow();
 
   const markAll = async () => {
     const result = await run(() => api.markNotificationsRead());
@@ -94,40 +113,62 @@ export default function NotificationsScreen() {
         refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />}
         contentContainerStyle={notifications.length ? styles.list : styles.flex}
         ListEmptyComponent={
-          <EmptyState icon="notifications-off-outline" title={t('notificationsInbox.empty')} />
+          <EmptyState
+            art="orbit"
+            title={t('notificationsInbox.empty')}
+            message={t('notificationsInbox.emptyMessage')}
+          />
         }
         ListFooterComponent={
           notifications.some((n) => n.read_at) ? (
             <Button title={t('notificationsInbox.deleteAll')} variant="ghost" onPress={clearRead} />
           ) : undefined
         }
-        renderItem={({ item }) => (
-          <ListItem
-            title={item.title}
-            subtitle={[
-              item.body,
-              formatDateTime(
-                new Date(item.created_at),
-                display.timezone,
-                display.dateFormat,
-                display.timeFormat,
-              ),
-            ]
-              .filter(Boolean)
-              .join('\n')}
-            left={
-              <View>
-                <Icon
-                  name={ICONS[item.type] ?? 'notifications-outline'}
-                  color={item.read_at ? colors.textMuted : colors.primary}
-                />
-                {!item.read_at && <View style={[styles.unreadDot, { backgroundColor: colors.danger }]} />}
-              </View>
-            }
-            accessibilityHint={item.read_at ? undefined : t('notificationsInbox.unread')}
-            onPress={() => open(item)}
-          />
-        )}
+        renderItem={({ item, index }) => {
+          const tint = CALENDAR_COLORS[TINTS[item.type] ?? 0].value;
+          const when = new Date(item.created_at);
+          return (
+            <EnterItem index={index}>
+              <Pressable
+                onPress={() => open(item)}
+                accessibilityRole="button"
+                accessibilityLabel={[
+                  item.read_at ? null : t('notificationsInbox.unread'),
+                  item.title,
+                  item.body,
+                  formatDateTime(when, display.timezone, display.dateFormat, display.timeFormat),
+                ]
+                  .filter(Boolean)
+                  .join('. ')}
+                style={({ pressed }) => [
+                  styles.item,
+                  {
+                    borderBottomColor: colors.border,
+                    backgroundColor: pressed ? colors.surfaceAlt : 'transparent',
+                  },
+                ]}
+              >
+                <View style={[styles.tile, { backgroundColor: pastel(tint) }]}>
+                  <Icon name={ICONS[item.type] ?? 'notifications-outline'} size={22} color={colors.onCoral} />
+                </View>
+                <View style={styles.texts}>
+                  <AppText style={[styles.itemTitle, !item.read_at && fonte('negrito')]}>
+                    {item.title}
+                    {!item.read_at ? <AppText style={{ color: colors.coral }}> ●</AppText> : null}
+                  </AppText>
+                  {item.body ? (
+                    <AppText variant="caption" tone="muted" numberOfLines={2}>
+                      {item.body}
+                    </AppText>
+                  ) : null}
+                </View>
+                <AppText variant="caption" tone="muted">
+                  {formatRelative(when, now, display.timezone, display.dateFormat)}
+                </AppText>
+              </Pressable>
+            </EnterItem>
+          );
+        }}
       />
       {notifications.length === 0 ? null : (
         <AppText variant="small" tone="muted" style={styles.note}>
@@ -140,7 +181,28 @@ export default function NotificationsScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  list: { paddingVertical: spacing.sm },
-  unreadDot: { position: 'absolute', right: -2, top: -2, width: 8, height: 8, borderRadius: 4 },
+  list: {
+    paddingHorizontal: SCREEN_MARGIN,
+    paddingBottom: spacing.xl,
+    width: '100%',
+    maxWidth: CONTENT_MAX_WIDTH,
+    alignSelf: 'center',
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.md,
+    paddingVertical: spacing.lg,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tile: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm + 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  texts: { flex: 1, gap: 2 },
+  itemTitle: { fontSize: 15, lineHeight: 20, ...fonte('semi') },
   note: { padding: spacing.lg, textAlign: 'center' },
 });

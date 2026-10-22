@@ -23,7 +23,7 @@ export const HELP_TOPICS: { question: string; answer: string }[] = [
   {
     question: 'Os lembretes não tocam. O que fazer?',
     answer:
-      'Confira em Perfil > Notificações se a permissão está "Permitida". No Android, desative a economia de bateria para o app (Configurações do Android > Apps > Agenda Compartilhada > Bateria > Sem restrições).',
+      'Confira em Perfil > Notificações se a permissão está "Permitida". No Android, desative a economia de bateria para o app (Configurações do Android > Apps > SynCK > Bateria > Sem restrições).',
   },
   {
     question: 'Como funciona um evento que se repete?',

@@ -1,6 +1,8 @@
 // Filtros da visão de calendário e da busca.
 import type { EventStatus, EventType, Occurrence } from '@/models/types';
 
+import { agendaColor } from '@/theme/tokens';
+
 import { normalizeText } from './text';
 
 export type Ownership = 'all' | 'mine' | 'shared';
@@ -88,8 +90,9 @@ export function applyFilters(
       if (!involved) return false;
     }
     if (filters.color) {
-      const color = (e.color ?? calendarColors[e.calendar_id] ?? '').toLowerCase();
-      if (color !== filters.color.toLowerCase()) return false;
+      // Cores da paleta antiga contam como a cor nova equivalente.
+      const color = (agendaColor(e.color ?? calendarColors[e.calendar_id], false) ?? '').toLowerCase();
+      if (color !== (agendaColor(filters.color, false) ?? '').toLowerCase()) return false;
     }
     if (filters.privateOnly && e.privacy === 'members') return false;
     if (filters.recurringOnly && !occ.isRecurring) return false;

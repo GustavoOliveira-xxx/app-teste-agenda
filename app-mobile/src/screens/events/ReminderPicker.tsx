@@ -36,7 +36,7 @@ export function ReminderPicker({
         {t('events.remindersHint')} {t('reminders.max')}
       </AppText>
       {!notificationsSupported && (
-        <AppText variant="small" tone="warning">
+        <AppText variant="small" tone="muted">
           {t('reminders.webNotice')}
         </AppText>
       )}

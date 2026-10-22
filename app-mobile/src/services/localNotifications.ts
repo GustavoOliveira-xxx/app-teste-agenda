@@ -7,14 +7,22 @@ import { AndroidImportance, AndroidNotificationVisibility } from 'expo-notificat
 import { Platform } from 'react-native';
 
 import { t } from '@/i18n';
+import { marca } from '@/theme/marca';
 import type { NotificationPreferences, Occurrence, TimeFormat } from '@/models/types';
 import { formatOccurrenceTime, isWithinQuietHours } from '@/utils/dates';
+import { reminderTitle } from '@/utils/reminders';
 
 import { logError } from './errorLog';
 
 const CHANNEL_PRIVATE = 'lembretes';
 const CHANNEL_PUBLIC = 'lembretes-detalhes';
 const CHANNEL_QUIET = 'lembretes-silencio';
+/** Categoria com os botões "Abrir" e "Adiar 10 min". */
+export const REMINDER_CATEGORY = 'lembrete';
+export const ACTION_OPEN = 'abrir';
+export const ACTION_SNOOZE = 'adiar';
+export const SNOOZE_MINUTES = 10;
+export { reminderTitle };
 const HORIZON_DAYS = 30;
 const MAX_SCHEDULED = 60;
 
@@ -32,9 +40,49 @@ export function configureNotifications(): void {
   });
 }
 
+/** Botões das notificações de lembrete. */
+async function ensureCategory(): Promise<void> {
+  await Notifications.setNotificationCategoryAsync(REMINDER_CATEGORY, [
+    {
+      identifier: ACTION_OPEN,
+      buttonTitle: t('reminders.actionOpen'),
+      options: { opensAppToForeground: true },
+    },
+    {
+      identifier: ACTION_SNOOZE,
+      buttonTitle: t('reminders.actionSnooze'),
+      options: { opensAppToForeground: true },
+    },
+  ]).catch(() => undefined);
+}
+
+/** Adia um lembrete já mostrado: a mesma notificação volta em 10 minutos. */
+export async function snoozeReminder(request: Notifications.NotificationRequest): Promise<void> {
+  if (!notificationsSupported) return;
+  const { content } = request;
+  await Notifications.dismissNotificationAsync(request.identifier).catch(() => undefined);
+  await Notifications.scheduleNotificationAsync({
+    identifier: `${request.identifier}:adiado:${Date.now()}`,
+    content: {
+      title: content.title ?? t('reminders.lockedContent'),
+      body: content.body ?? undefined,
+      data: content.data,
+      color: marca.cores.claro.primary,
+      categoryIdentifier: REMINDER_CATEGORY,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: SNOOZE_MINUTES * 60,
+      channelId: CHANNEL_PRIVATE,
+    },
+  });
+}
+
 export async function ensureChannels(): Promise<void> {
   if (Platform.OS !== 'android') return;
-  const base = { vibrationPattern: [0, 250, 150, 250], lightColor: '#3358D4' };
+  await ensureCategory();
+  // Luz de notificação na cor da marca (em aparelhos que têm LED).
+  const base = { vibrationPattern: [0, 250, 150, 250], lightColor: marca.cores.claro.primary };
   // Canal com conteúdo oculto na tela bloqueada (padrão, mais privado).
   await Notifications.setNotificationChannelAsync(CHANNEL_PRIVATE, {
     ...base,
@@ -118,7 +166,7 @@ export async function rescheduleReminders(
           : CHANNEL_PRIVATE;
       const title = occ.event.is_masked
         ? t('reminders.lockedContent')
-        : (occ.title ?? t('reminders.lockedContent'));
+        : reminderTitle(occ.title ?? t('reminders.lockedContent'), minutes);
       const when = formatOccurrenceTime(occ, timezone, timeFormat);
       await Notifications.scheduleNotificationAsync({
         identifier: `rem:${occ.key}:${minutes}`,
@@ -127,6 +175,8 @@ export async function rescheduleReminders(
           body: [when, occ.location].filter(Boolean).join(' · '),
           data: { eventId: occ.event.id, originalDate: occ.originalDate },
           sound: !quiet && prefs?.sound !== false ? 'default' : false,
+          color: marca.cores.claro.primary,
+          categoryIdentifier: REMINDER_CATEGORY,
         },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId },
       });

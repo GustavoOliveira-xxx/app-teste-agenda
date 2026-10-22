@@ -1,34 +1,46 @@
-// Identidade visual do app.
+// Identidade visual SynCK (um produto CK Group).
 //
-// Para aplicar uma identidade própria, mude só este arquivo (e as imagens
-// listadas em docs/DESIGN.md). Todas as telas leem daqui: cores,
-// fonte, cantos, sombras e alguns detalhes de estilo.
-//
-// O padrão é propositalmente neutro (tons de cinza, cantos discretos e a fonte
-// do próprio sistema), para não brigar com a marca que vier depois.
+// Fonte única de cores, fontes, cantos, sombras e movimento, copiada do pacote
+// de identidade (02-cores-e-tokens/tokens.ts). Telas e componentes leem daqui
+// por meio de src/theme/tokens.ts; nenhuma tela usa cor solta.
 
 export interface CoresDoTema {
-  /** Fundo das telas. */
+  /** Fundo das telas (`bg`). */
   background: string;
-  /** Fundo de cartões, campos e barras. */
+  /** Cartões, folhas, barra de navegação e campos (`surface`). */
   surface: string;
-  /** Fundo de áreas secundárias (seletor de visão, linhas alternadas). */
+  /** Áreas afundadas: trilhos, linhas alternadas, fundo de seletor (`surfaceSunken`). */
   surfaceAlt: string;
-  /** Linhas e divisórias. */
+  /** Linhas e divisórias (`line`). */
   border: string;
-  /** Borda de campos de formulário (contraste mínimo de 3:1 com o fundo). */
+  /** Borda de campos e botões contornados (`lineStrong`, 3:1 com o fundo). */
   inputBorder: string;
+  /** Texto principal (`ink`). */
   text: string;
-  /** Texto secundário (contraste mínimo de 4,5:1 com o fundo). */
+  /** Texto secundário e metadados (`inkMuted`). */
   textMuted: string;
-  /** Cor principal da marca: botões principais, itens selecionados, links. */
+  /** Botão principal, FAB, dia selecionado, item ativo. */
   primary: string;
-  /** Texto sobre a cor principal. */
+  /** Texto sobre `primary` (`onPrimary`). */
   primaryText: string;
-  /** Versão bem clara da cor principal (fundos de itens selecionados). */
+  /** Chip selecionado, botão tonal, pílula ativa. */
   primarySoft: string;
+  /** Links e rótulos de marca. */
+  primaryInk: string;
+  /** Blocos de marca escuros. */
+  tide: string;
+  /** Realces gráficos e névoa. */
+  mint: string;
+  /** Sinal pontual: "agora", não lido. */
+  coral: string;
+  onCoral: string;
+  /** Realce dentro do toast (fundo `ink`). */
+  accentInverse: string;
+  /** Detalhes de marca (filete); `bronzeInk` para texto. */
+  bronze: string;
+  bronzeInk: string;
   danger: string;
-  /** Texto sobre fundo `danger` (botões de excluir). */
+  /** Texto sobre `danger` (`onDanger`). */
   dangerText: string;
   dangerSoft: string;
   success: string;
@@ -37,102 +49,145 @@ export interface CoresDoTema {
   warningSoft: string;
   /** Contorno de foco (teclado e leitores de tela). */
   focus: string;
-  /** Escurecimento atrás de janelas e listas de opções. */
+  /** Escurecimento atrás de folhas e diálogos (`scrim`). */
   overlay: string;
   /** Destaque do dia de hoje no calendário. */
   today: string;
+  /** Sombra tingida de abismo. */
+  shadow: string;
 }
 
-export type PesoDaFonte = 'regular' | 'medio' | 'semi' | 'negrito';
+export type PesoDaFonte = 'regular' | 'medio' | 'semi' | 'negrito' | 'titulo' | 'tituloForte';
+
+/** As 8 cores de agenda, com nome. A mesma posição vale nos dois temas. */
+export const CORES_DE_AGENDA = [
+  { nome: 'Maré', claro: '#017A68', escuro: '#15C9AB' },
+  { nome: 'Coral', claro: '#D9472A', escuro: '#FF8A6E' },
+  { nome: 'Âmbar', claro: '#A86F00', escuro: '#F5C04A' },
+  { nome: 'Céu', claro: '#2B6CB0', escuro: '#7FB6F0' },
+  { nome: 'Ameixa', claro: '#7E46BF', escuro: '#C3A0F0' },
+  { nome: 'Rosa', claro: '#B83A66', escuro: '#F290B5' },
+  { nome: 'Oliva', claro: '#5E7A16', escuro: '#B8D45C' },
+  { nome: 'Ardósia', claro: '#55707A', escuro: '#9DB3BC' },
+] as const;
+
+/** Cores fixas do logo (não mudam com o tema). */
+export const CORES_DO_LOGO = {
+  abismo: '#03302F',
+  teal: '#01907A',
+  jade: '#15C9AB',
+  nevoa: '#89E1C4',
+  bronze: '#BFAA8C',
+  /** Fundo da splash do Android 12+ e do ícone. */
+  splash: '#E4F5EF',
+  /** Vidro claro do mascote Kairo. */
+  vidro: '#C9F1E3',
+  /** Brilho do vidro. */
+  brilho: '#E9FFF8',
+  branco: '#FFFFFF',
+} as const;
 
 export const marca = {
+  nome: 'SynCK',
+  assinatura: 'um produto CK Group',
+
   cores: {
     claro: {
-      background: '#FAFAFA',
+      background: '#F4F7F5',
       surface: '#FFFFFF',
-      surfaceAlt: '#F1F1F1',
-      border: '#E0E0E0',
-      inputBorder: '#8C8C8C',
-      text: '#171717',
-      textMuted: '#5C5C5C',
-      primary: '#171717',
+      surfaceAlt: '#E8EFEC',
+      border: '#D5E0DC',
+      inputBorder: '#7A908D',
+      text: '#0E1A1C',
+      textMuted: '#4A5B5D',
+      primary: '#017A68',
       primaryText: '#FFFFFF',
-      primarySoft: '#EBEBEB',
-      danger: '#B42318',
+      primarySoft: '#DDF3EE',
+      primaryInk: '#01604F',
+      tide: '#03302F',
+      mint: '#89E1C4',
+      coral: '#FF6F4E',
+      onCoral: '#0E1A1C',
+      accentInverse: '#6FE3C6',
+      bronze: '#BFAA8C',
+      bronzeInk: '#6F5E41',
+      danger: '#B3261E',
       dangerText: '#FFFFFF',
-      dangerSoft: '#FBEAE9',
-      success: '#1E7A44',
-      successSoft: '#E6F3EA',
-      warning: '#8A5300',
-      warningSoft: '#FFF3DC',
-      focus: '#171717',
-      overlay: 'rgba(0,0,0,0.45)',
-      today: '#171717',
+      dangerSoft: '#F9E3E1',
+      success: '#1B6E8F',
+      successSoft: '#DDEFF6',
+      warning: '#7A4F00',
+      warningSoft: '#FBEBC8',
+      focus: '#0E1A1C',
+      overlay: 'rgba(3,48,47,0.48)',
+      today: '#017A68',
+      shadow: '#03302F',
     } satisfies CoresDoTema,
     escuro: {
-      background: '#121212',
-      surface: '#1A1A1A',
-      surfaceAlt: '#242424',
-      border: '#333333',
-      inputBorder: '#707070',
-      text: '#EDEDED',
-      textMuted: '#A3A3A3',
-      primary: '#EDEDED',
-      primaryText: '#121212',
-      primarySoft: '#2B2B2B',
-      danger: '#F28B82',
-      dangerText: '#2A0B09',
-      dangerSoft: '#3A1F1D',
-      success: '#7CD49B',
-      successSoft: '#1C3326',
-      warning: '#FFC266',
-      warningSoft: '#3A2C14',
-      focus: '#EDEDED',
+      background: '#0A1416',
+      surface: '#112124',
+      surfaceAlt: '#0D1A1C',
+      border: '#22383B',
+      inputBorder: '#5E7B7D',
+      text: '#E8F1EE',
+      textMuted: '#9DB3B0',
+      primary: '#15C9AB',
+      primaryText: '#03302F',
+      primarySoft: '#12393A',
+      primaryInk: '#89E1C4',
+      tide: '#0F4A47',
+      mint: '#3DBA9F',
+      coral: '#FF8A6E',
+      onCoral: '#0E1A1C',
+      accentInverse: '#09625C',
+      bronze: '#CDB998',
+      bronzeInk: '#D9C6A5',
+      danger: '#FFB4A9',
+      dangerText: '#410E0B',
+      dangerSoft: '#3B1D1A',
+      success: '#7FD3F0',
+      successSoft: '#12313B',
+      warning: '#FFC861',
+      warningSoft: '#3A2A06',
+      focus: '#F4FFFB',
       overlay: 'rgba(0,0,0,0.6)',
-      today: '#EDEDED',
+      today: '#15C9AB',
+      shadow: '#000000',
     } satisfies CoresDoTema,
   },
 
   fonte: {
-    /**
-     * Nome de cada peso da fonte. `null` usa a fonte do sistema (Roboto no
-     * Android, San Francisco no iPhone e a do navegador no computador).
-     * Com uma fonte própria, use os mesmos nomes das chaves de `arquivos`.
-     */
+    /** Bricolage Grotesque nos títulos; Figtree no texto e na interface. */
     familias: {
-      regular: null,
-      medio: null,
-      semi: null,
-      negrito: null,
-    } as Record<PesoDaFonte, string | null>,
-    /**
-     * Arquivos da fonte própria (.ttf ou .otf), guardados em assets/fonts/.
-     * Exemplo:
-     *   arquivos: {
-     *     'MinhaFonte-Regular': require('../../assets/fonts/MinhaFonte-Regular.ttf'),
-     *     'MinhaFonte-Bold': require('../../assets/fonts/MinhaFonte-Bold.ttf'),
-     *   },
-     * e em `familias`: regular: 'MinhaFonte-Regular', negrito: 'MinhaFonte-Bold'.
-     */
-    arquivos: {} as Record<string, number>,
+      regular: 'Figtree-Regular',
+      medio: 'Figtree-Medium',
+      semi: 'Figtree-SemiBold',
+      negrito: 'Figtree-Bold',
+      titulo: 'BricolageGrotesque-Bold',
+      tituloForte: 'BricolageGrotesque-ExtraBold',
+    } as Record<PesoDaFonte, string>,
+    arquivos: {
+      'Figtree-Regular': require('../../assets/fonts/Figtree-Regular.ttf'),
+      'Figtree-Medium': require('../../assets/fonts/Figtree-Medium.ttf'),
+      'Figtree-SemiBold': require('../../assets/fonts/Figtree-SemiBold.ttf'),
+      'Figtree-Bold': require('../../assets/fonts/Figtree-Bold.ttf'),
+      'BricolageGrotesque-Bold': require('../../assets/fonts/BricolageGrotesque-Bold.ttf'),
+      'BricolageGrotesque-ExtraBold': require('../../assets/fonts/BricolageGrotesque-ExtraBold.ttf'),
+    } as Record<string, number>,
   },
 
-  /** Arredondamento dos cantos, em pixels. 0 deixa tudo reto. */
-  cantos: {
-    /** Etiquetas, seletores pequenos. */
-    pequeno: 4,
-    /** Botões, campos, linhas de evento. */
-    medio: 6,
-    /** Cartões, janelas e listas de opções. */
-    grande: 8,
+  /** Raios: campos 10, cartões 14, FAB e blocos 22, topo de folhas 28. */
+  cantos: { xs: 6, campo: 10, cartao: 14, bloco: 22, folha: 28 },
+
+  /** Movimento: molas no toque, saída suave nas entradas. */
+  movimento: {
+    escalaToque: 0.96,
+    escalaCartao: 0.98,
+    mola: { stiffness: 400, damping: 28, mass: 1 },
+    curva: [0.2, 0.8, 0.2, 1] as const,
+    micro: 120,
+    base: 220,
+    celebrar: 600,
+    cascata: 30,
   },
-
-  /** Sombra leve em cartões e no botão flutuante. */
-  sombra: false,
-
-  /** Mostrar ícones dentro dos botões com texto (ex.: "Gerar convite"). */
-  iconesNosBotoes: false,
-
-  /** Títulos de seção em letras maiúsculas ("CONVITES DESTA AGENDA"). */
-  titulosDeSecaoEmMaiusculas: false,
 };

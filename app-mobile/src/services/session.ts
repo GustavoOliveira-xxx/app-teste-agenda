@@ -17,6 +17,7 @@ import { signOutThisDevice } from './auth';
 import { logError } from './errorLog';
 import { cancelAllReminders, rescheduleReminders } from './localNotifications';
 import { startRealtime, stopRealtime } from './realtime';
+import { forgetWebPush } from './webPush';
 
 let activeUser: string | null = null;
 
@@ -82,6 +83,7 @@ async function doEndSession(): Promise<void> {
   setAfterSyncHook(null);
   stopRealtime();
   await cancelAllReminders();
+  await forgetWebPush();
   if (userId) await clearUserData(userId);
   useDataStore.getState().reset();
   useSyncStore.getState().reset();

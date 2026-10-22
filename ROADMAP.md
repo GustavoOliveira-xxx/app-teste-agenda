@@ -7,7 +7,7 @@ O que fica para depois da primeira versão, com o impacto de cada item. A arquit
 | Prioridade | Item | Por quê |
 |---|---|---|
 | **Alta** | Envio de e-mail de convite e SMTP próprio | Convidar por e-mail sem depender do código |
-| **Alta** | Push remoto (Firebase Cloud Messaging) | Avisar na hora quando alguém muda um evento, mesmo com o app fechado |
+| **Alta** | Push remoto no Android (Firebase Cloud Messaging) | Avisar na hora quando alguém muda um evento, com o app Android fechado (iPhone e computador já recebem pelo navegador desde a 2.0) |
 | **Alta** | Lembretes na versão web (Web Push) | Lembretes que tocam no iPhone (app instalado na tela de início, iOS 16.4 ou mais novo) e no computador |
 | **Alta** | Exportação ICS (e assinatura de calendário) | Ver os eventos no Google Agenda ou no calendário do iPhone sem integração complexa |
 | **Alta** | Publicação na Play Store | Instalação e atualização mais fáceis e confiáveis |

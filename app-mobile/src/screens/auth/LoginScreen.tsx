@@ -1,13 +1,20 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
+import { useWindowDimensions, View } from 'react-native';
+
 import { AppText } from '@/components/AppText';
+import { AuthTopBar, InlineLink, OrDivider } from '@/components/brand/AuthParts';
+import { GoogleButton } from '@/components/brand/GoogleButton';
+import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/Button';
+import { EnterItem } from '@/components/motion';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { t } from '@/i18n';
 import { resendSignupCode, signIn } from '@/services/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { spacing } from '@/theme/tokens';
 import { errorCode, toFriendlyError } from '@/utils/errors';
 import { hasErrors, validateLogin } from '@/validation/auth';
 
@@ -15,7 +22,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [message, setMessage] = useState<string | null>(null);
+  // Aviso deixado pela volta do Google no navegador (se a entrada falhou).
+  const [message, setMessage] = useState<string | null>(() => useAuthStore.getState().notice);
+  const { width } = useWindowDimensions();
+  useEffect(() => useAuthStore.getState().setNotice(null), []);
   const [loading, setLoading] = useState(false);
   const failures = useRef(0);
   const [lockedFor, setLockedFor] = useState(0);
@@ -55,9 +65,18 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen showOfflineBanner={false}>
+    <Screen showOfflineBanner={false} safeTop maxWidth={480}>
+      <AuthTopBar />
+      <EnterItem index={0} style={{ gap: spacing.md }}>
+        <Logo kind="horizontal" width={Math.min(width * 0.6, 260) - (width < 360 ? 30 : 0)} />
+        <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
+          <AppText variant="display">{t('auth.loginTitle')}</AppText>
+          <AppText tone="muted">{t('auth.loginSubtitle')}</AppText>
+        </View>
+      </EnterItem>
       <TextField
         label={t('auth.email')}
+        icon="mail-outline"
         value={email}
         onChangeText={setEmail}
         error={errors.email}
@@ -69,6 +88,7 @@ export default function LoginScreen() {
       />
       <TextField
         label={t('auth.password')}
+        icon="lock-closed-outline"
         value={password}
         onChangeText={setPassword}
         error={errors.password}
@@ -78,6 +98,7 @@ export default function LoginScreen() {
         onSubmitEditing={submit}
         testID="login-password"
       />
+      <InlineLink label={t('auth.forgot')} align="right" onPress={() => router.push('/forgot-password')} />
       {message ? (
         <AppText tone="danger" accessibilityLiveRegion="assertive">
           {message}
@@ -91,8 +112,13 @@ export default function LoginScreen() {
         disabled={lockedFor > 0}
         testID="login-submit"
       />
-      <Button title={t('auth.forgot')} variant="ghost" onPress={() => router.push('/forgot-password')} />
-      <Button title={t('auth.noAccount')} variant="ghost" onPress={() => router.replace('/signup')} />
+      <OrDivider />
+      <GoogleButton onError={setMessage} />
+      <InlineLink
+        lead={t('auth.newHere')}
+        label={t('auth.createAccount')}
+        onPress={() => router.replace('/signup')}
+      />
     </Screen>
   );
 }

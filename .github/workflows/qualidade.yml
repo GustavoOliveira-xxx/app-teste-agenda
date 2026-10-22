@@ -41,6 +41,15 @@ jobs:
         run: npm ci
       - name: Testes de integração do banco (PGlite)
         run: npm test
+      - name: Função de notificações usa a mesma lógica de datas do app
+        working-directory: .
+        run: node scripts/copiar-logica-push.mjs --verificar
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Verificar tipos da função de notificações (Deno)
+        working-directory: supabase/functions/enviar-push
+        run: deno check index.ts
 
   app:
     name: App (tipos, lint, testes, empacotamento)

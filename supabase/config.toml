@@ -16,6 +16,7 @@ sql_paths = ["./seed.sql"]
 
 [auth]
 site_url = "agendacompartilhada://"
+additional_redirect_urls = ["agendacompartilhada://**", "http://localhost:8081/**"]
 enable_signup = true
 minimum_password_length = 8
 
@@ -32,3 +33,14 @@ content_path = "./supabase/templates/confirmacao.html"
 [auth.email.template.recovery]
 subject = "Código para redefinir sua senha"
 content_path = "./supabase/templates/recuperacao.html"
+
+# Entrar com Google (as chaves ficam no painel do Supabase, nunca aqui).
+[auth.external.google]
+enabled = false
+client_id = "env(GOOGLE_CLIENT_ID)"
+secret = "env(GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
+
+# Notificações pelo navegador: a função se autentica pelo segredo do agendamento.
+[functions.enviar-push]
+verify_jwt = false

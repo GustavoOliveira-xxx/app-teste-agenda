@@ -2,7 +2,7 @@ import { expandEvent } from '@/utils/recurrence';
 import { reminderLabel } from '@/utils/reminders';
 
 import { makeEvent } from '../../utils/__tests__/fixtures';
-import { planReminders } from '../localNotifications';
+import { planReminders, reminderTitle } from '../localNotifications';
 
 const now = new Date('2026-11-01T12:00:00Z');
 const range = [now, new Date('2027-01-01T00:00:00Z')] as const;
@@ -54,5 +54,16 @@ describe('reminderLabel', () => {
     expect(reminderLabel(120)).toBe('2 horas antes');
     expect(reminderLabel(1440)).toBe('1 dia antes');
     expect(reminderLabel(2880)).toBe('2 dias antes');
+  });
+});
+
+describe('reminderTitle', () => {
+  it('começa pelo que importa: quanto falta e o nome do evento', () => {
+    expect(reminderTitle('Revisão de Cálculo', 30)).toBe('Em 30 min: Revisão de Cálculo');
+    expect(reminderTitle('Dentista', 0)).toBe('Agora: Dentista');
+    expect(reminderTitle('Dentista', 60)).toBe('Em 1 h: Dentista');
+    expect(reminderTitle('Dentista', 90)).toBe('Em 1 h 30 min: Dentista');
+    expect(reminderTitle('Dentista', 1440)).toBe('Amanhã, neste horário: Dentista');
+    expect(reminderTitle('Viagem', 2880)).toBe('Em 2 dias: Viagem');
   });
 });

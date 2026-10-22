@@ -105,7 +105,7 @@ Os nomes dos menus do Android mudam um pouco de fabricante para fabricante (Sams
 
 | Passo | O que fazer | Resultado esperado |
 |---|---|---|
-| A1 | Abra o app na tela de boas-vindas e deslize para a direita item por item. | O logotipo é pulado (ou não diz nada). Lê "Agenda Compartilhada" como cabeçalho (o TalkBack pode dizer "título"), o subtítulo, depois "Criar conta, botão" e "Já tenho conta, botão". |
+| A1 | Abra o app na tela de boas-vindas e deslize para a direita item por item. | O logotipo é pulado (ou não diz nada). Lê "SynCK" como cabeçalho (o TalkBack pode dizer "título"), o subtítulo, depois "Criar conta, botão" e "Já tenho conta, botão". |
 | A2 | Entre em "Já tenho conta". Deslize pelos campos. | Lê "E-mail" e "Senha" como campos de edição. O botão de olho lê "Mostrar senha". |
 | A3 | Toque duas vezes em "Entrar" com a senha errada. | O erro "E-mail ou senha incorretos." é lido **sem** você precisar procurar por ele. |
 | A4 | Entre com uma conta de demonstração. Deslize pela barra de abas, embaixo. | Lê "Agenda", "Agendas", "Avisos" (com a quantidade de não lidos, se houver) e "Perfil", cada uma como aba. |

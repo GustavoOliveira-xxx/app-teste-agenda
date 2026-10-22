@@ -26,8 +26,8 @@ const tipos = {
 
 // Sem as Variables do Supabase o site abre em "Servidor não configurado": também vale,
 // porque aqui o que se testa é a instalação e o modo offline, não o login.
-const TELA_INICIAL = /Uma agenda para várias pessoas|Servidor não configurado/;
-const TELA_LOGIN = /Esqueci minha senha|Servidor não configurado/;
+const TELA_INICIAL = /Sua rotina, sincronizada com quem importa|Servidor não configurado/;
+const TELA_LOGIN = /Esqueci a senha|Servidor não configurado/;
 
 let servidor;
 let origem;

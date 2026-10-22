@@ -15,6 +15,8 @@ export const supabase = createClient(
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: false,
+      // PKCE: a entrada com Google devolve um código que o próprio app troca pela sessão.
+      flowType: 'pkce',
     },
     global: { headers: { 'x-client-info': `agenda-compartilhada/${env.appVersion} (${Platform.OS})` } },
   },

@@ -1,10 +1,11 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { CALENDAR_COLORS, readableTextOn } from '@/theme/tokens';
+import { agendaColor, CALENDAR_COLORS, readableTextOn } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon } from './Icon';
+import { PressableScale, tapFeedback } from './motion';
 
 /** Escolha de cor. Cada cor tem nome (leitor de tela) e a escolhida ganha um ✓. */
 export function ColorPicker({
@@ -20,13 +21,15 @@ export function ColorPicker({
   allowNone?: boolean;
   noneLabel?: string;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, dark } = useAppTheme();
+  // Cores antigas (versões 1.x) aparecem marcadas na cor nova equivalente.
+  const current = agendaColor(value, false)?.toLowerCase() ?? null;
   return (
     <View style={styles.wrapper}>
       <AppText variant="label">{label}</AppText>
       <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel={label}>
         {allowNone && (
-          <Pressable
+          <PressableScale
             onPress={() => onChange(null)}
             accessibilityRole="radio"
             accessibilityLabel={noneLabel}
@@ -38,24 +41,28 @@ export function ColorPicker({
             ]}
           >
             <Icon name="ban-outline" size={20} color={colors.textMuted} />
-          </Pressable>
+          </PressableScale>
         )}
         {CALENDAR_COLORS.map((c) => {
-          const selected = value?.toLowerCase() === c.value.toLowerCase();
+          const selected = current === c.value.toLowerCase();
+          const shown = agendaColor(c.value, dark) ?? c.value;
           return (
-            <Pressable
+            <PressableScale
               key={c.value}
-              onPress={() => onChange(c.value)}
+              onPress={() => {
+                tapFeedback('select');
+                onChange(c.value);
+              }}
               accessibilityRole="radio"
               accessibilityLabel={c.name}
               accessibilityState={{ checked: selected }}
               style={[
                 styles.swatch,
-                { backgroundColor: c.value, borderColor: selected ? colors.focus : 'transparent' },
+                { backgroundColor: shown, borderColor: selected ? colors.focus : 'transparent' },
               ]}
             >
-              {selected && <Icon name="checkmark" size={22} color={readableTextOn(c.value)} />}
-            </Pressable>
+              {selected && <Icon name="checkmark" size={22} color={readableTextOn(shown)} />}
+            </PressableScale>
           );
         })}
       </View>

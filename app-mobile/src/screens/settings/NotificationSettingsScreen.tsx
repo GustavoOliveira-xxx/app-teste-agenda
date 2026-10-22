@@ -5,6 +5,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { useFeedback } from '@/components/Feedback';
 import { DateTimeField } from '@/components/DateTimeField';
 import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
@@ -19,9 +20,55 @@ import {
   notificationsSupported,
   requestPermission,
 } from '@/services/localNotifications';
+import { disableWebPush, enableWebPush, getWebPushState, type WebPushState } from '@/services/webPush';
 import { useAuthStore } from '@/stores/authStore';
 import { spacing } from '@/theme/tokens';
+import { toFriendlyError } from '@/utils/errors';
 import { REMINDER_PRESETS, reminderLabel } from '@/utils/reminders';
+
+/** Navegador (iPhone e computador): ativar as notificações deste navegador. */
+function WebPushCard() {
+  const [state, setState] = useState<WebPushState | null>(null);
+  const [busy, setBusy] = useState(false);
+  const { toast } = useFeedback();
+  useEffect(() => {
+    void getWebPushState().then(setState);
+  }, []);
+  const toggle = async (on: boolean) => {
+    setBusy(true);
+    try {
+      const next = on ? await enableWebPush() : await disableWebPush();
+      setState(next);
+      if (next === 'on') toast(t('notificationSettings.webPushEnabled'));
+    } catch (error) {
+      toast(toFriendlyError(error).message, 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+  const message =
+    state === 'unsupported'
+      ? t('notificationSettings.webPushUnsupported')
+      : state === 'blocked'
+        ? t('notificationSettings.webPushBlocked')
+        : state === 'unavailable'
+          ? t('notificationSettings.webPushUnavailable')
+          : t('notificationSettings.webPushHint');
+  return (
+    <Card>
+      <SwitchRow
+        label={t('notificationSettings.webPush')}
+        hint={state === 'on' ? t('notificationSettings.webPushOn') : t('notificationSettings.webPushOff')}
+        value={state === 'on'}
+        disabled={busy || state === null || state === 'unsupported'}
+        onChange={(on) => void toggle(on)}
+      />
+      <AppText variant="small" tone={state === 'blocked' || state === 'unsupported' ? 'warning' : 'muted'}>
+        {message}
+      </AppText>
+    </Card>
+  );
+}
 
 export default function NotificationSettingsScreen() {
   const prefs = useAuthStore((s) => s.account?.notification_preferences);
@@ -39,11 +86,7 @@ export default function NotificationSettingsScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('notificationSettings.title') }} />
-      {!notificationsSupported && (
-        <Card>
-          <AppText tone="warning">{t('reminders.webNotice')}</AppText>
-        </Card>
-      )}
+      {!notificationsSupported && <WebPushCard />}
       {notificationsSupported && (
         <Card>
           <AppText variant="label">{t('notificationSettings.systemPermission')}</AppText>

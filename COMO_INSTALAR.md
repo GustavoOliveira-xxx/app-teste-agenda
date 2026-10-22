@@ -1,4 +1,4 @@
-# Como instalar o Agenda Compartilhada
+# Como instalar o SynCK
 
 Este guia é para quem **não programa**. Escolha pelo aparelho:
 
@@ -40,12 +40,12 @@ APK é o "instalador" de um aplicativo Android, como um arquivo `.exe` no Window
 O nome do arquivo segue o padrão:
 
 ```
-agenda-compartilhada-v1.0.0-build4.apk
+synck-v1.0.0-build4.apk
                       │      └─ número da compilação (sempre cresce)
                       └─ versão do app
 ```
 
-- Confira se o nome começa com **`agenda-compartilhada`** e se a versão é a mais recente da página Releases.
+- Confira se o nome começa com **`synck`** e se a versão é a mais recente da página Releases.
 - Se a versão estiver marcada como **"Pre-release"**, ela foi assinada com a chave de testes: funciona normalmente, mas é para testes.
 
 ### Passo 3. Abrir o arquivo
@@ -70,12 +70,14 @@ Toque em **Instalar**. O Google Play Protect pode mostrar um aviso de "app não 
 
 ### Passo 6. Abrir o aplicativo
 
-Toque em **Abrir** (ou procure o ícone **Agenda Compartilhada** na tela inicial). Na primeira abertura:
+Toque em **Abrir** (ou procure o ícone **SynCK** na tela inicial). Na primeira abertura:
 
 - Se aparecer **"Servidor não configurado"**, o APK foi gerado sem o endereço do servidor. Avise a pessoa responsável (ela precisa seguir a [parte 2 do GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md#parte-2-ligar-o-github-ao-servidor) e gerar um APK novo).
 - Em Android 13 ou mais novo, o app vai pedir permissão para **enviar notificações**. Toque em **Permitir** se quiser receber lembretes. Dá para mudar depois.
 
 ### Passo 7. Criar uma conta ou entrar
+
+Use e-mail e senha ou toque em **Entrar com Google** (se a pessoa responsável já ativou essa opção).
 
 1. Na tela de boas-vindas, toque em **Criar conta**.
 2. Informe nome, e-mail e uma senha de pelo menos 8 caracteres, com letras e números.
@@ -113,17 +115,17 @@ O app do Android **não se atualiza sozinho** (ele não vem da Play Store). A pa
 ### Como ver a versão instalada
 
 - No app: no fim da tela **Perfil** aparece, por exemplo, "Versão 1.0.0 (build 4)". A tela **Perfil > Diagnóstico** mostra o mesmo.
-- No Android: **Configurações > Apps > Agenda Compartilhada** (a versão aparece no final da página).
+- No Android: **Configurações > Apps > SynCK** (a versão aparece no final da página).
 
 ### Como desinstalar
 
-Pressione o ícone do app por alguns segundos e toque em **Desinstalar** (ou **Configurações > Apps > Agenda Compartilhada > Desinstalar**).
+Pressione o ícone do app por alguns segundos e toque em **Desinstalar** (ou **Configurações > Apps > SynCK > Desinstalar**).
 
 Desinstalar **não exclui sua conta**: os dados continuam no servidor. Para excluir a conta e os dados, use antes **Perfil > Privacidade e dados > Excluir minha conta**.
 
 ## Opção B: instalação pela Google Play Store
 
-Ainda **não disponível**. Será possível só depois que o app for publicado e aprovado pelo Google (conta de desenvolvedor, ficha da loja, política de privacidade, classificação etária e testes; veja o [GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store)). Quando estiver na loja, bastará procurar "Agenda Compartilhada" e tocar em **Instalar**, e as atualizações serão automáticas.
+Ainda **não disponível**. Será possível só depois que o app for publicado e aprovado pelo Google (conta de desenvolvedor, ficha da loja, política de privacidade, classificação etária e testes; veja o [GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store)). Quando estiver na loja, bastará procurar "SynCK" e tocar em **Instalar**, e as atualizações serão automáticas.
 
 Se você instalou pelo APK de testes, será preciso desinstalar antes de instalar pela loja (as assinaturas são diferentes).
 
@@ -140,8 +142,9 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 1. Abra o endereço no **Safari** (em versões recentes do iOS, Chrome e Edge também funcionam).
 2. Toque no botão **Compartilhar** (quadrado com uma seta para cima, embaixo no iPhone ou em cima no iPad).
 3. Role a lista e toque em **Adicionar à Tela de Início**.
-4. Confira o nome ("Agenda") e toque em **Adicionar**.
-5. Abra pelo novo ícone **Agenda** na tela de início (não pelo Safari) e crie sua conta ou entre.
+4. Confira o nome ("SynCK") e toque em **Adicionar**.
+5. Abra pelo novo ícone **SynCK** na tela de início (não pelo Safari) e crie sua conta ou entre.
+6. Para receber lembretes (iOS 16.4 ou mais novo): **Perfil > Notificações > Notificações neste navegador** e toque em **Permitir**.
 
 ### No Android (sem instalar o APK)
 
@@ -157,7 +160,7 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 
 ### O que muda em relação ao app Android
 
-- **Os lembretes não tocam** nesta versão: ficam salvos no evento, mas o aviso no horário só existe no app Android. Mudanças feitas por outras pessoas aparecem na aba **Avisos**.
+- **Lembretes e avisos chegam como notificação** depois de ativar em **Perfil > Notificações > Notificações neste navegador**. No iPhone, isso só aparece abrindo pelo ícone da Tela de Início. Mudanças feitas por outras pessoas também ficam no sino da tela **Hoje**.
 - Use sempre o **ícone instalado**: o iPhone pode apagar os dados de sites que ficam muitas semanas sem uso no Safari, e isso não acontece com apps adicionados à tela de início.
 - Em **computador compartilhado**, toque em **Perfil > Sair** ao terminar: os dados ficam guardados no navegador.
 
@@ -176,8 +179,8 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 | **Instalação bloqueada** | Refaça o passo 4 (permitir instalar apps desconhecidos para o navegador). Se o Play Protect bloquear, toque em "Mais detalhes > Instalar mesmo assim" somente se o arquivo veio da página Releases oficial. Celulares de empresa ou com controle parental podem proibir; fale com o administrador. |
 | **Versão antiga** ou "App não instalado" ao atualizar | Veja [Como atualizar](#como-atualizar). Se a assinatura mudou, desinstale e instale de novo. |
 | **App sem internet** | O app mostra a faixa "Sem internet. Você está vendo os dados guardados neste aparelho." Você pode ver o que já foi sincronizado e criar ou editar eventos; tudo é enviado quando a internet voltar. Veja pendências em **Perfil > Sincronização**. |
-| **Notificações não recebidas** | Confira: Configurações > Apps > Agenda Compartilhada > Notificações (ativadas); no app, **Perfil > Notificações**; desative a otimização de bateria para o app (Configurações > Bateria). Alguns fabricantes (Xiaomi, Samsung, Motorola) encerram apps em segundo plano; procure "iniciar automaticamente" ou "apps sem restrição". Abra o app uma vez depois de reiniciar o celular. |
-| **Permissão negada** (notificações) | Ative manualmente: Configurações > Apps > Agenda Compartilhada > Notificações. |
+| **Notificações não recebidas** | Confira: Configurações > Apps > SynCK > Notificações (ativadas); no app, **Perfil > Notificações**; desative a otimização de bateria para o app (Configurações > Bateria). Alguns fabricantes (Xiaomi, Samsung, Motorola) encerram apps em segundo plano; procure "iniciar automaticamente" ou "apps sem restrição". Abra o app uma vez depois de reiniciar o celular. |
+| **Permissão negada** (notificações) | Ative manualmente: Configurações > Apps > SynCK > Notificações. |
 | **Erro de login** | Confira e-mail e senha (a senha diferencia maiúsculas). Use **Esqueci minha senha**. Depois de várias tentativas erradas, o app pede para esperar um pouco antes de tentar de novo. Se a conta foi criada mas pede confirmação, procure o código no e-mail (inclusive no spam). |
 | **API indisponível** ("Sem conexão com o servidor" ou "O servidor demorou para responder") | Pode ser falta de internet ou o servidor pausado. No plano gratuito, o Supabase pausa projetos sem uso por cerca de uma semana; a pessoa responsável precisa reativar no painel ([TROUBLESHOOTING.md](TROUBLESHOOTING.md#servidor-pausado-ou-fora-do-ar)). |
 | **Banco não configurado** ("Servidor não configurado" ou erros ao entrar) | O APK foi gerado sem o endereço do servidor, ou o banco ainda não recebeu as tabelas. A pessoa responsável deve seguir o [GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md) (partes 1 e 2) e gerar um APK novo. |

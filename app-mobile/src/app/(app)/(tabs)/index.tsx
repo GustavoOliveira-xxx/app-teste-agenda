@@ -1,1 +1,1 @@
-export { default } from '@/screens/calendar/CalendarScreen';
+export { default } from '@/screens/today/TodayScreen';

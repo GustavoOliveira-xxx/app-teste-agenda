@@ -9,13 +9,14 @@ import { TextField } from '@/components/TextField';
 import { useAction } from '@/hooks/useAction';
 import { saveProfile } from '@/services/account';
 import { t } from '@/i18n';
+import { CALENDAR_COLORS } from '@/theme/tokens';
 import { useAuthStore } from '@/stores/authStore';
 import { validateDisplayName } from '@/validation/auth';
 
 export default function EditProfileScreen() {
   const account = useAuthStore((s) => s.account);
   const [name, setName] = useState(account?.display_name ?? '');
-  const [color, setColor] = useState(account?.avatar_color ?? '#3358D4');
+  const [color, setColor] = useState(account?.avatar_color ?? CALENDAR_COLORS[0].value);
   const [error, setError] = useState<string | undefined>();
   const { run, busy } = useAction();
 

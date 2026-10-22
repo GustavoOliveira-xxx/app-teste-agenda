@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
   wrapper: { gap: spacing.xs },
   field: {
     minHeight: MIN_TOUCH,
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',

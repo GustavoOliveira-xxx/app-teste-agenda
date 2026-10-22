@@ -9,9 +9,11 @@
     <!-- Instalar na tela de início (iPhone: Safari > Compartilhar > Adicionar à Tela de Início) -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Agenda" />
+    <meta name="apple-mobile-web-app-title" content="SynCK" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#F4F7F5" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A1416" media="(prefers-color-scheme: dark)" />
     <style id="expo-reset">
       html,
       body {
@@ -19,11 +21,11 @@
       }
       body {
         overflow: hidden;
-        background-color: #fafafa;
+        background-color: #f4f7f5;
       }
       @media (prefers-color-scheme: dark) {
         body {
-          background-color: #121212;
+          background-color: #0a1416;
         }
       }
       #root {
@@ -56,7 +58,7 @@
   </head>
 
   <body>
-    <noscript>Ative o JavaScript para usar a Agenda Compartilhada.</noscript>
+    <noscript>Ative o JavaScript para usar o SynCK.</noscript>
     <div id="root"></div>
   </body>
 </html>

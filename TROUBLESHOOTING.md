@@ -76,7 +76,7 @@ Abra **Perfil > Sincronização**:
 
 ### Notificações (lembretes) não aparecem
 
-1. Android: **Configurações > Apps > Agenda Compartilhada > Notificações**: ativadas.
+1. Android: **Configurações > Apps > SynCK > Notificações**: ativadas.
 2. No app: **Perfil > Notificações**: lembretes ligados; confira o horário de silêncio.
 3. O evento tem lembrete? Lembretes são **pessoais**: cada pessoa define os seus no evento.
 4. Bateria: desative a otimização de bateria para o app (Configurações > Bateria > Uso de bateria por app > Sem restrições). Em Xiaomi, Samsung e Motorola, procure também "Início automático" ou "Apps em suspensão".

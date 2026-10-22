@@ -1,6 +1,7 @@
-// Ao trocar as cores em marca.ts, estes testes avisam se algum texto ficou
-// difícil de ler (contraste mínimo da norma WCAG AA).
-import { marca, type CoresDoTema } from '../marca';
+// Contraste das cores SynCK (norma WCAG AA): 4,5:1 para texto e 3:1 para
+// bordas e elementos gráficos. Se alguma cor da marca mudar, estes testes
+// dizem qual par ficou fraco.
+import { CORES_DE_AGENDA, marca, type CoresDoTema } from '../marca';
 
 function luminance(hex: string): number {
   const m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
@@ -33,18 +34,37 @@ describe.each([
     expect(contrast(c.dangerText, c.danger)).toBeGreaterThanOrEqual(4.5);
   });
 
-  test('cor principal usada como texto (links, itens selecionados)', () => {
-    expect(contrast(c.primary, c.surface)).toBeGreaterThanOrEqual(4.5);
-    expect(contrast(c.primary, c.primarySoft)).toBeGreaterThanOrEqual(4.5);
+  test('rótulos de marca (links, chips e abas selecionados)', () => {
+    expect(contrast(c.primaryInk, c.surface)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.primaryInk, c.primarySoft)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.primaryInk, c.background)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test('cor principal como elemento gráfico (FAB, dia selecionado)', () => {
+    expect(contrast(c.primary, c.background)).toBeGreaterThanOrEqual(3);
+  });
+
+  test('assinatura em bronze e toast', () => {
+    expect(contrast(c.bronzeInk, c.background)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.background, c.text)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.onCoral, c.coral)).toBeGreaterThanOrEqual(4.5);
   });
 
   test('avisos legíveis', () => {
     expect(contrast(c.danger, c.surface)).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(c.danger, c.dangerSoft)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(c.warning, c.warningSoft)).toBeGreaterThanOrEqual(4.5);
     expect(contrast(c.success, c.successSoft)).toBeGreaterThanOrEqual(4.5);
   });
 
   test('borda dos campos visível', () => {
     expect(contrast(c.inputBorder, c.surface)).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe('cores de agenda', () => {
+  test.each(CORES_DE_AGENDA.map((a) => [a.nome, a] as const))('%s visível nos dois temas', (_n, a) => {
+    expect(contrast(a.claro, marca.cores.claro.surface)).toBeGreaterThanOrEqual(3);
+    expect(contrast(a.escuro, marca.cores.escuro.surface)).toBeGreaterThanOrEqual(3);
   });
 });

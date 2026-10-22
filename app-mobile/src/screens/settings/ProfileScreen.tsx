@@ -4,16 +4,20 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/AppText';
 import { Avatar } from '@/components/Avatar';
 import { Badge } from '@/components/Badge';
+import { Logo } from '@/components/brand/Logo';
 import { Card } from '@/components/Card';
 import { useFeedback } from '@/components/Feedback';
 import { ListItem } from '@/components/ListItem';
 import { Screen } from '@/components/Screen';
+import { SectionHeader } from '@/components/SectionHeader';
 import { env } from '@/config/env';
 import { useAvailableUpdate } from '@/hooks/useAvailableUpdate';
 import { t } from '@/i18n';
 import { endSession } from '@/services/session';
 import { useAuthStore } from '@/stores/authStore';
 import { useSyncStore } from '@/stores/syncStore';
+import { useAppTheme } from '@/theme/ThemeProvider';
+import { marca } from '@/theme/marca';
 import { spacing } from '@/theme/tokens';
 
 export default function ProfileScreen() {
@@ -22,6 +26,7 @@ export default function ProfileScreen() {
   const pending = useSyncStore((s) => s.outbox.length);
   const { confirm } = useFeedback();
   const update = useAvailableUpdate();
+  const { colors } = useAppTheme();
 
   const logout = async () => {
     const ok = await confirm({
@@ -35,10 +40,13 @@ export default function ProfileScreen() {
 
   const name = account?.display_name ?? email;
   return (
-    <Screen>
+    <Screen safeTop>
+      <AppText variant="title" style={styles.title} accessibilityRole="header">
+        {t('profile.title')}
+      </AppText>
       <Card>
         <View style={styles.row}>
-          <Avatar name={name} color={account?.avatar_color ?? '#3358D4'} size={64} />
+          <Avatar name={name} color={account?.avatar_color ?? colors.primary} size={64} />
           <View style={styles.flex}>
             <AppText variant="title">{name}</AppText>
             <AppText tone="muted">{email}</AppText>
@@ -61,6 +69,7 @@ export default function ProfileScreen() {
           />
         </Card>
       )}
+      <SectionHeader title={t('profile.account')} />
       <Card padded={false}>
         <ListItem
           icon="person-outline"
@@ -93,6 +102,7 @@ export default function ProfileScreen() {
           onPress={() => router.push('/settings/privacy-data')}
         />
       </Card>
+      <SectionHeader title={t('profile.app')} />
       <Card padded={false}>
         <ListItem
           icon="sync-outline"
@@ -115,14 +125,24 @@ export default function ProfileScreen() {
       <Card padded={false}>
         <ListItem icon="log-out-outline" title={t('auth.logout')} danger onPress={logout} chevron={false} />
       </Card>
-      <AppText variant="small" tone="muted" center>
-        {t('common.appName')} · {t('profile.about', { version: env.appVersion, build: env.appBuild })}
-      </AppText>
+      <View style={styles.about} accessibilityRole="summary">
+        <Logo kind="vertical" width={160} />
+        <View style={[styles.rule, { backgroundColor: colors.bronze }]} />
+        <AppText variant="small" tone="bronze" center>
+          {marca.assinatura}
+        </AppText>
+        <AppText variant="caption" tone="muted" center>
+          {t('profile.about', { version: env.appVersion, build: env.appBuild })}
+        </AppText>
+      </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  title: { fontSize: 26, lineHeight: 32 },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  about: { alignItems: 'center', gap: spacing.sm, marginTop: spacing.xl },
+  rule: { width: 40, height: 1, marginTop: spacing.sm },
   flex: { flex: 1, gap: spacing.xs },
 });

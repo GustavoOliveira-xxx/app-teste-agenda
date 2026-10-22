@@ -1,17 +1,20 @@
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { marca } from '@/theme/marca';
 import { fonte, MIN_TOUCH, radius, spacing } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './motion';
 
 export interface ButtonProps {
   title: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
+  /** Principal (um por tela), contornado, tonal, perigo ou fantasma. */
+  variant?: 'primary' | 'secondary' | 'tonal' | 'danger' | 'ghost';
   icon?: IconName;
+  /** Elemento no lugar do ícone (ex.: marca do Google). */
+  leading?: React.ReactNode;
   loading?: boolean;
   disabled?: boolean;
   accessibilityHint?: string;
@@ -24,6 +27,7 @@ export function Button({
   onPress,
   variant = 'primary',
   icon,
+  leading,
   loading,
   disabled,
   accessibilityHint,
@@ -34,27 +38,30 @@ export function Button({
   const inactive = disabled || loading;
   const palette = {
     primary: { bg: colors.primary, fg: colors.primaryText, border: colors.primary },
-    secondary: { bg: colors.surface, fg: colors.primary, border: colors.border },
+    secondary: { bg: 'transparent', fg: colors.text, border: colors.inputBorder },
+    tonal: { bg: colors.primarySoft, fg: colors.primaryInk, border: colors.primarySoft },
     danger: { bg: colors.danger, fg: colors.dangerText, border: colors.danger },
-    ghost: { bg: 'transparent', fg: colors.primary, border: 'transparent' },
+    ghost: { bg: 'transparent', fg: colors.primaryInk, border: 'transparent' },
   }[variant];
 
   return (
-    <Pressable
+    <PressableScale
       testID={testID}
       onPress={onPress}
       disabled={inactive}
+      haptic={variant === 'primary'}
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled: !!inactive, busy: !!loading }}
-      style={({ pressed }) => [
+      android_ripple={{ color: `${colors.primary}1F`, borderless: false }}
+      style={[
         styles.base,
         compact && styles.compact,
         {
           backgroundColor: palette.bg,
           borderColor: palette.border,
-          opacity: inactive ? 0.55 : pressed ? 0.85 : 1,
+          opacity: inactive ? 0.5 : 1,
         },
       ]}
     >
@@ -62,24 +69,26 @@ export function Button({
         {loading ? (
           <ActivityIndicator color={palette.fg} />
         ) : (
-          icon && marca.iconesNosBotoes && <Icon name={icon} size={20} color={palette.fg} />
+          (leading ?? (icon && <Icon name={icon} size={20} color={palette.fg} />))
         )}
-        <AppText variant="label" style={{ color: palette.fg, fontSize: 16, ...fonte('semi') }}>
+        <AppText style={[styles.label, { color: palette.fg }]} numberOfLines={2}>
           {title}
         </AppText>
       </View>
-    </Pressable>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
     minHeight: MIN_TOUCH,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    paddingHorizontal: spacing.lg,
+    borderRadius: radius.pill,
+    borderWidth: 1.5,
+    paddingHorizontal: spacing.xxl,
     justifyContent: 'center',
+    overflow: 'hidden',
   },
-  compact: { alignSelf: 'flex-start' },
+  compact: { alignSelf: 'flex-start', paddingHorizontal: spacing.xl },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spacing.sm },
+  label: { fontSize: 16, lineHeight: 22, textAlign: 'center', ...fonte('negrito') },
 });

@@ -338,6 +338,59 @@ O identificador do app para iOS já está em `app-mobile/app.json` (`com.gustavo
 | Chave pública exposta em lugar estranho | Ela já é pública por natureza; ainda assim, o procedimento de troca está em [SEGURANCA.md](SEGURANCA.md#procedimento-para-revogar-credenciais-expostas). |
 | Chave `secret`/`service_role`, senha do banco ou keystore vazada | Siga [SEGURANCA.md](SEGURANCA.md#procedimento-para-revogar-credenciais-expostas) imediatamente. |
 
+## Parte 9: entrar com Google
+
+O app já tem o botão **Entrar com Google** (na abertura, no login e no cadastro). Ele só funciona depois destes passos, feitos uma vez. Enquanto não estiverem feitos, o botão avisa que a entrada com Google ainda não foi ativada e o e-mail com senha continua funcionando normalmente. **Não custa nada.**
+
+As chaves do Google ficam só no painel do Supabase. Não cole nenhuma delas no GitHub, no código nem em conversas.
+
+**9.1 Criar o acesso no Google (Google Cloud)**
+
+1. Entre em <https://console.cloud.google.com> com sua conta Google.
+2. No topo, **Selecionar projeto > Novo projeto** > nome `SynCK` > **Criar**. Confira se o projeto `SynCK` está selecionado no topo.
+3. Menu (☰) > **APIs e serviços > Tela de consentimento OAuth** (em algumas contas aparece como **Google Auth Platform > Branding**):
+   - Nome do app: `SynCK`. E-mail de suporte: o seu.
+   - Público (Audience): **Externo**.
+   - Contato do desenvolvedor: o seu e-mail. Salve.
+   - Em **Público**, toque em **Publicar app** (sem isso, só contas de teste conseguem entrar).
+4. Menu > **APIs e serviços > Credenciais > Criar credenciais > ID do cliente OAuth**:
+   - Tipo de aplicativo: **Aplicativo da Web**. Nome: `SynCK`.
+   - **Origens JavaScript autorizadas:** `https://gustavooliveira-xxx.github.io`
+   - **URIs de redirecionamento autorizados:** `https://rirzumnfpsdqpubvvckh.supabase.co/auth/v1/callback`
+   - **Criar.** Aparecem o **ID do cliente** e a **Chave secreta do cliente**. Deixe essa janela aberta.
+
+**9.2 Ligar o Google no Supabase**
+
+1. Em <https://supabase.com/dashboard>, abra o projeto > **Authentication > Sign In / Providers > Google**.
+2. Ative **Enable Sign in with Google**, cole o **Client ID** e o **Client Secret** do passo anterior e toque em **Save**.
+3. **Authentication > URL Configuration > Redirect URLs > Add URL**, uma de cada vez:
+   - `https://gustavooliveira-xxx.github.io/app-teste-agenda/`
+   - `agendacompartilhada://auth/callback`
+4. **Save.**
+
+**9.3 Testar**
+
+- No computador: abra o site, toque em **Entrar com Google**, escolha a conta. O app volta já logado na tela Hoje.
+- No Android (APK 2.0.0 ou mais novo): o Google abre numa janela do navegador e, ao escolher a conta, volta para o SynCK.
+- A primeira entrada com Google cria a conta com o nome do Google. Se a pessoa já tinha conta com o mesmo e-mail (cadastro com senha), o Supabase junta as duas.
+
+## Parte 10: notificações no iPhone e no computador
+
+Já está ativado no servidor (função `enviar-push` e o agendamento que roda a cada minuto). Não há nada para configurar nem pagar.
+
+**Para cada pessoa:**
+
+- **Computador (Chrome, Edge, Firefox, Safari):** abra o site > **Perfil > Notificações > Notificações neste navegador** > permita quando o navegador perguntar.
+- **iPhone e iPad (iOS 16.4 ou mais novo):** primeiro adicione o SynCK à Tela de Início (Safari > Compartilhar > **Adicionar à Tela de Início**), abra pelo ícone e então ative em **Perfil > Notificações**. A Apple só entrega notificações para sites adicionados à Tela de Início.
+
+**O que chega:** os lembretes de cada evento (mesmo horário do Android, com "Em 30 min: ...") e os avisos (evento criado, alterado ou cancelado, convite, comentário, pessoa entrando na agenda). Ao tocar, o SynCK abre direto no evento. O horário de silêncio e a opção "Mostrar detalhes na tela bloqueada" valem aqui também.
+
+**Como funciona:** cada navegador que ativa gera uma inscrição (tabela `push_subscriptions`). O agendamento `synck-enviar-push` (pg_cron) chama a função `enviar-push` a cada minuto; ela calcula os lembretes que venceram com a mesma lógica do app (cópia em `supabase/functions/enviar-push/logica`, conferida pelo CI) e envia pelo padrão Web Push. As chaves desse envio são criadas pela própria função e ficam só no banco.
+
+**Android com o app fechado:** os lembretes já tocam (são agendados no próprio celular). Os **avisos de outras pessoas** com o app fechado exigiriam o Firebase Cloud Messaging (conta no Firebase e um arquivo de configuração no APK). Ficou como passo opcional no [ROADMAP.md](ROADMAP.md); hoje eles aparecem no sino da tela Hoje assim que o app abre.
+
+**Atualizar a função depois de mudar o código:** com o [Supabase CLI](https://supabase.com/docs/guides/cli) logado, na raiz do projeto: `npx supabase functions deploy enviar-push --project-ref rirzumnfpsdqpubvvckh`. Antes, rode `node scripts/copiar-logica-push.mjs` se mexeu em datas, repetição ou lembretes do app.
+
 ## Custos
 
 Com o uso previsto (grupos pequenos), **tudo pode ficar no gratuito**. Valores e limites na data deste guia; confira nos sites.

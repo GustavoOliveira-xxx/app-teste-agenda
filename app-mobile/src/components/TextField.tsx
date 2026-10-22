@@ -3,9 +3,10 @@ import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { radius, spacing, typography } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Icon, type IconName } from './Icon';
 import { IconButton } from './IconButton';
 
 export interface TextFieldProps extends TextInputProps {
@@ -13,16 +14,18 @@ export interface TextFieldProps extends TextInputProps {
   error?: string;
   hint?: string;
   secure?: boolean;
+  /** Ícone à esquerda (ex.: e-mail, cadeado). */
+  icon?: IconName;
 }
 
 export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldProps>(function TextField(
-  { label, error, hint, secure, style, multiline, ...rest },
+  { label, error, hint, secure, icon, style, multiline, ...rest },
   ref,
 ) {
   const { colors } = useAppTheme();
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(true);
-  const borderColor = error ? colors.danger : focused ? colors.focus : colors.inputBorder;
+  const borderColor = error ? colors.danger : focused ? colors.primary : colors.inputBorder;
 
   return (
     <View style={styles.wrapper}>
@@ -32,10 +35,12 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
       <View
         style={[
           styles.inputRow,
-          { borderColor, backgroundColor: colors.surface, borderWidth: focused || error ? 2 : 1 },
+          { borderColor, backgroundColor: colors.surface, borderWidth: focused || error ? 2 : 1.5 },
+          !!icon && { paddingLeft: spacing.md },
           multiline && { alignItems: 'flex-start' },
         ]}
       >
+        {icon && <Icon name={icon} size={20} color={error ? colors.danger : colors.textMuted} />}
         <TextInput
           ref={ref}
           accessibilityLabel={label}
@@ -60,6 +65,11 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
           ]}
           {...rest}
         />
+        {error && !secure && (
+          <View style={styles.trailing}>
+            <Icon name="warning-outline" size={20} color={colors.danger} />
+          </View>
+        )}
         {secure && (
           <IconButton
             icon={hidden ? 'eye-outline' : 'eye-off-outline'}
@@ -70,11 +80,11 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
         )}
       </View>
       {error ? (
-        <AppText variant="small" tone="danger" accessibilityLiveRegion="polite">
+        <AppText variant="caption" tone="danger" accessibilityLiveRegion="polite">
           {error}
         </AppText>
       ) : hint ? (
-        <AppText variant="small" tone="muted">
+        <AppText variant="caption" tone="muted">
           {hint}
         </AppText>
       ) : null}
@@ -83,12 +93,13 @@ export const TextField = forwardRef<ComponentRef<typeof TextInput>, TextFieldPro
 });
 
 const styles = StyleSheet.create({
-  wrapper: { gap: spacing.xs },
+  wrapper: { gap: 6 },
   inputRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: radius.md,
-    minHeight: MIN_TOUCH,
+    borderRadius: radius.sm,
+    minHeight: 52,
   },
+  trailing: { paddingRight: spacing.md },
   input: { flex: 1, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
 });

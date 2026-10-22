@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { MIN_TOUCH, radius } from '@/theme/tokens';
+import { elevation, MIN_TOUCH, radius } from '@/theme/tokens';
 
 import { Icon, type IconName } from './Icon';
+import { PressableScale } from './motion';
 
 /** Botão só com ícone. O rótulo é obrigatório para leitores de tela. */
 export function IconButton({
@@ -12,6 +13,7 @@ export function IconButton({
   onPress,
   color,
   disabled,
+  filled,
   testID,
 }: {
   icon: IconName;
@@ -19,11 +21,13 @@ export function IconButton({
   onPress: () => void;
   color?: string;
   disabled?: boolean;
+  /** Círculo em `surface` com sombra curta (ex.: sino na tela Hoje). */
+  filled?: boolean;
   testID?: string;
 }) {
   const { colors } = useAppTheme();
   return (
-    <Pressable
+    <PressableScale
       testID={testID}
       onPress={onPress}
       disabled={disabled}
@@ -31,10 +35,14 @@ export function IconButton({
       accessibilityLabel={label}
       accessibilityState={{ disabled: !!disabled }}
       hitSlop={4}
-      style={({ pressed }) => [styles.base, { opacity: disabled ? 0.4 : pressed ? 0.6 : 1 }]}
+      style={[
+        styles.base,
+        filled && [{ backgroundColor: colors.surface }, elevation(1, colors)],
+        { opacity: disabled ? 0.4 : 1 },
+      ]}
     >
       <Icon name={icon} color={color ?? colors.text} size={24} />
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
   wrapper: { gap: spacing.xs, flex: 1 },
   field: {
     minHeight: MIN_TOUCH,
-    borderWidth: 1,
-    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderRadius: radius.sm,
     paddingHorizontal: spacing.md,
     flexDirection: 'row',
     alignItems: 'center',
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   iosSheet: {
     padding: spacing.lg,
     gap: spacing.md,
-    borderTopLeftRadius: radius.lg,
-    borderTopRightRadius: radius.lg,
+    borderTopLeftRadius: radius.xl,
+    borderTopRightRadius: radius.xl,
   },
 });

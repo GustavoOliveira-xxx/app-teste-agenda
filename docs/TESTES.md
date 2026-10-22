@@ -465,7 +465,7 @@ Faça os passos nesta ordem, num evento novo.
    - **Esperado:** o app abre no detalhe do evento.
 5. **Lembrete é pessoal:** no Aparelho B (outro membro), abra o mesmo evento.
    - **Esperado:** os lembretes da Ana não aparecem como lembretes do Aparelho B; cada pessoa escolhe os seus.
-6. **Permissão negada:** em Configurações do Android > Apps > Agenda Compartilhada > Notificações, desligue. No app, vá em **Perfil > Notificações**.
+6. **Permissão negada:** em Configurações do Android > Apps > SynCK > Notificações, desligue. No app, vá em **Perfil > Notificações**.
    - **Esperado:** "Permissão do sistema" mostra "Bloqueada (ative nas configurações do Android)" e o botão **"Permitir notificações"**, que leva às configurações do Android. Nenhum lembrete chega enquanto estiver bloqueado.
 
 Os lembretes são **agendados no próprio celular**; não há envio pelo servidor nesta versão.

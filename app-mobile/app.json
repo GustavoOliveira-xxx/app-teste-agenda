@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "Agenda Compartilhada",
+    "name": "SynCK",
     "slug": "agenda-compartilhada",
     "scheme": "agendacompartilhada",
-    "version": "1.2.0",
+    "version": "2.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "description": "Agenda compartilhada para casais, famílias, amigos e equipes.",
+    "description": "Agenda compartilhada da CK Group: sua rotina, sincronizada com quem importa.",
     "ios": {
       "bundleIdentifier": "com.gustavooliveira.agendacompartilhada",
       "supportsTablet": true,
@@ -19,7 +19,7 @@
       "package": "com.gustavooliveira.agendacompartilhada",
       "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#171717",
+        "backgroundColor": "#E4F5EF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -71,11 +71,11 @@
       "bundler": "metro",
       "output": "single",
       "lang": "pt-BR",
-      "name": "Agenda Compartilhada",
-      "shortName": "Agenda",
-      "themeColor": "#FAFAFA",
-      "backgroundColor": "#FAFAFA",
-      "description": "Agenda compartilhada para casais, famílias, amigos e equipes."
+      "name": "SynCK",
+      "shortName": "SynCK",
+      "themeColor": "#F4F7F5",
+      "backgroundColor": "#F4F7F5",
+      "description": "Agenda compartilhada da CK Group: sua rotina, sincronizada com quem importa."
     },
     "plugins": [
       "expo-router",
@@ -87,25 +87,23 @@
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",
-          "imageWidth": 160,
+          "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FAFAFA",
-          "dark": {
-            "image": "./assets/splash-icon.png",
-            "backgroundColor": "#121212"
-          }
+          "backgroundColor": "#E4F5EF"
         }
       ],
       [
         "expo-notifications",
         {
           "icon": "./assets/notification-icon.png",
-          "color": "#171717"
+          "color": "#017A68",
+          "defaultChannel": "lembretes"
         }
       ]
     ],
     "experiments": {
       "typedRoutes": false
-    }
+    },
+    "backgroundColor": "#F4F7F5"
   }
 }

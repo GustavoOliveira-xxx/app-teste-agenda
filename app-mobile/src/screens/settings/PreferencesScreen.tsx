@@ -9,7 +9,7 @@ import { useAction } from '@/hooks/useAction';
 import { savePreferences } from '@/services/account';
 import { getDeviceTimezone } from '@/hooks/useDeviceTimezone';
 import { t } from '@/i18n';
-import type { DateFormat, ThemePreference, TimeFormat, UserPreferences } from '@/models/types';
+import type { DateFormat, TimeFormat, UserPreferences } from '@/models/types';
 import { useAuthStore } from '@/stores/authStore';
 import { formatDateKey } from '@/utils/dates';
 import { timezoneOptions } from '@/utils/timezones';
@@ -26,24 +26,6 @@ export default function PreferencesScreen() {
   return (
     <Screen>
       <Stack.Screen options={{ title: t('preferences.title') }} />
-      <Card>
-        <SelectField<ThemePreference>
-          label={t('preferences.theme')}
-          value={prefs.theme}
-          onChange={(theme) => save({ theme })}
-          options={[
-            { value: 'system', label: t('preferences.themeSystem') },
-            { value: 'light', label: t('preferences.themeLight') },
-            { value: 'dark', label: t('preferences.themeDark') },
-          ]}
-        />
-        <SelectField<'pt-BR'>
-          label={t('preferences.language')}
-          value="pt-BR"
-          onChange={() => undefined}
-          options={[{ value: 'pt-BR', label: t('preferences.languageValue') }]}
-        />
-      </Card>
       <Card>
         <SwitchRow
           label={t('preferences.useDeviceTimezone')}

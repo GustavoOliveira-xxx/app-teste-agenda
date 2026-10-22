@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { ZoomIn } from 'react-native-reanimated';
 
 import { strings, t } from '@/i18n';
 import type { DateKey } from '@/models/types';
@@ -32,7 +33,7 @@ export const MonthGrid = memo(function MonthGrid({
   days: Record<DateKey, DayInfo>;
   onSelect: (day: DateKey) => void;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, reduceMotion } = useAppTheme();
   const matrix = monthMatrix(year, month, weekStartsOn);
   const headers = Array.from({ length: 7 }, (_, i) => (i + weekStartsOn) % 7);
 
@@ -41,8 +42,8 @@ export const MonthGrid = memo(function MonthGrid({
       <View style={styles.week}>
         {headers.map((wd) => (
           <View key={wd} style={styles.cell} accessibilityElementsHidden importantForAccessibility="no">
-            <AppText variant="caption" tone="muted" maxFontSizeMultiplier={1.2} style={styles.headerText}>
-              {strings.weekdays.short[wd]}
+            <AppText variant="overline" tone="muted" maxFontSizeMultiplier={1.2}>
+              {strings.weekdays.letter[wd]}
             </AppText>
           </View>
         ))}
@@ -74,16 +75,30 @@ export const MonthGrid = memo(function MonthGrid({
                 <View
                   style={[
                     styles.dayCircle,
-                    isSelected && { backgroundColor: colors.primary },
-                    !isSelected && isToday && { borderWidth: 2, borderColor: colors.today },
+                    !isSelected && isToday && { borderWidth: 1.5, borderColor: colors.today },
                   ]}
                 >
+                  {isSelected && (
+                    <Animated.View
+                      entering={reduceMotion ? undefined : ZoomIn.springify().stiffness(400).damping(28)}
+                      style={[StyleSheet.absoluteFill, styles.fill, { backgroundColor: colors.primary }]}
+                    />
+                  )}
                   <AppText
                     maxFontSizeMultiplier={1.3}
                     style={{
-                      color: isSelected ? colors.primaryText : outside ? colors.textMuted : colors.text,
-                      ...fonte(isToday || isSelected ? 'semi' : 'regular'),
-                      opacity: outside && !isSelected ? 0.6 : 1,
+                      fontSize: 16,
+                      lineHeight: 20,
+                      fontVariant: ['tabular-nums'],
+                      color: isSelected
+                        ? colors.primaryText
+                        : outside
+                          ? colors.textMuted
+                          : isToday
+                            ? colors.primaryInk
+                            : colors.text,
+                      ...fonte(isToday || isSelected ? 'negrito' : 'semi'),
+                      opacity: outside && !isSelected ? 0.55 : 1,
                     }}
                   >
                     {d}
@@ -111,7 +126,7 @@ export const MonthGrid = memo(function MonthGrid({
 const styles = StyleSheet.create({
   week: { flexDirection: 'row' },
   cell: { flex: 1, alignItems: 'center', paddingVertical: 4, minHeight: 52 },
-  headerText: { textTransform: 'uppercase' },
+  fill: { borderRadius: radius.pill },
   dayCircle: {
     width: 36,
     height: 36,
@@ -119,7 +134,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  dots: { flexDirection: 'row', gap: 3, height: 8, alignItems: 'center', marginTop: 2 },
-  dot: { width: 6, height: 6, borderRadius: 3 },
+  dots: { flexDirection: 'row', gap: 3, height: 8, alignItems: 'center', marginTop: 3 },
+  dot: { width: 5, height: 5, borderRadius: 3 },
   more: { fontSize: 10, lineHeight: 10 },
 });

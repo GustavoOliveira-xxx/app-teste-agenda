@@ -1,9 +1,7 @@
-// Fornece o tema (claro/escuro) para todo o app, seguindo a preferência da
-// pessoa ou a do celular, e informa se o celular pede menos animações.
+// Fornece o tema (claro ou escuro, sempre o do aparelho) para todo o app e
+// informa se o aparelho pede menos animações.
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, useColorScheme } from 'react-native';
-
-import type { ThemePreference } from '@/models/types';
 
 import { darkPalette, lightPalette, type Palette } from './tokens';
 
@@ -15,13 +13,7 @@ export interface AppTheme {
 
 const ThemeContext = createContext<AppTheme>({ colors: lightPalette, dark: false, reduceMotion: false });
 
-export function ThemeProvider({
-  preference,
-  children,
-}: {
-  preference: ThemePreference;
-  children: ReactNode;
-}) {
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const system = useColorScheme();
   const [reduceMotion, setReduceMotion] = useState(false);
 
@@ -33,7 +25,7 @@ export function ThemeProvider({
     return () => sub.remove();
   }, []);
 
-  const dark = preference === 'dark' || (preference === 'system' && system === 'dark');
+  const dark = system === 'dark';
   const value = useMemo(
     () => ({ colors: dark ? darkPalette : lightPalette, dark, reduceMotion }),
     [dark, reduceMotion],

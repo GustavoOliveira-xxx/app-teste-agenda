@@ -1,4 +1,4 @@
-# Política de Privacidade: Agenda Compartilhada
+# Política de Privacidade: SynCK
 
 > **Aviso importante:** este documento é um **modelo técnico inicial**, escrito a partir de como o aplicativo funciona. Ele **pode precisar de revisão jurídica** antes de o aplicativo ser oferecido ao público em geral (por exemplo, na Google Play Store).
 

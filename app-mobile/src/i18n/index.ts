@@ -22,8 +22,21 @@ function lookup(key: string): unknown {
   }, dictionary);
 }
 
+/**
+ * Plural em português a partir do número `n`: "agenda(s)" vira "agenda" com
+ * n = 1 e "agendas" nos demais casos; "alteração(ões)" vira "alterações".
+ */
+export function pluralize(text: string, n: number): string {
+  const many = n !== 1;
+  return text
+    .replace(/mês\(es\)/g, many ? 'meses' : 'mês')
+    .replace(/ão\(ões\)/g, many ? 'ões' : 'ão')
+    .replace(/\((s|es)\)/g, many ? '$1' : '');
+}
+
 export function interpolate(text: string, params?: TranslationParams): string {
   if (!params) return text;
+  if (typeof params.n === 'number') text = pluralize(text, params.n);
   return text.replace(/\{(\w+)\}/g, (match, name: string) =>
     params[name] === undefined ? match : String(params[name]),
   );

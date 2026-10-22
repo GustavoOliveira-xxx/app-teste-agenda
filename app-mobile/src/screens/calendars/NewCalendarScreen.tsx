@@ -1,4 +1,4 @@
-import { router, Stack } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 
 import { Button } from '@/components/Button';
@@ -6,8 +6,10 @@ import { Screen } from '@/components/Screen';
 import { useAction } from '@/hooks/useAction';
 import { getDeviceTimezone } from '@/hooks/useDeviceTimezone';
 import { t } from '@/i18n';
+import type { CalendarKind } from '@/models/types';
 import { syncNow } from '@/offline/syncEngine';
 import * as api from '@/services/api';
+import { CALENDAR_COLORS } from '@/theme/tokens';
 import { hasErrors } from '@/validation/auth';
 import { validateCalendar } from '@/validation/calendar';
 
@@ -15,11 +17,12 @@ import { CalendarFormFields, type CalendarFormValues } from './CalendarFormField
 
 export default function NewCalendarScreen() {
   const { run, busy } = useAction();
+  const { kind } = useLocalSearchParams<{ kind?: CalendarKind }>();
   const [values, setValues] = useState<CalendarFormValues>({
     name: '',
     description: '',
-    color: '#30A46C',
-    kind: 'shared',
+    color: CALENDAR_COLORS[0].value,
+    kind: kind === 'personal' ? 'personal' : 'shared',
     default_timezone: getDeviceTimezone(),
   });
   const [errors, setErrors] = useState<Partial<Record<'name' | 'description' | 'color', string>>>({});

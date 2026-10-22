@@ -1,87 +1,88 @@
-# Design e identidade visual
+# Design e identidade visual (SynCK)
 
-O visual do app foi deixado neutro de propósito (tons de cinza, cantos discretos, fonte do sistema), para receber uma identidade própria sem precisar mexer nas telas.
+O app segue a identidade **SynCK** (um produto CK Group). A fonte de verdade é o pacote de marca entregue em `SynCK-identidade.zip` (guia `IDENTIDADE.md`, telas de referência e tokens). Este documento diz onde cada parte da identidade mora no código.
 
 ## Onde fica cada coisa
 
 | O quê | Arquivo |
 |---|---|
-| Cores, fonte, cantos, sombra e detalhes de estilo | `app-mobile/src/theme/marca.ts` |
-| Ícone do app, ícone do Android, splash, ícone de notificação, favicon | `app-mobile/assets/` |
-| Ícones do site (iPhone e computador) | `app-mobile/public/icons/` |
-| Cores da splash, do ícone do Android e da barra do navegador | `app-mobile/app.json`, `app-mobile/public/manifest.webmanifest` e `app-mobile/public/index.html` |
-| Nome do app | `name` em `app-mobile/app.json` e em `app-mobile/public/manifest.webmanifest` |
+| Cores (claro e escuro), cores de agenda, cores do logo, fontes, raios e movimento | `app-mobile/src/theme/marca.ts` |
+| Estilos derivados: tipografia, sombras tingidas, espaçamentos, cor de agenda no tema | `app-mobile/src/theme/tokens.ts` |
+| Ícones de interface (23 do pacote + complementares no mesmo traço) | `app-mobile/src/components/Icon.tsx` |
+| Decoração animada (esfera de vidro, anéis de órbita, Kairo, estrela, névoa) | `app-mobile/src/components/brand/Decor.tsx` |
+| Logo (vertical, horizontal e personagem) | `app-mobile/src/components/brand/Logo.tsx` e `app-mobile/assets/brand/` |
+| Abertura animada (logo, barra de progresso, "um produto CK Group") | `app-mobile/src/components/brand/BrandSplash.tsx` |
+| Microinterações (toque com mola, cascata, alternadores) | `app-mobile/src/components/motion.tsx` |
+| Fontes Bricolage Grotesque e Figtree (licença OFL) | `app-mobile/assets/fonts/` |
+| Ícone do app, ícone adaptativo e monocromático do Android, splash, ícone de notificação | `app-mobile/assets/` e `app-mobile/app.json` |
+| Ícones do site (iPhone e computador) e ícone pequeno das notificações | `app-mobile/public/icons/` |
 
-As telas nunca usam cores ou fontes soltas: tudo passa por `marca.ts` (via `src/theme/tokens.ts`). Trocando a marca, o app inteiro muda junto, nos temas claro e escuro.
+Nenhuma tela usa cor solta: tudo vem de `marca.ts` por meio de `tokens.ts` e do `useAppTheme()`. A única exceção é a marca do Google no botão "Entrar com Google", que por regra do Google usa as cores dele.
 
-## Como aplicar uma identidade nova
+## Cores
 
-### 1. Cores
+Os nomes do pacote viram chaves do tema:
 
-Em `marca.ts`, ajuste `cores.claro` e `cores.escuro`. Os nomes mais importantes:
-
-- `primary`: cor da marca (botão principal, aba ativa, item escolhido, dia selecionado, links).
-- `primaryText`: texto em cima da cor da marca.
-- `primarySoft`: versão bem clara (ou bem escura, no tema escuro) da cor da marca, usada no fundo de itens selecionados.
-- `background`, `surface`, `surfaceAlt`, `border`: fundos e linhas.
-- `text`, `textMuted`: texto principal e secundário.
-
-Depois de trocar, rode `npm test` dentro de `app-mobile`. O teste `src/theme/__tests__/marca.test.ts` confere se os textos continuam legíveis (contraste mínimo de 4,5:1, e 3:1 para a borda dos campos). Se algum falhar, ele diz qual par de cores ficou fraco.
-
-As 10 cores que a pessoa escolhe para cada agenda ficam em `CALENDAR_COLORS`, em `src/theme/tokens.ts`. Elas são dados das agendas, não da marca, então só mude se quiser outra paleta de escolha.
-
-### 2. Fonte
-
-1. Coloque os arquivos `.ttf` ou `.otf` em `app-mobile/assets/fonts/`.
-2. Em `marca.ts`, preencha `fonte.arquivos` (um nome para cada arquivo) e `fonte.familias` (qual nome usar em cada peso: `regular`, `medio`, `semi`, `negrito`). Há um exemplo comentado no próprio arquivo.
-3. O app carrega a fonte antes de sair da splash. Pesos sem arquivo usam o `regular`.
-
-Com `familias` vazio (`null`), o app usa a fonte do sistema: Roboto no Android, San Francisco no iPhone e a fonte padrão do navegador no computador.
-
-### 3. Formas e detalhes
-
-Também em `marca.ts`:
-
-- `cantos`: arredondamento em pixels (`pequeno` para etiquetas, `medio` para botões e campos, `grande` para cartões e janelas). Use 0 para cantos retos.
-- `sombra`: liga uma sombra leve em cartões e no botão "+".
-- `iconesNosBotoes`: mostra ícones dentro dos botões com texto.
-- `titulosDeSecaoEmMaiusculas`: deixa os títulos de seção em letras maiúsculas.
-
-### 4. Imagens
-
-Troque os arquivos mantendo nome e tamanho:
-
-| Arquivo | Tamanho | Observação |
+| Pacote | No código | Uso |
 |---|---|---|
-| `assets/icon.png` | 1024 x 1024 | Ícone principal (iPhone e lojas). Sem transparência. |
-| `assets/android-icon-foreground.png` | 1024 x 1024 | Desenho do ícone do Android, com fundo transparente. Deixe o desenho dentro do círculo central (cerca de 66% da imagem), porque cada celular recorta de um jeito. |
-| `assets/android-icon-background.png` | 1024 x 1024 | Fundo do ícone do Android. |
-| `assets/android-icon-monochrome.png` | 1024 x 1024 | Versão de uma cor só, usada nos ícones temáticos do Android 13+. |
-| `assets/splash-icon.png` | 512 x 512 | Imagem da tela de abertura. |
-| `assets/notification-icon.png` | 96 x 96 | Silhueta branca com fundo transparente (o Android pinta com a cor de `app.json`). |
-| `assets/favicon.png` | 48 x 48 | Ícone da aba do navegador. |
-| `public/icons/icon-192.png` e `icon-512.png` | 192 e 512 | Ícone do site instalado. |
-| `public/icons/icon-maskable-512.png` | 512 x 512 | Igual ao anterior, com o desenho dentro de 80% central e fundo preenchido. |
-| `public/icons/apple-touch-icon.png` | 180 x 180 | Ícone na tela de início do iPhone. Sem transparência. |
+| `bg` | `background` | Fundo das telas |
+| `surface` | `surface` | Cartões, folhas, barra de navegação, campos |
+| `surfaceSunken` | `surfaceAlt` | Trilhos (seletor Mês/Semana), linhas pressionadas |
+| `line` / `lineStrong` | `border` / `inputBorder` | Divisórias / borda de campos e botões contornados |
+| `ink` / `inkMuted` | `text` / `textMuted` | Texto principal e secundário |
+| `primary`, `onPrimary`, `primarySoft`, `primaryInk` | mesmos nomes (`onPrimary` = `primaryText`) | Botão principal, FAB, dia escolhido; pílulas e chips; links |
+| `tide`, `mint`, `coral`, `bronze`, `bronzeInk`, `accentInverse` | mesmos nomes | Detalhes de marca: névoa, ponto "agora", filete e assinatura, realce do toast |
+| `danger`, `success`, `warning`, `warningSoft` | mesmos nomes | Estados, sempre com ícone ou palavra |
 
-Os ícones atuais são provisórios: um calendário simples em branco sobre cinza escuro.
+As **8 cores de agenda** (Maré, Coral, Âmbar, Céu, Ameixa, Rosa, Oliva, Ardósia) têm versão clara e escura; o banco guarda a clara e `agendaColor()` mostra a certa para o tema. Agendas e avatares criados antes da 2.0 aparecem na cor nova mais próxima.
 
-### 5. Cores fora do código
+O teste `src/theme/__tests__/marca.test.ts` confere o contraste (4,5:1 para texto, 3:1 para bordas e cores de agenda) nos dois temas.
 
-Atualize para combinar com a marca:
+## Tipografia
 
-- `app-mobile/app.json`: `android.adaptiveIcon.backgroundColor`, `web.themeColor` e `web.backgroundColor`, o `backgroundColor` da splash (claro e `dark`) e a `color` do ícone de notificação.
-- `app-mobile/public/manifest.webmanifest`: `theme_color` e `background_color`.
-- `app-mobile/public/index.html`: a cor de fundo enquanto o site carrega (claro e escuro).
+| Estilo (`variant`) | Tamanho | Fonte |
+|---|---|---|
+| `display` | 30/34 | Bricolage Grotesque 800 |
+| `title` | 24/30 | Bricolage Grotesque 700 |
+| `heading` | 18/24 | Figtree 600 |
+| `body` / `bodyMd` | 16/24 e 15/22 | Figtree 400 |
+| `eventTitle` | 15/20 | Figtree 700 |
+| `label` | 13/18 | Figtree 600 |
+| `caption` | 12/16 | Figtree 500 |
+| `overline` | 11/14, caixa alta | Figtree 700 |
+| `time` | 13/16, algarismos tabulares | Figtree 700 |
 
-### 6. Ver o resultado
+O texto acompanha o tamanho de fonte escolhido no aparelho.
 
-- No computador: `cd app-mobile && npx expo start --web`.
-- No celular: gere um APK novo (veja [GUIA_DE_DEPLOY.md](../GUIA_DE_DEPLOY.md)). O site para iPhone se atualiza sozinho a cada envio para o GitHub.
+## Formas e movimento
 
-## Temas claro, escuro e automático
+- Raios: campos 10, cartões 14, FAB e blocos 22, topo das folhas 28, botões, chips e avatares totalmente arredondados.
+- Sombras curtas tingidas de abismo no tema claro; no escuro a profundidade vem da cor da superfície.
+- Toque: escala 0,96 em botões e 0,98 em cartões, mola com rigidez 400 e amortecimento 28. Vibração leve no botão principal (só no celular).
+- Entradas: saída suave `cubic-bezier(0.2, 0.8, 0.2, 1)`; listas em cascata de 30 ms (no máximo 8 itens).
+- Pílula das abas e do seletor escorrega até o item novo; o mês desliza na horizontal ao trocar.
+- Com **reduzir movimento** ligado no aparelho, escalas e deslocamentos viram um fade curto e a decoração fica parada.
 
-A pessoa escolhe em Perfil > Preferências > Tema (Automático, Claro ou Escuro). A escolha fica salva na conta e vale em qualquer aparelho. Antes do login, o app segue o tema do aparelho. Se o aparelho pede menos animações, diálogos e listas de opções abrem sem animação.
+## Decoração
+
+| Objeto | Onde | Tamanho |
+|---|---|---|
+| Esfera de vidro com névoa girando e satélites | Onboarding | até 60% da largura |
+| Anéis de órbita com satélites | Cabeçalho de Hoje e Agendas, carregamento | 28% a 36% da largura, sangrando pela borda, sem cobrir dados |
+| Kairo (mascote) e símbolo Órbita | Estados vazios ("Dia livre. Que raridade.", "Ninguém na sua órbita ainda") | cerca de 40% da largura |
+| Estrela de quatro pontas | "Vou" no evento | estoura em 6 partículas |
+| Fitas de névoa | Abertura e boas-vindas | rodapé da tela |
+
+Regras aplicadas por `useDecorSize()`: proporcional à largura, 15% menor abaixo de 360 dp e no máximo 420 dp em tablets e computador. Só anima com a tela em foco e o app em primeiro plano.
+
+## Logo
+
+- Só sobre fundo claro. No tema escuro, `Logo` coloca o logo numa placa clara com raio 22.
+- Abertura: vertical a 60% da largura. Login: horizontal no topo. Onboarding: personagem. Perfil (Sobre) e menu lateral: logo, filete bronze e "um produto CK Group" em `bronzeInk`.
+
+## Navegação
+
+Hoje, Calendário, Agendas e Perfil. No celular, abas embaixo com a pílula `primarySoft` atrás do ícone ativo; a partir de 768 de largura, menu lateral com o logo. Os avisos ficam no sino da tela Hoje (com ponto coral quando há não lidos).
 
 ## Tamanhos de tela
 
@@ -93,19 +94,10 @@ As faixas ficam em `src/utils/layout.ts` (hook `useLayout()`):
 | 768 a 1023 (tablet) | Menu lateral | Coluna centralizada de até 720 |
 | 1024 ou mais (computador) | Menu lateral | No calendário, mês à esquerda e eventos do dia à direita |
 
-Diálogos e listas de opções viram um cartão centralizado (até 520) a partir de 600 de largura.
-
 ## Acessibilidade
 
-- Área de toque mínima de 48 (`MIN_TOUCH` em `tokens.ts`) em botões, campos e opções.
-- Botões só com ícone sempre têm rótulo para leitor de tela.
+- Área de toque mínima de 48 (`MIN_TOUCH`).
+- Botões só com ícone sempre têm rótulo para leitor de tela; decorações são ocultas para ele.
 - Nenhuma informação depende só de cor: etiquetas com texto, ✓ no item escolhido e nome em cada cor de agenda.
-- O texto acompanha o tamanho de fonte escolhido no aparelho.
 
-Detalhes em [ACESSIBILIDADE.md](ACESSIBILIDADE.md).
-
-## Componentes
-
-Ficam em `app-mobile/src/components/` e são usados por todas as telas. Os principais: `Button` (principal, secundário, perigo e discreto), `TextField`, `SelectField`, `DateTimeField`, `Card`, `Chip`, `Badge`, `ListItem`, `EventRow`, `MonthGrid`, `SegmentedControl`, `SectionHeader`, `FAB` (botão "+"), `Feedback` (mensagens rápidas e confirmações) e `Screen` (estrutura de cada tela). Ícones vêm da família Ionicons, pelo componente `Icon`.
-
-Para a lista de telas, veja [TELAS.md](TELAS.md).
+Detalhes em [ACESSIBILIDADE.md](ACESSIBILIDADE.md). Lista de telas em [TELAS.md](TELAS.md).

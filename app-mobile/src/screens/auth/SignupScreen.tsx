@@ -1,13 +1,19 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 
+import { View } from 'react-native';
+
 import { AppText } from '@/components/AppText';
+import { AuthTopBar, InlineLink, OrDivider } from '@/components/brand/AuthParts';
+import { GoogleButton } from '@/components/brand/GoogleButton';
 import { Button } from '@/components/Button';
+import { EnterItem } from '@/components/motion';
 import { Screen } from '@/components/Screen';
 import { TextField } from '@/components/TextField';
 import { t } from '@/i18n';
 import { signUp } from '@/services/auth';
 import { useAuthStore } from '@/stores/authStore';
+import { spacing } from '@/theme/tokens';
 import { toFriendlyError } from '@/utils/errors';
 import { hasErrors, validateSignup } from '@/validation/auth';
 
@@ -39,9 +45,17 @@ export default function SignupScreen() {
   };
 
   return (
-    <Screen showOfflineBanner={false}>
+    <Screen showOfflineBanner={false} safeTop maxWidth={480}>
+      <AuthTopBar />
+      <EnterItem index={0} style={{ gap: spacing.xs }}>
+        <AppText variant="display">{t('auth.signupTitle')}</AppText>
+        <AppText tone="muted">{t('auth.signupSubtitle')}</AppText>
+      </EnterItem>
+      <GoogleButton title={t('auth.googleSignup')} onError={setMessage} />
+      <OrDivider />
       <TextField
         label={t('auth.name')}
+        icon="person-outline"
         placeholder={t('auth.namePlaceholder')}
         value={form.name}
         onChangeText={set('name')}
@@ -52,6 +66,7 @@ export default function SignupScreen() {
       />
       <TextField
         label={t('auth.email')}
+        icon="mail-outline"
         value={form.email}
         onChangeText={set('email')}
         error={errors.email}
@@ -62,6 +77,7 @@ export default function SignupScreen() {
       />
       <TextField
         label={t('auth.password')}
+        icon="lock-closed-outline"
         value={form.password}
         onChangeText={set('password')}
         error={errors.password}
@@ -73,6 +89,7 @@ export default function SignupScreen() {
       />
       <TextField
         label={t('auth.passwordConfirm')}
+        icon="lock-closed-outline"
         value={form.confirm}
         onChangeText={set('confirm')}
         error={errors.confirm}
@@ -85,12 +102,18 @@ export default function SignupScreen() {
           {message}
         </AppText>
       ) : null}
-      <AppText variant="small" tone="muted">
-        {t('auth.termsNotice')}
-      </AppText>
-      <Button title={t('auth.readPrivacy')} variant="ghost" onPress={() => router.push('/privacy')} />
+      <View>
+        <AppText variant="small" tone="muted">
+          {t('auth.termsNotice')}
+        </AppText>
+        <InlineLink label={t('auth.readPrivacy')} align="right" onPress={() => router.push('/privacy')} />
+      </View>
       <Button title={t('auth.signup')} onPress={submit} loading={loading} testID="signup-submit" />
-      <Button title={t('auth.haveAccount')} variant="ghost" onPress={() => router.replace('/login')} />
+      <InlineLink
+        lead={t('auth.alreadyHave')}
+        label={t('auth.login')}
+        onPress={() => router.replace('/login')}
+      />
     </Screen>
   );
 }

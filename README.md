@@ -1,4 +1,6 @@
-# Agenda Compartilhada
+# SynCK
+
+> Sua rotina, sincronizada com quem importa. Um produto CK Group.
 
 Aplicativo de **agenda compartilhada** para **Android, iPhone, iPad e computador**: você cria agendas, convida pessoas e todo mundo vê os mesmos compromissos, sincronizados pela internet, cada pessoa com o nível de acesso que você escolher. Funciona para casal, família, amigos, república, equipe pequena, grupo de estudo, cuidadores e viagens.
 
@@ -13,9 +15,9 @@ Aplicativo de **agenda compartilhada** para **Android, iPhone, iPad e computador
 
 | Aparelho | Como usar | Lembretes que tocam |
 |---|---|---|
-| Android (celular e tablet) | App instalado pelo **APK** ([COMO_INSTALAR.md, opção A](COMO_INSTALAR.md#opção-a-instalação-do-apk)) | Sim |
-| iPhone e iPad | **Versão web instalável**: Safari > Compartilhar > Adicionar à Tela de Início ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Não nesta versão |
-| Computador (Windows, Mac, Linux) | No navegador ou instalado como aplicativo pelo Chrome, Edge ou Safari ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Não nesta versão |
+| Android (celular e tablet) | App instalado pelo **APK** ([COMO_INSTALAR.md, opção A](COMO_INSTALAR.md#opção-a-instalação-do-apk)) | Sim, com o ícone do SynCK e os botões Abrir e Adiar 10 min |
+| iPhone e iPad | **Versão web instalável**: Safari > Compartilhar > Adicionar à Tela de Início ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Sim, depois de ativar em Perfil > Notificações (iPhone com iOS 16.4 ou mais novo) |
+| Computador (Windows, Mac, Linux) | No navegador ou instalado como aplicativo pelo Chrome, Edge ou Safari ([opção C](COMO_INSTALAR.md#opção-c-iphone-ipad-computador-ou-qualquer-celular-versão-web)) | Sim, depois de ativar em Perfil > Notificações |
 
 A tela se adapta ao tamanho: no celular, abas embaixo; no tablet, menu lateral; no computador, menu lateral com o mês e os eventos do dia lado a lado. Um app nativo de iPhone na App Store também é possível, mas exige conta paga da Apple ([GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store)).
 
@@ -51,16 +53,16 @@ O mapa completo de telas está em [docs/TELAS.md](docs/TELAS.md).
 
 | | | |
 |---|---|---|
-| ![Apresentação](docs/capturas/01-apresentacao.png) | ![Calendário do mês](docs/capturas/03-agenda-mes.png) | ![Lista de próximos eventos](docs/capturas/04-agenda-lista.png) |
-| Apresentação | Calendário do mês | Próximos eventos |
+| ![Tela Hoje](docs/capturas/00-hoje.png) | ![Calendário do mês](docs/capturas/03-agenda-mes.png) | ![Lista de próximos eventos](docs/capturas/04-agenda-lista.png) |
+| Hoje | Calendário do mês | Próximos eventos |
 | ![Detalhes do evento](docs/capturas/05-evento-detalhe.png) | ![Membros e papéis](docs/capturas/08-membros.png) | ![Código de convite](docs/capturas/09-convite.png) |
 | Detalhes do evento e lembretes | Membros e papéis | Código de convite |
-| ![Avisos](docs/capturas/10-avisos.png) | ![Histórico](docs/capturas/11-historico.png) | ![Tema escuro](docs/capturas/13-agenda-tema-escuro.png) |
-| Avisos | Histórico da agenda | Tema escuro |
+| ![Avisos](docs/capturas/10-avisos.png) | ![Entrar](docs/capturas/02-login.png) | ![Tema escuro](docs/capturas/00-hoje-escuro.png) |
+| Avisos | Entrar (com Google) | Tema escuro |
 
-**No computador** (menu lateral, mês e eventos do dia lado a lado):
+**No computador** (menu lateral com o logo; no Calendário, mês e eventos do dia lado a lado):
 
-![Agenda no computador](docs/capturas/15-computador-agenda.png)
+![Tela Hoje no computador](docs/capturas/14-computador-hoje.png)
 
 Mais capturas em [`docs/capturas/`](docs/capturas/). **Como foram feitas:** a versão web do app (o mesmo código do APK) rodou num navegador com tamanho de celular, conectada a uma cópia local do banco com as migrations reais e os dados fictícios de demonstração (`supabase/seed.sql`), entrando como "Ana Demo". No celular o visual é o mesmo, com pequenas diferenças (por exemplo, os seletores de data e hora são os do Android).
 

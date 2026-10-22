@@ -35,8 +35,9 @@ export function SwitchRow({
         disabled={disabled}
         accessibilityLabel={label}
         accessibilityHint={hint}
-        trackColor={{ true: colors.primary, false: colors.inputBorder }}
-        thumbColor={colors.surface}
+        trackColor={{ true: colors.primary, false: colors.surfaceAlt }}
+        thumbColor={value ? colors.primaryText : colors.inputBorder}
+        ios_backgroundColor={colors.surfaceAlt}
       />
     </View>
   );

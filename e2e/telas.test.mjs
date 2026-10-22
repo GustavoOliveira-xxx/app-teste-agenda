@@ -71,17 +71,22 @@ async function abrirSessao(tema = 'light', viewport = { width: 390, height: 844 
   return page;
 }
 
+/** Espera a abertura animada (logo SynCK) sair da frente. */
+const semAbertura = (page) => page.getByTestId('abertura').waitFor({ state: 'detached', timeout: 15_000 });
+
 async function entrar(page, email) {
   await page.goto(`${base}/login`);
+  await semAbertura(page);
   await page.locator('input').nth(0).fill(email);
   await page.locator('input').nth(1).fill(SENHA_DEMO);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await page.getByText('Mês', { exact: true }).waitFor({ timeout: 20_000 });
+  await page.getByText(/^(Bom dia|Boa tarde|Boa noite),/).first().waitFor({ timeout: 20_000 });
 }
 
 async function ir(page, caminho) {
   await page.goto(base + caminho);
   await page.waitForLoadState('networkidle');
+  await semAbertura(page);
 }
 
 const foto = (page, nome) => page.screenshot({ path: join(SAIDA, `${nome}.png`) });
@@ -106,16 +111,22 @@ after(async () => {
 test('primeiro acesso: apresentação e tela de login', async () => {
   const page = await abrirSessao();
   await page.goto(base);
-  await visivel(page, 'Uma agenda para várias pessoas');
+  await semAbertura(page);
+  await visivel(page, 'Sua rotina, sincronizada com quem importa.');
   await foto(page, '01-apresentacao');
   await ir(page, '/login');
-  await visivel(page, 'Esqueci minha senha');
+  await visivel(page, 'Esqueci a senha');
+  // Sem o Google ativado no servidor, o botão explica em vez de abrir uma página de erro.
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await visivel(page, 'ainda não foi ativada');
+  await foto(page, '01-login');
   await page.context().close();
 });
 
 test('senha errada mostra mensagem compreensível', async () => {
   const page = await abrirSessao();
   await page.goto(`${base}/login`);
+  await semAbertura(page);
   await page.locator('input').nth(0).fill('ana.demo@exemplo.test');
   await page.locator('input').nth(1).fill('SenhaErrada1');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
@@ -127,6 +138,9 @@ test('senha errada mostra mensagem compreensível', async () => {
 test('proprietária: calendário, evento, membros, convite e demais telas', async () => {
   const page = await abrirSessao();
   await entrar(page, 'ana.demo@exemplo.test');
+  await foto(page, '03-hoje');
+  await ir(page, '/month');
+  await visivel(page, 'Mês');
   await foto(page, '03-agenda-mes');
 
   await page.getByText('Lista', { exact: true }).click();
@@ -172,6 +186,8 @@ test('proprietária: calendário, evento, membros, convite e demais telas', asyn
 test('visualizador: vê "Ocupado" no lugar de detalhes e não vê eventos privados', async () => {
   const page = await abrirSessao('dark');
   await entrar(page, 'davi.demo@exemplo.test');
+  await foto(page, '17-hoje-escuro');
+  await ir(page, '/month');
   await page.getByText('Lista', { exact: true }).click();
   await visivel(page, 'Jantar de aniversário');
   await visivel(page, 'Ocupado');
@@ -186,7 +202,9 @@ test('computador: menu lateral, mês e eventos do dia lado a lado', async () => 
   await entrar(page, 'ana.demo@exemplo.test');
   // Menu lateral: o item "Agendas" fica na coluna da esquerda, no alto da tela.
   const item = await page.getByText('Agendas', { exact: true }).first().boundingBox();
-  assert.ok(item && item.x < 240 && item.y < 300, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
+  assert.ok(item && item.x < 248 && item.y < 400, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
+  await foto(page, '18-computador-hoje');
+  await ir(page, '/month');
   // Duas colunas: a grade do mês à esquerda e o título do dia (cabeçalho) à direita.
   const dia = page.getByRole('heading', { name: /-feira|sábado|domingo/i }).first();
   await dia.waitFor({ timeout: 15_000 });
@@ -219,7 +237,7 @@ test('tablet: menu lateral e formulário centralizado', async () => {
   const page = await abrirSessao('light', { width: 820, height: 1180 });
   await entrar(page, 'ana.demo@exemplo.test');
   const item = await page.getByText('Perfil', { exact: true }).first().boundingBox();
-  assert.ok(item && item.x < 240 && item.y < 400, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
+  assert.ok(item && item.x < 248 && item.y < 500, `menu lateral fora do lugar: ${JSON.stringify(item)}`);
   await ir(page, '/event/new');
   await visivel(page, 'Título');
   await foto(page, '20-tablet-novo-evento');

@@ -1,64 +1,38 @@
 import { Tabs } from 'expo-router/js-tabs';
 
-import { Icon } from '@/components/Icon';
+import { SynckTabBar, type TabItem } from '@/components/TabBar';
 import { useLayout } from '@/hooks/useLayout';
 import { t } from '@/i18n';
-import { useDataStore } from '@/stores/dataStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { fonte } from '@/theme/tokens';
 
+const ITEMS: TabItem[] = [
+  { name: 'index', label: t('tabs.today'), icon: 'today-outline' },
+  { name: 'month', label: t('tabs.calendar'), icon: 'calendar-outline' },
+  { name: 'calendars', label: t('tabs.calendars'), icon: 'people-outline' },
+  { name: 'profile', label: t('tabs.profile'), icon: 'person-outline' },
+];
+
 export default function TabsLayout() {
   const { colors } = useAppTheme();
-  const unread = useDataStore((s) => s.notifications.filter((n) => !n.read_at).length);
   // Tablet e computador: menu lateral. Celular: abas embaixo, ao alcance do polegar.
   const { sideNav } = useLayout();
   return (
     <Tabs
+      tabBar={(props) => <SynckTabBar {...props} items={ITEMS} side={sideNav} />}
       screenOptions={{
         tabBarPosition: sideNav ? 'left' : 'bottom',
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarActiveBackgroundColor: sideNav ? colors.primarySoft : undefined,
-        tabBarStyle: sideNav
-          ? { backgroundColor: colors.surface, borderRightColor: colors.border, width: 240, minWidth: 240 }
-          : { backgroundColor: colors.surface, borderTopColor: colors.border, minHeight: 60 },
-        tabBarLabelStyle: { fontSize: sideNav ? 15 : 12, ...fonte('medio') },
-        headerStyle: { backgroundColor: colors.surface },
-        headerTitleStyle: fonte('semi'),
+        headerShown: false,
+        headerStyle: { backgroundColor: colors.background },
+        headerTitleStyle: fonte('negrito'),
         headerTintColor: colors.text,
+        sceneStyle: { backgroundColor: colors.background },
+        animation: 'fade',
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: t('tabs.calendar'),
-          tabBarIcon: ({ color }) => <Icon name="calendar" color={color as string} />,
-        }}
-      />
-      <Tabs.Screen
-        name="calendars"
-        options={{
-          title: t('tabs.calendars'),
-          tabBarIcon: ({ color }) => <Icon name="albums-outline" color={color as string} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: t('tabs.notifications'),
-          tabBarBadge: unread > 0 ? (unread > 99 ? '99+' : unread) : undefined,
-          tabBarAccessibilityLabel:
-            unread > 0 ? t('tabs.notificationsUnread', { n: unread }) : t('tabs.notifications'),
-          tabBarIcon: ({ color }) => <Icon name="notifications-outline" color={color as string} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: t('tabs.profile'),
-          tabBarIcon: ({ color }) => <Icon name="person-circle-outline" color={color as string} />,
-        }}
-      />
+      {ITEMS.map((item) => (
+        <Tabs.Screen key={item.name} name={item.name} options={{ title: item.label }} />
+      ))}
     </Tabs>
   );
 }

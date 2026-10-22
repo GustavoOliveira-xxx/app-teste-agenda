@@ -1,7 +1,7 @@
 // Service worker: guarda os arquivos do app no aparelho para que ele abra
 // mesmo sem internet (os dados vêm do armazenamento do próprio app).
 // Chamadas ao servidor (Supabase) nunca passam por aqui: vão direto para a rede.
-const CACHE = 'agenda-compartilhada-v1';
+const CACHE = 'synck-v2';
 const SHELL = new URL('./', self.location).href;
 
 // Na instalação guarda a página e todos os arquivos JavaScript do app
@@ -69,5 +69,46 @@ self.addEventListener('fetch', (event) => {
           return response;
         }),
     ),
+  );
+});
+
+// ---------------------------------------------------------------------
+// Notificações (lembretes e avisos) enviadas pelo servidor do SynCK.
+// ---------------------------------------------------------------------
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: 'SynCK', body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'SynCK', {
+      body: data.body || '',
+      icon: new URL('icons/icon-192.png', SHELL).href,
+      badge: new URL('icons/badge-96.png', SHELL).href,
+      tag: data.tag,
+      silent: !!data.silent,
+      data: { path: data.path || '' },
+      actions: [{ action: 'abrir', title: 'Abrir' }],
+    }),
+  );
+});
+
+// Ao tocar: volta para o SynCK aberto (se houver) ou abre uma janela nova.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const alvo = new URL(event.notification.data?.path || '', SHELL).href;
+  event.waitUntil(
+    (async () => {
+      const janelas = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const aberta = janelas.find((c) => c.url.startsWith(SHELL));
+      if (aberta) {
+        await aberta.focus();
+        if ('navigate' in aberta) return aberta.navigate(alvo);
+        return undefined;
+      }
+      return self.clients.openWindow(alvo);
+    })(),
   );
 });

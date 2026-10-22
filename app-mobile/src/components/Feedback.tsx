@@ -9,15 +9,17 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { fonte, MIN_TOUCH, radius, spacing, typography } from '@/theme/tokens';
+import { elevation, fonte, MIN_TOUCH, motion, radius, spacing, typography } from '@/theme/tokens';
 import { centeredInset, DIALOG_MAX_WIDTH } from '@/utils/layout';
 
 import { AppText } from './AppText';
 import { Button } from './Button';
+import { Icon } from './Icon';
 
 export interface ConfirmOptions {
   title: string;
@@ -109,7 +111,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
       >
         <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
           <View style={[styles.dialog, { backgroundColor: colors.surface }]} accessibilityViewIsModal>
-            <AppText variant="heading">{dialog?.title}</AppText>
+            <AppText variant="title">{dialog?.title}</AppText>
             {dialog?.message ? <AppText tone="muted">{dialog.message}</AppText> : null}
             {dialog?.typeToConfirm ? (
               <TextInput
@@ -120,7 +122,11 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
                 accessibilityLabel={t('account.deleteTypeToConfirm')}
                 placeholder={dialog.typeToConfirm}
                 placeholderTextColor={colors.textMuted}
-                style={[styles.input, typography.body, { borderColor: colors.border, color: colors.text }]}
+                style={[
+                  styles.input,
+                  typography.body,
+                  { borderColor: colors.inputBorder, color: colors.text },
+                ]}
               />
             ) : null}
             <View style={styles.actions}>
@@ -150,25 +156,45 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         </View>
       </Modal>
       {toastState && (
-        <View
+        <Animated.View
+          key={toastState.message}
+          entering={
+            reduceMotion
+              ? FadeIn.duration(150)
+              : SlideInDown.springify().stiffness(motion.mola.stiffness).damping(motion.mola.damping)
+          }
+          exiting={reduceMotion ? FadeOut.duration(150) : SlideOutDown.duration(200)}
           pointerEvents={toastState.action ? 'box-none' : 'none'}
           accessibilityLiveRegion="polite"
           style={[
             styles.toast,
+            elevation(3, colors),
             {
-              bottom: insets.bottom + 80,
+              bottom: insets.bottom + 88,
               left: toastInset,
               right: toastInset,
-              backgroundColor:
-                toastState.tone === 'error'
-                  ? colors.danger
-                  : toastState.tone === 'info'
-                    ? colors.text
-                    : colors.success,
+              backgroundColor: toastState.tone === 'error' ? colors.danger : colors.text,
             },
           ]}
         >
-          <AppText style={{ color: colors.background, ...fonte('medio'), flex: 1 }}>
+          <Icon
+            name={
+              toastState.tone === 'error'
+                ? 'alert-circle-outline'
+                : toastState.tone === 'info'
+                  ? 'notifications-outline'
+                  : 'sync'
+            }
+            size={20}
+            color={toastState.tone === 'error' ? colors.dangerText : colors.background}
+          />
+          <AppText
+            style={{
+              color: toastState.tone === 'error' ? colors.dangerText : colors.background,
+              ...fonte('semi'),
+              flex: 1,
+            }}
+          >
             {toastState.message}
           </AppText>
           {toastState.action ? (
@@ -182,13 +208,16 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
               style={styles.toastAction}
             >
               <AppText
-                style={{ color: colors.background, ...fonte('semi'), textDecorationLine: 'underline' }}
+                style={{
+                  color: toastState.tone === 'error' ? colors.dangerText : colors.accentInverse,
+                  ...fonte('negrito'),
+                }}
               >
                 {toastState.action.label}
               </AppText>
             </Pressable>
           ) : null}
-        </View>
+        </Animated.View>
       )}
     </FeedbackContext.Provider>
   );
@@ -204,15 +233,16 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: DIALOG_MAX_WIDTH,
     borderRadius: radius.lg,
-    padding: spacing.xl,
+    padding: spacing.xxl,
     gap: spacing.md,
   },
   actions: { gap: spacing.sm, marginTop: spacing.sm },
-  input: { borderWidth: 1, borderRadius: radius.md, minHeight: MIN_TOUCH, paddingHorizontal: spacing.md },
+  input: { borderWidth: 1.5, borderRadius: radius.sm, minHeight: MIN_TOUCH, paddingHorizontal: spacing.md },
   toast: {
     position: 'absolute',
     borderRadius: radius.md,
-    padding: spacing.md,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,

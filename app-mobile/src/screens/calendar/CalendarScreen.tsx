@@ -1,13 +1,16 @@
 // Tela principal: calendário em visão mensal, semanal, diária ou lista.
-import { router, useNavigation } from 'expo-router';
-import { useCallback, useEffect, useLayoutEffect, useMemo } from 'react';
+import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, SectionList, StyleSheet, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, SlideInLeft, SlideInRight } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
-import { Button } from '@/components/Button';
+import { Chip } from '@/components/Chip';
 import { EventRow } from '@/components/EventRow';
 import { FAB } from '@/components/FAB';
 import { IconButton } from '@/components/IconButton';
+import { EnterItem } from '@/components/motion';
 import { MonthGrid, type DayInfo } from '@/components/MonthGrid';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { SegmentedControl } from '@/components/SegmentedControl';
@@ -22,7 +25,7 @@ import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
 import { useUiStore, type CalendarViewMode } from '@/stores/uiStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
-import { spacing } from '@/theme/tokens';
+import { agendaColor, SCREEN_MARGIN, spacing } from '@/theme/tokens';
 import { conflictingKeys } from '@/utils/conflicts';
 import {
   addDaysToKey,
@@ -63,9 +66,9 @@ function groupByDay(list: Occurrence[], tz: string, days?: DateKey[]): Map<DateK
 }
 
 export default function CalendarScreen() {
-  const { colors } = useAppTheme();
+  const { colors, dark, reduceMotion } = useAppTheme();
   const { twoPane } = useLayout();
-  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const display = useDisplaySettings();
   const tz = display.timezone;
   const today = todayKey(tz);
@@ -75,6 +78,7 @@ export default function CalendarScreen() {
   const selected = useUiStore((s) => s.selectedDate) ?? today;
   const setSelected = useUiStore((s) => s.setSelectedDate);
   const filters = useUiStore((s) => s.filters);
+  const setFilters = useUiStore((s) => s.setFilters);
   const listTab = useUiStore((s) => s.listTab);
   const setListTab = useUiStore((s) => s.setListTab);
 
@@ -82,8 +86,6 @@ export default function CalendarScreen() {
   const hydrated = useDataStore((s) => s.hydrated);
   const calendarsMap = useCalendarsMap();
   const syncing = useSyncStore((s) => s.syncing);
-  const pending = useSyncStore((s) => s.outbox.length);
-  const online = useSyncStore((s) => s.online);
 
   const { year, month } = dateKeyParts(selected);
 
@@ -117,47 +119,25 @@ export default function CalendarScreen() {
     byDay.forEach((list, day) => {
       info[day] = {
         count: list.length,
-        colors: list.map((o) => o.event.color ?? calendarsMap[o.event.calendar_id]?.color ?? colors.primary),
+        colors: list.map(
+          (o) =>
+            agendaColor(o.event.color ?? calendarsMap[o.event.calendar_id]?.color, dark) ?? colors.primary,
+        ),
       };
     });
     return info;
-  }, [byDay, calendarsMap, colors.primary]);
+  }, [byDay, calendarsMap, colors.primary, dark]);
 
   const writable = calendars.filter((c) => canCreateEvents(c));
   const nFilters = activeFilterCount(filters);
 
-  useLayoutEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={styles.headerActions}>
-          <IconButton icon="search" label={t('common.search')} onPress={() => router.push('/search')} />
-          <IconButton
-            icon={nFilters ? 'funnel' : 'funnel-outline'}
-            label={
-              nFilters
-                ? `${t('common.filters')}, ${t('filters.active', { n: nFilters })}`
-                : t('common.filters')
-            }
-            onPress={() => router.push('/filters')}
-            color={nFilters ? colors.primary : undefined}
-          />
-          <IconButton
-            icon={!online ? 'cloud-offline-outline' : pending ? 'cloud-upload-outline' : 'cloud-done-outline'}
-            label={
-              !online ? t('sync.offline') : pending ? t('sync.pending', { n: pending }) : t('sync.synced')
-            }
-            onPress={() => router.push('/sync')}
-            color={!online || pending ? colors.warning : undefined}
-          />
-        </View>
-      ),
-    });
-  }, [navigation, nFilters, colors, online, pending]);
-
-  const move = (direction: 1 | -1) => {
-    if (viewMode === 'month') setSelected(addMonthsToKey(`${selected.slice(0, 7)}-01`, direction));
-    else if (viewMode === 'week') setSelected(addDaysToKey(selected, 7 * direction));
-    else setSelected(addDaysToKey(selected, direction));
+  // Direção da última troca de período (para a grade deslizar do lado certo).
+  const [direction, setDirection] = useState<1 | -1>(1);
+  const move = (dir: 1 | -1) => {
+    setDirection(dir);
+    if (viewMode === 'month') setSelected(addMonthsToKey(`${selected.slice(0, 7)}-01`, dir));
+    else if (viewMode === 'week') setSelected(addDaysToKey(selected, 7 * dir));
+    else setSelected(addDaysToKey(selected, dir));
   };
 
   const openEvent = useCallback(
@@ -182,7 +162,7 @@ export default function CalendarScreen() {
 
   const periodTitle =
     viewMode === 'month'
-      ? capitalize(formatMonthYear(year, month))
+      ? capitalize(formatMonthYear(year, month).split(' de ')[0])
       : viewMode === 'week'
         ? t('calendarView.weekRange', { start: formatShortDate(firstDay), end: formatShortDate(lastDay) })
         : viewMode === 'day'
@@ -196,28 +176,78 @@ export default function CalendarScreen() {
 
   const refresh = <RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} />;
 
+  const visibleCalendars = calendars.filter((c) => !c.deleted_at);
+  const toggleCalendar = (id: string | null) => {
+    if (!id) return setFilters({ ...filters, calendarIds: [] });
+    const has = filters.calendarIds.includes(id);
+    setFilters({
+      ...filters,
+      calendarIds: has ? filters.calendarIds.filter((x) => x !== id) : [...filters.calendarIds, id],
+    });
+  };
+
   const header = (
     <View style={styles.controls}>
-      <SegmentedControl<CalendarViewMode>
-        label={t('tabs.calendar')}
-        value={viewMode}
-        onChange={setViewMode}
-        options={[
-          { value: 'month', label: t('calendarView.month') },
-          { value: 'week', label: t('calendarView.week') },
-          { value: 'day', label: t('calendarView.day') },
-          { value: 'list', label: t('calendarView.list') },
-        ]}
-      />
-      {viewMode !== 'list' ? (
-        <View style={styles.periodRow}>
-          <IconButton icon="chevron-back" label={t('calendarView.previous')} onPress={() => move(-1)} />
-          <AppText variant="heading" center style={styles.flex} accessibilityLiveRegion="polite">
-            {periodTitle}
-          </AppText>
-          <IconButton icon="chevron-forward" label={t('calendarView.next')} onPress={() => move(1)} />
+      <View style={[styles.titleRow, { paddingTop: insets.top + spacing.md }]}>
+        <AppText
+          variant="title"
+          style={styles.monthTitle}
+          accessibilityRole="header"
+          accessibilityLiveRegion="polite"
+        >
+          {viewMode === 'list' ? t('calendarView.list') : periodTitle}
+          {viewMode === 'month' ? (
+            <AppText variant="title" tone="muted" style={styles.monthTitle}>{` ${year}`}</AppText>
+          ) : null}
+        </AppText>
+        {viewMode !== 'list' && (
+          <>
+            <IconButton icon="chevron-back" label={t('calendarView.previous')} onPress={() => move(-1)} />
+            <IconButton icon="chevron-forward" label={t('calendarView.next')} onPress={() => move(1)} />
+          </>
+        )}
+      </View>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+        <Chip
+          label={t('calendarView.allCalendars')}
+          selected={filters.calendarIds.length === 0}
+          onPress={() => toggleCalendar(null)}
+        />
+        {visibleCalendars.map((c) => (
+          <Chip
+            key={c.id}
+            label={c.name}
+            color={agendaColor(c.color, dark)}
+            selected={filters.calendarIds.includes(c.id)}
+            onPress={() => toggleCalendar(c.id)}
+          />
+        ))}
+      </ScrollView>
+      <View style={styles.modeRow}>
+        <View style={styles.flex}>
+          <SegmentedControl<CalendarViewMode>
+            label={t('tabs.calendar')}
+            value={viewMode}
+            onChange={setViewMode}
+            options={[
+              { value: 'month', label: t('calendarView.month') },
+              { value: 'week', label: t('calendarView.week') },
+              { value: 'day', label: t('calendarView.day') },
+              { value: 'list', label: t('calendarView.list') },
+            ]}
+          />
         </View>
-      ) : (
+        <IconButton icon="search" label={t('common.search')} onPress={() => router.push('/search')} />
+        <IconButton
+          icon={nFilters ? 'funnel' : 'funnel-outline'}
+          label={
+            nFilters ? `${t('common.filters')}, ${t('filters.active', { n: nFilters })}` : t('common.filters')
+          }
+          onPress={() => router.push('/filters')}
+          color={nFilters ? colors.primaryInk : undefined}
+        />
+      </View>
+      {viewMode === 'list' ? (
         <SegmentedControl
           label={t('calendarView.list')}
           value={listTab}
@@ -227,15 +257,9 @@ export default function CalendarScreen() {
             { value: 'past', label: t('calendarView.past') },
           ]}
         />
-      )}
+      ) : null}
       {selected !== today && viewMode !== 'list' ? (
-        <Button
-          title={t('calendarView.goToToday')}
-          icon="today-outline"
-          variant="secondary"
-          compact
-          onPress={() => setSelected(today)}
-        />
+        <Chip label={t('calendarView.goToToday')} selected={false} onPress={() => setSelected(today)} />
       ) : null}
     </View>
   );
@@ -245,12 +269,38 @@ export default function CalendarScreen() {
 
   const dayEvents = (dayList: Occurrence[]) =>
     dayList.length ? (
-      <View style={styles.list}>{dayList.map(renderRow)}</View>
+      <View style={styles.list} key={selected}>
+        {dayList.map((occ, i) => (
+          <EnterItem key={occ.key} index={i}>
+            {renderRow(occ)}
+          </EnterItem>
+        ))}
+      </View>
     ) : (
       <AppText tone="muted">
         {noCalendars ? t('calendars.emptyMessage') : t('calendarView.noEventsDay')}
       </AppText>
     );
+
+  // Troca de mês: a grade desliza na horizontal com fade.
+  const monthEntering = reduceMotion
+    ? FadeIn.duration(150)
+    : (direction > 0 ? SlideInRight : SlideInLeft).duration(220);
+  const grid = (
+    <Animated.View key={`${year}-${month}`} entering={monthEntering} exiting={FadeOut.duration(80)}>
+      <MonthGrid
+        year={year}
+        month={month}
+        weekStartsOn={display.weekStartsOn}
+        selected={selected}
+        today={today}
+        days={monthDays}
+        onSelect={setSelected}
+      />
+    </Animated.View>
+  );
+  const dayCount = (byDay.get(selected) ?? []).length;
+  const dayHeader = t('calendarView.dayHeader', { day: capitalize(formatLongDate(selected)), n: dayCount });
 
   let content: React.ReactNode;
   if (twoPaneMonth) {
@@ -258,22 +308,17 @@ export default function CalendarScreen() {
       <View style={styles.panes}>
         <ScrollView style={styles.leftPane} refreshControl={refresh} contentContainerStyle={styles.scroll}>
           {header}
-          <MonthGrid
-            year={year}
-            month={month}
-            weekStartsOn={display.weekStartsOn}
-            selected={selected}
-            today={today}
-            days={monthDays}
-            onSelect={setSelected}
-          />
+          {grid}
         </ScrollView>
         <ScrollView
           style={[styles.rightPane, { borderLeftColor: colors.border }]}
-          contentContainerStyle={styles.scroll}
+          contentContainerStyle={[styles.scroll, { paddingTop: insets.top + spacing.xxl }]}
         >
-          <AppText variant="heading" accessibilityRole="header" accessibilityLiveRegion="polite">
+          <AppText variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">
             {capitalize(formatLongDate(selected))}
+          </AppText>
+          <AppText variant="overline" tone="muted">
+            {t('calendarView.eventsCount', { n: dayCount })}
           </AppText>
           {dayEvents(byDay.get(selected) ?? [])}
         </ScrollView>
@@ -284,19 +329,9 @@ export default function CalendarScreen() {
     content = (
       <ScrollView refreshControl={refresh} contentContainerStyle={[styles.scroll, styles.column]}>
         {header}
-        {viewMode === 'month' && (
-          <MonthGrid
-            year={year}
-            month={month}
-            weekStartsOn={display.weekStartsOn}
-            selected={selected}
-            today={today}
-            days={monthDays}
-            onSelect={setSelected}
-          />
-        )}
-        <AppText variant="label" tone="muted" style={styles.dayTitle}>
-          {capitalize(formatLongDate(selected))}
+        {viewMode === 'month' && grid}
+        <AppText variant="overline" tone="muted" style={styles.dayTitle} accessibilityRole="header">
+          {dayHeader}
         </AppText>
         {dayEvents(dayList)}
       </ScrollView>
@@ -311,7 +346,7 @@ export default function CalendarScreen() {
           const list = grouped.get(day) ?? [];
           return (
             <View key={day} style={styles.weekDay}>
-              <AppText variant="label" tone={day === today ? 'primary' : 'muted'}>
+              <AppText variant="overline" tone={day === today ? 'brand' : 'muted'} accessibilityRole="header">
                 {capitalize(formatLongDate(day))}
                 {day === today ? ` · ${t('common.today')}` : ''}
               </AppText>
@@ -349,7 +384,12 @@ export default function CalendarScreen() {
         initialNumToRender={15}
         windowSize={7}
         renderSectionHeader={({ section }) => (
-          <AppText variant="label" tone={section.day === today ? 'primary' : 'muted'} style={styles.dayTitle}>
+          <AppText
+            variant="overline"
+            tone={section.day === today ? 'brand' : 'muted'}
+            style={styles.dayTitle}
+            accessibilityRole="header"
+          >
             {section.title}
           </AppText>
         )}
@@ -369,7 +409,7 @@ export default function CalendarScreen() {
       <OfflineBanner />
       {noCalendars && hydrated && !syncing ? (
         <EmptyState
-          icon="albums-outline"
+          art="orbit"
           title={t('calendars.emptyTitle')}
           message={t('calendars.emptyMessage')}
           actionLabel={t('calendars.new')}
@@ -390,14 +430,16 @@ export default function CalendarScreen() {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  scroll: { padding: spacing.lg, gap: spacing.md, paddingBottom: 120 },
+  scroll: { paddingHorizontal: SCREEN_MARGIN, gap: spacing.md, paddingBottom: 120 },
   column: { width: '100%', maxWidth: CONTENT_MAX_WIDTH, alignSelf: 'center' },
   panes: { flex: 1, flexDirection: 'row' },
   leftPane: { flex: 1, maxWidth: 560 },
   rightPane: { flex: 1, borderLeftWidth: StyleSheet.hairlineWidth },
-  controls: { gap: spacing.md, marginBottom: spacing.sm },
-  periodRow: { flexDirection: 'row', alignItems: 'center' },
-  headerActions: { flexDirection: 'row', alignItems: 'center' },
+  controls: { gap: spacing.md, marginBottom: spacing.xs },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  monthTitle: { flex: 1, fontSize: 26, lineHeight: 32 },
+  chips: { gap: spacing.sm, paddingRight: spacing.lg },
+  modeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   dayTitle: { marginTop: spacing.md, marginBottom: spacing.xs },
   list: { gap: spacing.sm },
   listItem: { marginBottom: spacing.sm },

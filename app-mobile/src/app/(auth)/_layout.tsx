@@ -9,9 +9,11 @@ export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: { backgroundColor: colors.surface },
+        headerStyle: { backgroundColor: colors.background },
+        headerShadowVisible: false,
         headerTintColor: colors.text,
-        headerTitleStyle: fonte('semi'),
+        headerTitleStyle: fonte('negrito'),
+        animation: 'slide_from_right',
         headerBackButtonDisplayMode: 'minimal',
         contentStyle: { backgroundColor: colors.background },
       }}
@@ -19,8 +21,8 @@ export default function AuthLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="onboarding" options={{ headerShown: false }} />
       <Stack.Screen name="welcome" options={{ headerShown: false }} />
-      <Stack.Screen name="login" options={{ title: t('auth.loginTitle') }} />
-      <Stack.Screen name="signup" options={{ title: t('auth.signupTitle') }} />
+      <Stack.Screen name="login" options={{ title: t('auth.login'), headerShown: false }} />
+      <Stack.Screen name="signup" options={{ title: t('auth.signup'), headerShown: false }} />
       <Stack.Screen name="verify-email" options={{ title: t('auth.verifyTitle') }} />
       <Stack.Screen name="forgot-password" options={{ title: t('auth.forgotTitle') }} />
       <Stack.Screen name="privacy" options={{ title: t('privacyPolicy.title') }} />

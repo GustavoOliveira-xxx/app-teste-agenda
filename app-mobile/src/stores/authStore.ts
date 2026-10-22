@@ -10,6 +10,9 @@ interface AuthState {
   account: Account | null;
   /** E-mail aguardando o código de confirmação do cadastro. */
   pendingEmail: string | null;
+  /** Mensagem para a tela de login (ex.: a entrada com Google falhou). */
+  notice: string | null;
+  setNotice: (notice: string | null) => void;
   setSession: (session: Session | null) => void;
   setAccount: (account: Account | null) => void;
   setPendingEmail: (email: string | null) => void;
@@ -21,6 +24,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   account: null,
   pendingEmail: null,
+  notice: null,
+  setNotice: (notice) => set({ notice }),
   setSession: (session) => set({ session }),
   setAccount: (account) => set({ account }),
   setPendingEmail: (pendingEmail) => set({ pendingEmail }),
