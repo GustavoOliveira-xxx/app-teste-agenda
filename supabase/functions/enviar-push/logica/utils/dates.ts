@@ -245,11 +245,17 @@ export function isWithinQuietHours(
 }
 
 /** Tempo desde um instante, curto: "agora", "12 min", "3 h", "ontem" ou a data. */
-export function formatRelative(date: Date, now: number, tz: string, dateFormat: DateFormat = 'dd/MM/yyyy'): string {
+export function formatRelative(
+  date: Date,
+  now: number,
+  tz: string,
+  dateFormat: DateFormat = 'dd/MM/yyyy',
+): string {
   const minutes = Math.floor((now - date.getTime()) / 60_000);
   if (minutes < 1) return 'agora';
   if (minutes < 60) return `${minutes} min`;
-  if (minutes < 24 * 60 && toDateKey(date, tz) === toDateKey(new Date(now), tz)) return `${Math.floor(minutes / 60)} h`;
+  if (minutes < 24 * 60 && toDateKey(date, tz) === toDateKey(new Date(now), tz))
+    return `${Math.floor(minutes / 60)} h`;
   const days = diffDays(toDateKey(new Date(now), tz), toDateKey(date, tz));
   if (days === 1) return 'ontem';
   if (days < 7) return `${days} dias`;

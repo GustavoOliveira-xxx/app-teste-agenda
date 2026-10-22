@@ -17,7 +17,8 @@ export function reminderLabel(minutes: number): string {
 export function reminderTitle(title: string, minutes: number): string {
   if (minutes <= 0) return t('reminders.titleNow', { title });
   if (minutes < 60) return t('reminders.titleIn', { when: `${minutes} min`, title });
-  if (minutes < 1440 && minutes % 60 === 0) return t('reminders.titleIn', { when: `${minutes / 60} h`, title });
+  if (minutes < 1440 && minutes % 60 === 0)
+    return t('reminders.titleIn', { when: `${minutes / 60} h`, title });
   if (minutes < 1440) {
     return t('reminders.titleIn', { when: `${Math.floor(minutes / 60)} h ${minutes % 60} min`, title });
   }
