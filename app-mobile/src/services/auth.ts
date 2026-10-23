@@ -91,7 +91,7 @@ export async function isGoogleEnabled(): Promise<boolean> {
 export function googleRedirectUrl(): string {
   if (Platform.OS === 'web') {
     const { origin, pathname } = window.location;
-    // Raiz do site (no GitHub Pages fica numa subpasta, ex.: /app-teste-agenda/).
+    // Raiz do site (no GitHub Pages fica numa subpasta, ex.: /synck-app/).
     const script = document.querySelector('script[src*="/_expo/static/js/"]')?.getAttribute('src');
     const base = script ? script.split('_expo/static/js/')[0] : pathname.replace(/[^/]*$/, '');
     return `${origin}${base.startsWith('/') ? base : `/${base}`}`;

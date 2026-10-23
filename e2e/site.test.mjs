@@ -2,7 +2,7 @@
 // numa subpasta do site (como no GitHub Pages), com 404.html para links diretos.
 //
 // Pré-requisito: o site gerado em SITE_DIR (o workflow "Publicar versão web"
-// gera em app-mobile/dist-site) e o subcaminho em BASE_PATH (ex.: /app-teste-agenda/).
+// gera em app-mobile/dist-site) e o subcaminho em BASE_PATH (ex.: /synck-app/).
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createReadStream, existsSync, statSync } from 'node:fs';
@@ -13,7 +13,7 @@ import { chromium } from 'playwright-core';
 
 const aqui = dirname(fileURLToPath(import.meta.url));
 const SITE = process.env.SITE_DIR ?? join(aqui, '..', 'app-mobile', 'dist-site');
-const BASE = (process.env.BASE_PATH ?? '/app-teste-agenda/').replace(/\/?$/, '/');
+const BASE = (process.env.BASE_PATH ?? '/synck-app/').replace(/\/?$/, '/');
 const tipos = {
   '.js': 'text/javascript',
   '.html': 'text/html',

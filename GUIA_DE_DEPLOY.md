@@ -271,7 +271,7 @@ Não precisa salvar nada mais: a escolha já vale.
 2. Aba **Actions** > **Publicar versão web** > **Run workflow** > **Run workflow**.
 3. Em cerca de 5 minutos o site estará em:
 
-   **<https://gustavooliveira-xxx.github.io/app-teste-agenda/>**
+   **<https://gustavooliveira-xxx.github.io/synck-app/>**
 
    O endereço também aparece no resumo da execução, no quadro **Publicar no GitHub Pages**.
 
@@ -364,7 +364,7 @@ As chaves do Google ficam só no painel do Supabase. Não cole nenhuma delas no 
 1. Em <https://supabase.com/dashboard>, abra o projeto > **Authentication > Sign In / Providers > Google**.
 2. Ative **Enable Sign in with Google**, cole o **Client ID** e o **Client Secret** do passo anterior e toque em **Save**.
 3. **Authentication > URL Configuration > Redirect URLs > Add URL**, uma de cada vez:
-   - `https://gustavooliveira-xxx.github.io/app-teste-agenda/`
+   - `https://gustavooliveira-xxx.github.io/synck-app/`
    - `agendacompartilhada://auth/callback`
 4. **Save.**
 

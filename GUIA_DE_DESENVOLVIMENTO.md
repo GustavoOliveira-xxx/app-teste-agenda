@@ -47,11 +47,11 @@ git config --global user.email "seu-email@exemplo.com"
 ```bash
 # Pasta: onde você guarda seus projetos (ex.: Documentos)
 # Finalidade: copiar o repositório para o computador
-git clone https://github.com/GustavoOliveira-xxx/app-teste-agenda.git
-cd app-teste-agenda
+git clone https://github.com/GustavoOliveira-xxx/synck-app.git
+cd synck-app
 ```
 
-- **Esperado:** a pasta `app-teste-agenda` com `app-mobile/`, `supabase/` e os arquivos `.md`.
+- **Esperado:** a pasta `synck-app` com `app-mobile/`, `supabase/` e os arquivos `.md`.
 - **Se falhar** com erro de autenticação: o repositório é público, então confira o endereço. Para enviar mudanças, entre na conta do GitHub quando o Git pedir (pelo navegador).
 
 ## 3. Instalar as dependências
@@ -87,7 +87,7 @@ Crie um projeto **separado** do de produção (ou use o de produção só se for
 2. Suba o banco local:
 
 ```bash
-# Pasta: raiz do projeto (app-teste-agenda)
+# Pasta: raiz do projeto (synck-app)
 # Finalidade: subir Postgres, Auth e Realtime locais, aplicar as migrations e o seed
 npx supabase start
 ```
@@ -199,7 +199,7 @@ Gerar o site como ele é publicado no GitHub Pages (numa subpasta):
 
 ```bash
 # Pasta: app-mobile (com o .env preenchido)
-SITE_BASE_PATH=/app-teste-agenda npx expo export --platform web --output-dir dist-site
+SITE_BASE_PATH=/synck-app npx expo export --platform web --output-dir dist-site
 cp dist-site/index.html dist-site/404.html
 ```
 

@@ -157,9 +157,9 @@ Tamanho (build 4): APK de 48 MB e AAB de 37 MB. Android mínimo: 7.0. Permissõe
 
 ## Publicação
 
-- **Distribuição direta (APK):** página [Releases](https://github.com/GustavoOliveira-xxx/app-teste-agenda/releases) do repositório.
+- **Distribuição direta (APK):** página [Releases](https://github.com/GustavoOliveira-xxx/synck-app/releases) do repositório.
 - **Google Play Store (AAB):** requer conta de desenvolvedor e uma série de cadastros; o caminho está no [GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store).
-- **Versão web (iPhone, iPad, computador):** publicada no GitHub Pages pelo workflow **Publicar versão web**, em <https://gustavooliveira-xxx.github.io/app-teste-agenda/> depois de ligar o Pages ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)).
+- **Versão web (iPhone, iPad, computador):** publicada no GitHub Pages pelo workflow **Publicar versão web**, em <https://gustavooliveira-xxx.github.io/synck-app/> depois de ligar o Pages ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)).
 - **App nativo de iPhone (App Store):** o código é compatível, mas a publicação exige conta Apple Developer paga; explicado no [GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store).
 
 ## Problemas comuns

@@ -66,7 +66,7 @@ flowchart TB
 ## Estrutura de pastas
 
 ```
-app-teste-agenda/
+synck-app/
 ├── app-mobile/                  App
 │   ├── app.json                 Nome, ícone, pacote Android, permissões, plugins
 │   ├── src/app/                 ROTAS (navegação). Cada arquivo é um endereço:

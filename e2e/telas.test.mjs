@@ -23,7 +23,7 @@ const SAIDA = join(aqui, 'saida');
 const API = 'https://demonstracao.supabase.co';
 const AGENDA = 'c0000000-0000-4000-8000-000000000001';
 // Como no GitHub Pages: o app fica numa subpasta e a raiz do domínio responde 404.
-const SUBPASTA = '/app-teste-agenda';
+const SUBPASTA = '/synck-app';
 
 let site;
 let base;

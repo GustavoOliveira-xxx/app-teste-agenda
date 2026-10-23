@@ -226,7 +226,7 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 ## D18 Autoria, licença e repositório
 
 - Autor: **Gustavo Oliveira dos Santos**, e-mail de commits informado pelo proprietário.
-- Repositório: `GustavoOliveira-xxx/app-teste-agenda` (já existente).
+- Repositório: `GustavoOliveira-xxx/synck-app` (já existente).
 - Licença: **MIT**.
 
 ## D19 Agenda pessoal criada no cadastro
@@ -295,7 +295,7 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 **Como funciona.**
 
 - `app-mobile/public/`: modelo da página com as marcações do iPhone, manifesto, ícones e um *service worker* que guarda os arquivos do app no aparelho. O endereço base é descoberto pelo próprio script do app, então o site funciona na raiz ou numa subpasta.
-- `app-mobile/app.config.js`: só ao gerar o site, define a subpasta (`SITE_BASE_PATH`), necessária no GitHub Pages (`/app-teste-agenda`).
+- `app-mobile/app.config.js`: só ao gerar o site, define a subpasta (`SITE_BASE_PATH`), necessária no GitHub Pages (`/synck-app`).
 - Workflow **Publicar versão web**: gera o site, copia o `index.html` para `404.html` (links diretos), testa a instalação e o modo offline (`e2e/site.test.mjs`) e publica se o Pages estiver ligado. Com domínio próprio, publica na raiz.
 - No navegador, o app usa o seletor de data e hora do próprio navegador, copia o texto quando não há folha de compartilhamento e baixa um arquivo na exportação de dados.
 

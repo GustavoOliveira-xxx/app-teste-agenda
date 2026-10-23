@@ -28,7 +28,7 @@ APK é o "instalador" de um aplicativo Android, como um arquivo `.exe` no Window
 ### Passo 1. Baixar o arquivo de uma fonte confiável
 
 1. No celular, abra o navegador (Chrome, por exemplo).
-2. Entre na página **Releases** do projeto: <https://github.com/GustavoOliveira-xxx/app-teste-agenda/releases>
+2. Entre na página **Releases** do projeto: <https://github.com/GustavoOliveira-xxx/synck-app/releases>
    (ou use o link que a pessoa responsável enviou para você).
 3. Na versão mais recente (a primeira da lista), toque em **Assets** para abrir a lista de arquivos.
 4. Toque no arquivo que termina em **`.apk`**. **Não** baixe o `.aab`: ele serve só para a Play Store e não instala no celular.
@@ -133,7 +133,7 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 
 É o mesmo app, aberto pelo navegador e instalado na tela de início. Fica com ícone próprio, abre em tela cheia, funciona sem internet depois do primeiro acesso e se atualiza sozinho. No computador, mostra menu lateral e calendário em duas colunas.
 
-**Endereço:** <https://gustavooliveira-xxx.github.io/app-teste-agenda/> (ou o link que a pessoa responsável enviou).
+**Endereço:** <https://gustavooliveira-xxx.github.io/synck-app/> (ou o link que a pessoa responsável enviou).
 
 > O endereço só funciona depois que a pessoa responsável publicar o site ([GUIA_DE_DEPLOY.md, parte 6](GUIA_DE_DEPLOY.md#parte-6-versão-web-iphone-ipad-computador-e-qualquer-sistema)).
 
