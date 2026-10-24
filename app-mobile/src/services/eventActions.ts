@@ -341,9 +341,26 @@ export async function resolveConflict(op: OutboxOp, choice: ConflictChoice): Pro
   await discardOperation(op.id);
   if (op.entity && op.entity !== 'event') {
     const KEEP: Record<string, string[]> = {
-      task: ['item_type', 'calendar_id', 'list_id', 'title', 'description', 'links', 'tags', 'start_date',
-        'due_date', 'due_time', 'timezone', 'estimated_minutes', 'priority', 'status', 'recurrence_rule',
-        'recurrence_mode', 'assignee_id', 'privacy'],
+      task: [
+        'item_type',
+        'calendar_id',
+        'list_id',
+        'title',
+        'description',
+        'links',
+        'tags',
+        'start_date',
+        'due_date',
+        'due_time',
+        'timezone',
+        'estimated_minutes',
+        'priority',
+        'status',
+        'recurrence_rule',
+        'recurrence_mode',
+        'assignee_id',
+        'privacy',
+      ],
       note: ['calendar_id', 'title', 'body', 'pinned'],
       habit: ['calendar_id', 'title', 'description', 'color', 'recurrence_rule', 'start_date', 'show_streak'],
       list: ['calendar_id', 'name', 'color'],
@@ -423,4 +440,20 @@ export async function moveEvent(event: CalendarEvent, occurrence: Occurrence, st
       baseSnapshot: snapshot(event, changes) as Record<string, unknown>,
     }),
   );
+}
+
+/** Desfaz blocos recém-criados (ex.: "Desfazer" do planejador). */
+export async function deleteEventsById(list: { id: string; calendarId: string }[]): Promise<void> {
+  for (const item of list) {
+    await enqueueOp(
+      makeOp({
+        id: newId(),
+        kind: 'delete',
+        entityId: item.id,
+        calendarId: item.calendarId,
+        payload: {},
+        baseVersion: null,
+      }),
+    );
+  }
 }

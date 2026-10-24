@@ -83,9 +83,16 @@ function PlanRow({
 }) {
   const { colors } = useAppTheme();
   return (
-    <Animated.View layout={LinearTransition.springify()} style={[styles.planRow, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+    <Animated.View
+      layout={LinearTransition.springify()}
+      style={[styles.planRow, { borderColor: colors.border, backgroundColor: colors.surface }]}
+    >
       <View style={[styles.planIcon, { backgroundColor: planned ? colors.primary : colors.primarySoft }]}>
-        <Icon name={planned ? 'checkmark' : icon} size={18} color={planned ? colors.primaryText : colors.primaryInk} />
+        <Icon
+          name={planned ? 'checkmark' : icon}
+          size={18}
+          color={planned ? colors.primaryText : colors.primaryInk}
+        />
       </View>
       <View style={styles.flex}>
         <AppText variant="bodyMd" numberOfLines={2}>
@@ -168,7 +175,12 @@ export default function PlanDayScreen() {
 
   const hour = new Date().getHours();
   const first = name.trim().split(/\s+/)[0] ?? '';
-  const greeting = hour < 12 ? t('today.morning', { name: first }) : hour < 18 ? t('today.afternoon', { name: first }) : t('today.evening', { name: first });
+  const greeting =
+    hour < 12
+      ? t('today.morning', { name: first })
+      : hour < 18
+        ? t('today.afternoon', { name: first })
+        : t('today.evening', { name: first });
 
   return (
     <Screen
@@ -178,13 +190,21 @@ export default function PlanDayScreen() {
             <Button title={t('planDay.skip')} variant="ghost" onPress={later} />
           </View>
           <View style={styles.flex}>
-            <Button title={t('planDay.start')} icon="sunny-outline" onPress={() => void finish()} testID="plan-start" />
+            <Button
+              title={t('planDay.start')}
+              icon="sunny-outline"
+              onPress={() => void finish()}
+              testID="plan-start"
+            />
           </View>
         </View>
       }
     >
       <Stack.Screen options={{ title: t('planDay.title'), headerShown: true }} />
-      <Animated.View entering={FadeIn.duration(260)} style={[styles.hero, { backgroundColor: colors.primarySoft, marginTop: insets.top ? 0 : spacing.xs }]}>
+      <Animated.View
+        entering={FadeIn.duration(260)}
+        style={[styles.hero, { backgroundColor: colors.primarySoft, marginTop: insets.top ? 0 : spacing.xs }]}
+      >
         <View style={styles.flex}>
           <AppText variant="overline" style={{ color: colors.primaryInk }}>
             {capitalize(formatLongDate(today))}
@@ -192,7 +212,11 @@ export default function PlanDayScreen() {
           <AppText variant="caption" style={{ color: colors.primaryInk }}>
             {greeting}
           </AppText>
-          <AppText variant="display" style={[styles.question, { color: colors.text }]} accessibilityRole="header">
+          <AppText
+            variant="display"
+            style={[styles.question, { color: colors.text }]}
+            accessibilityRole="header"
+          >
             {t('planDay.question')}
           </AppText>
           <AppText variant="small" tone="muted">
@@ -224,7 +248,9 @@ export default function PlanDayScreen() {
           {events.map((o) => (
             <View key={o.key} style={styles.agendaRow}>
               <AppText variant="time" style={[styles.time, { color: colors.primaryInk }]}>
-                {o.allDay ? t('calendarGrid.allDay') : formatTime(o.start, display.timezone, display.timeFormat)}
+                {o.allDay
+                  ? t('calendarGrid.allDay')
+                  : formatTime(o.start, display.timezone, display.timeFormat)}
               </AppText>
               <AppText style={styles.flex} numberOfLines={1}>
                 {o.event.is_masked ? t('events.maskedTitle') : o.title}
@@ -262,7 +288,11 @@ export default function PlanDayScreen() {
               <PlanRow
                 icon={task.item_type === 'reminder' ? 'notifications-outline' : 'task-outline'}
                 title={task.title}
-                subtitle={task.plan_day === yesterday ? t('planDay.yesterday') : (describeDue(task, today) ?? undefined)}
+                subtitle={
+                  task.plan_day === yesterday
+                    ? t('planDay.yesterday')
+                    : (describeDue(task, today) ?? undefined)
+                }
                 planned={task.plan_day === today}
                 onToggle={() => togglePlan(task)}
               />
@@ -272,15 +302,27 @@ export default function PlanDayScreen() {
       )}
 
       <SectionHeader title={t('planDay.addLabel')} />
-      <QuickAddBar planDay={today} placeholder={t('planDay.addPlaceholder')} onSaved={() => setBurst((b) => b + 1)} />
+      <QuickAddBar
+        planDay={today}
+        placeholder={t('planDay.addPlaceholder')}
+        onSaved={() => setBurst((b) => b + 1)}
+      />
       {planned.map((task) => (
-        <Animated.View key={task.id} entering={FadeInDown.duration(220)} layout={LinearTransition.springify()}>
+        <Animated.View
+          key={task.id}
+          entering={FadeInDown.duration(220)}
+          layout={LinearTransition.springify()}
+        >
           <View style={[styles.plannedRow, { backgroundColor: colors.surface, borderColor: colors.primary }]}>
             <Icon name="sunny-outline" size={18} color={colors.primaryInk} />
             <AppText style={styles.flex} numberOfLines={2}>
               {task.title}
             </AppText>
-            <IconButton icon="close" label={`${t('tasks.planRemove')}: ${task.title}`} onPress={() => togglePlan(task)} />
+            <IconButton
+              icon="close"
+              label={`${t('tasks.planRemove')}: ${task.title}`}
+              onPress={() => togglePlan(task)}
+            />
           </View>
         </Animated.View>
       ))}
@@ -299,7 +341,11 @@ export default function PlanDayScreen() {
                 accessibilityLabel={h.title}
                 style={[styles.plannedRow, { backgroundColor: colors.surface, borderColor: colors.border }]}
               >
-                <Icon name={done ? 'checkmark-circle' : 'leaf-outline'} size={20} color={done ? colors.primary : colors.textMuted} />
+                <Icon
+                  name={done ? 'checkmark-circle' : 'leaf-outline'}
+                  size={20}
+                  color={done ? colors.primary : colors.textMuted}
+                />
                 <AppText style={styles.flex}>{h.title}</AppText>
                 <AppText variant="caption" tone="muted">
                   {done ? t('habits.doneToday') : t('habits.markDone')}
