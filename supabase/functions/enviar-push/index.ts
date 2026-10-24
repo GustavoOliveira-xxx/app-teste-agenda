@@ -1,8 +1,9 @@
 // Função "enviar-push": notificações do SynCK no navegador (iPhone e computador).
 //
 // O agendamento do banco (pg_cron) chama esta função a cada minuto. Ela envia:
-// - os lembretes que vencem desde a última rodada (mesma regra do app Android);
-// - os avisos novos (evento criado, alterado, convite, comentário...).
+// - os lembretes de eventos que vencem desde a última rodada (mesma regra do app Android);
+// - os alertas de tarefas e lembretes avulsos (prazo, ou 9h do dia sem horário);
+// - os avisos novos (evento criado, alterado, convite, comentário, tarefa, enquete...).
 //
 // As chaves VAPID são criadas aqui na primeira rodada e ficam só no banco
 // (private.web_push_config). Quem chama precisa mandar o segredo do agendamento.
@@ -11,7 +12,7 @@ import webpush from 'npm:web-push@3.6.7';
 
 import { t } from './logica/i18n/index.ts';
 import type { CalendarEvent } from './logica/models/types.ts';
-import { formatOccurrenceTime, isWithinQuietHours } from './logica/utils/dates.ts';
+import { formatDateKey, formatOccurrenceTime, isWithinQuietHours, localToInstant } from './logica/utils/dates.ts';
 import { expandEvent } from './logica/utils/recurrence.ts';
 import { reminderTitle } from './logica/utils/reminders.ts';
 
@@ -98,6 +99,77 @@ async function reminders(from: Date, to: Date): Promise<Push[]> {
   return pushes;
 }
 
+/** Sem horário no prazo, o alerta usa 9h do dia (igual ao app). */
+const DEFAULT_ALERT_TIME = '09:00';
+
+async function taskAlerts(from: Date, to: Date): Promise<Push[]> {
+  const rows = await sql<
+    {
+      user_id: string;
+      minutes_before: number;
+      task_id: string;
+      title: string;
+      due_date: string;
+      due_time: string | null;
+      task_timezone: string;
+      access: boolean;
+      show_details: boolean;
+      timezone: string;
+      time_format: '24h' | '12h';
+      quiet_start: string | null;
+      quiet_end: string | null;
+    }[]
+  >`
+    select a.user_id, a.minutes_before, t.id as task_id, t.title, t.due_date::text, t.due_time::text,
+           t.timezone as task_timezone,
+           private.task_access_for(a.user_id, cm.role, t.calendar_id, t.id, t.created_by, t.assignee_id, t.privacy)
+             as access,
+           np.show_details_on_lock_screen as show_details,
+           up.timezone, up.time_format,
+           np.quiet_hours_start::text as quiet_start, np.quiet_hours_end::text as quiet_end
+      from public.task_alerts a
+      join public.tasks t on t.id = a.task_id and t.deleted_at is null and t.due_date is not null
+                         and t.status not in ('done', 'cancelled')
+      left join public.calendars c on c.id = t.calendar_id
+      left join public.calendar_members cm on cm.calendar_id = t.calendar_id and cm.user_id = a.user_id
+                                          and cm.status = 'active'
+      join public.notification_preferences np on np.user_id = a.user_id and np.enabled and np.notify_reminders
+      join public.user_preferences up on up.user_id = a.user_id
+     where exists (select 1 from public.push_subscriptions s where s.user_id = a.user_id)
+       and (t.calendar_id is null or (c.deleted_at is null and cm.id is not null))
+       and t.due_date between (${from}::timestamptz - interval '2 days')::date
+                          and (${to}::timestamptz + interval '30 days')::date`;
+
+  const pushes: Push[] = [];
+  for (const row of rows) {
+    if (!row.access) continue;
+    const time = row.due_time?.slice(0, 5) ?? null;
+    const base = localToInstant(row.due_date, time ?? DEFAULT_ALERT_TIME, row.task_timezone);
+    const at = base.getTime() - row.minutes_before * 60_000;
+    if (at <= from.getTime() || at > to.getTime()) continue;
+    const when = [formatDateKey(row.due_date), time].filter(Boolean).join(' ');
+    pushes.push({
+      userId: row.user_id,
+      title: row.show_details ? (time ? reminderTitle(row.title, row.minutes_before) : row.title) : t('reminders.lockedContent'),
+      body: row.show_details ? when : t('reminders.lockedBody'),
+      path: `task/${row.task_id}`,
+      tag: `task:${row.task_id}:${row.due_date}:${row.minutes_before}`,
+      silent: isWithinQuietHours(new Date(at), row.timezone, row.quiet_start, row.quiet_end),
+    });
+  }
+  return pushes;
+}
+
+/** Caminho aberto ao tocar num aviso. */
+function noticePath(n: { type: string; event_id: string | null; calendar_id: string | null; data: Record<string, unknown> }) {
+  if (n.type === 'invite_received') return 'invites';
+  if (typeof n.data.task_id === 'string') return `task/${n.data.task_id}`;
+  if (typeof n.data.poll_id === 'string' && n.calendar_id) return `calendar/${n.calendar_id}/polls`;
+  if (n.event_id && n.type !== 'event_deleted') return `event/${n.event_id}`;
+  if (n.calendar_id && n.type !== 'member_removed') return `calendar/${n.calendar_id}`;
+  return 'notifications';
+}
+
 async function notices(from: Date, to: Date): Promise<Push[]> {
   const rows = await sql<
     {
@@ -108,10 +180,11 @@ async function notices(from: Date, to: Date): Promise<Push[]> {
       body: string | null;
       event_id: string | null;
       calendar_id: string | null;
+      data: Record<string, unknown>;
       show_details: boolean;
     }[]
   >`
-    select n.id, n.user_id, n.type, n.title, n.body, n.event_id, n.calendar_id,
+    select n.id, n.user_id, n.type, n.title, n.body, n.event_id, n.calendar_id, n.data,
            np.show_details_on_lock_screen as show_details
       from public.notifications n
       join public.notification_preferences np on np.user_id = n.user_id and np.enabled
@@ -121,14 +194,7 @@ async function notices(from: Date, to: Date): Promise<Push[]> {
     userId: n.user_id,
     title: n.title,
     body: n.show_details ? (n.body ?? '') : t('reminders.lockedBody'),
-    path:
-      n.type === 'invite_received'
-        ? 'invites'
-        : n.event_id && n.type !== 'event_deleted'
-          ? `event/${n.event_id}`
-          : n.calendar_id && n.type !== 'member_removed'
-            ? `calendar/${n.calendar_id}`
-            : 'notifications',
+    path: noticePath(n),
     tag: `aviso:${n.id}`,
     silent: false,
   }));
@@ -195,7 +261,7 @@ Deno.serve(async (req) => {
     returning antes.last_run_at as previous`;
   const from = new Date(Math.max(previous ? previous.getTime() : to.getTime() - 60_000, to.getTime() - MAX_BACKLOG_MS));
 
-  const pushes = [...(await reminders(from, to)), ...(await notices(from, to))];
+  const pushes = [...(await reminders(from, to)), ...(await taskAlerts(from, to)), ...(await notices(from, to))];
   const result = await send(pushes);
   return Response.json({ from, to, ...result });
 });

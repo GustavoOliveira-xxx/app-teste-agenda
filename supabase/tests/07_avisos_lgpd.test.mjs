@@ -97,6 +97,6 @@ test('manutenção da lixeira não pode ser chamada pelo app', async () => {
   const { db, ana } = await setupGroup();
   await expectError(db.rpc(ana, 'purge_trash', [30]), 'permission denied');
   const res = await db.admin('select public.purge_trash(30) as r');
-  assert.deepEqual(res.rows[0].r, { calendars: 0, events: 0 });
+  assert.deepEqual(res.rows[0].r, { calendars: 0, events: 0, items: 0 });
   await db.close();
 });
