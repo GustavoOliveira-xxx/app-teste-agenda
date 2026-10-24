@@ -124,12 +124,17 @@ function Checklist({ task, canEdit, canTick }: { task: Task; canEdit: boolean; c
           <TaskCheck
             done={item.done}
             priority={0}
-            label={item.done ? `${t('tasks.reopen')}: ${item.title}` : `${t('tasks.complete')}: ${item.title}`}
+            label={
+              item.done ? `${t('tasks.reopen')}: ${item.title}` : `${t('tasks.complete')}: ${item.title}`
+            }
             onPress={() => void tick(item)}
             disabled={!canTick}
           />
           <AppText
-            style={[styles.flex, item.done && { textDecorationLine: 'line-through', color: colors.textMuted }]}
+            style={[
+              styles.flex,
+              item.done && { textDecorationLine: 'line-through', color: colors.textMuted },
+            ]}
           >
             {item.title}
           </AppText>
@@ -169,7 +174,13 @@ function Checklist({ task, canEdit, canTick }: { task: Task; canEdit: boolean; c
               maxLength={200}
             />
           </View>
-          <IconButton icon="add" label={t('tasks.checklistAdd')} onPress={add} disabled={!text.trim()} filled />
+          <IconButton
+            icon="add"
+            label={t('tasks.checklistAdd')}
+            onPress={add}
+            disabled={!text.trim()}
+            filled
+          />
         </View>
       )}
     </View>
@@ -198,7 +209,11 @@ function Comments({ task, canWrite }: { task: Task; canWrite: boolean }) {
     }
   };
   const remove = async (id: string) => {
-    const ok = await confirm({ title: t('events.deleteComment'), destructive: true, confirmLabel: t('common.delete') });
+    const ok = await confirm({
+      title: t('events.deleteComment'),
+      destructive: true,
+      confirmLabel: t('common.delete'),
+    });
     if (ok && (await run(() => api.deleteTaskComment(id))).ok) void reload();
   };
   return (
@@ -213,11 +228,20 @@ function Comments({ task, canWrite }: { task: Task; canWrite: boolean }) {
             <View style={styles.flex}>
               <AppText variant="label">{c.is_mine ? t('common.you') : c.author_name}</AppText>
               <AppText variant="caption" tone="muted">
-                {formatDateTime(new Date(c.created_at), display.timezone, display.dateFormat, display.timeFormat)}
+                {formatDateTime(
+                  new Date(c.created_at),
+                  display.timezone,
+                  display.dateFormat,
+                  display.timeFormat,
+                )}
               </AppText>
             </View>
             {c.is_mine && !c.deleted_at && (
-              <IconButton icon="trash-outline" label={t('events.deleteComment')} onPress={() => void remove(c.id)} />
+              <IconButton
+                icon="trash-outline"
+                label={t('events.deleteComment')}
+                onPress={() => void remove(c.id)}
+              />
             )}
           </View>
           <AppText tone={c.deleted_at ? 'muted' : 'default'} selectable>
@@ -227,7 +251,13 @@ function Comments({ task, canWrite }: { task: Task; canWrite: boolean }) {
       ))}
       {canWrite && online && !isPending && (
         <>
-          <TextField label={t('events.commentPlaceholder')} value={text} onChangeText={setText} multiline maxLength={2000} />
+          <TextField
+            label={t('events.commentPlaceholder')}
+            value={text}
+            onChangeText={setText}
+            multiline
+            maxLength={2000}
+          />
           <Button title={t('events.send')} icon="send" onPress={send} loading={busy} compact />
         </>
       )}
@@ -315,7 +345,8 @@ export default function TaskDetailScreen() {
         (calendar.my_role === 'collaborator' && task.created_by === userId))
     : task.created_by === userId;
   const canTick = canEdit || task.assignee_id === userId;
-  const canComment = !!calendar && (canTick || ['owner', 'admin', 'editor', 'collaborator'].includes(calendar.my_role));
+  const canComment =
+    !!calendar && (canTick || ['owner', 'admin', 'editor', 'collaborator'].includes(calendar.my_role));
   const open = isOpen(task);
   const late = isOverdue(task, today);
   const rule = parseRule(task.recurrence_rule);
@@ -342,7 +373,9 @@ export default function TaskDetailScreen() {
       return;
     }
     const day =
-      choice === 'tomorrow' ? addDaysToKey(today, 1) : addDaysToKey(today, ((8 - weekdayOfKey(today)) % 7) || 7);
+      choice === 'tomorrow'
+        ? addDaysToKey(today, 1)
+        : addDaysToKey(today, (8 - weekdayOfKey(today)) % 7 || 7);
     await postponeTask(task, day);
     toast(t('tasks.postponed', { date: formatShortDate(day) }));
   };
@@ -397,7 +430,9 @@ export default function TaskDetailScreen() {
           />
         )}
         {late && <Badge label={t('tasks.overdue')} tone="danger" icon="alert-circle-outline" />}
-        {task.plan_day === today && <Badge label={t('planDay.inMyDay')} tone="primary" icon="sunny-outline" />}
+        {task.plan_day === today && (
+          <Badge label={t('planDay.inMyDay')} tone="primary" icon="sunny-outline" />
+        )}
         {task.pending && <Badge label={t('tasks.pendingBadge')} icon="cloud-upload-outline" />}
       </View>
       {!canEdit && (
@@ -424,7 +459,13 @@ export default function TaskDetailScreen() {
             />
           )}
           {open && canEdit && (
-            <Button title={t('tasks.postpone')} icon="snooze-outline" variant="tonal" compact onPress={() => setPostponeOpen(true)} />
+            <Button
+              title={t('tasks.postpone')}
+              icon="snooze-outline"
+              variant="tonal"
+              compact
+              onPress={() => setPostponeOpen(true)}
+            />
           )}
           {open && !reminder && writableCalendar && (
             <Button
@@ -440,11 +481,17 @@ export default function TaskDetailScreen() {
 
       <Card>
         <View style={styles.infoRow}>
-          <Icon name={late ? 'alert-circle-outline' : 'time-outline'} size={18} color={late ? colors.danger : colors.textMuted} />
+          <Icon
+            name={late ? 'alert-circle-outline' : 'time-outline'}
+            size={18}
+            color={late ? colors.danger : colors.textMuted}
+          />
           <View style={styles.flex}>
             <AppText variant="label">{reminder ? t('tasks.reminderDate') : t('tasks.due')}</AppText>
             <AppText tone={late ? 'danger' : 'default'}>
-              {due ? `${due}${task.due_date ? ` · ${formatDateKey(task.due_date, display.dateFormat)}` : ''}` : t('tasks.noDue')}
+              {due
+                ? `${due}${task.due_date ? ` · ${formatDateKey(task.due_date, display.dateFormat)}` : ''}`
+                : t('tasks.noDue')}
             </AppText>
           </View>
         </View>
@@ -467,7 +514,9 @@ export default function TaskDetailScreen() {
         {task.estimated_minutes ? (
           <View style={styles.infoRow}>
             <Icon name="time-outline" size={18} color={colors.textMuted} />
-            <AppText style={styles.flex}>{`${t('tasks.estimate')}: ${estimateLabel(task.estimated_minutes)}`}</AppText>
+            <AppText
+              style={styles.flex}
+            >{`${t('tasks.estimate')}: ${estimateLabel(task.estimated_minutes)}`}</AppText>
           </View>
         ) : null}
         <View style={styles.infoRow}>
@@ -475,7 +524,11 @@ export default function TaskDetailScreen() {
           <AppText style={styles.flex}>{list ? list.name : t('tasks.noList')}</AppText>
         </View>
         <View style={styles.infoRow}>
-          <Icon name={calendar ? 'group-outline' : 'lock-closed-outline'} size={18} color={colors.textMuted} />
+          <Icon
+            name={calendar ? 'group-outline' : 'lock-closed-outline'}
+            size={18}
+            color={colors.textMuted}
+          />
           <AppText style={styles.flex}>
             {calendar
               ? `${calendar.name} · ${strings.tasks.privacyOptions[task.privacy]}`
@@ -498,11 +551,16 @@ export default function TaskDetailScreen() {
         )}
       </Card>
 
-      {task.description ? (
-        <AppText selectable>{task.description}</AppText>
-      ) : null}
+      {task.description ? <AppText selectable>{task.description}</AppText> : null}
       {task.links.map((link) => (
-        <Button key={link} title={link} icon="link-outline" variant="ghost" compact onPress={() => void Linking.openURL(link)} />
+        <Button
+          key={link}
+          title={link}
+          icon="link-outline"
+          variant="ghost"
+          compact
+          onPress={() => void Linking.openURL(link)}
+        />
       ))}
 
       {!reminder && <Checklist task={task} canEdit={canEdit} canTick={canTick} />}
@@ -526,7 +584,10 @@ export default function TaskDetailScreen() {
                 dateFormat={display.dateFormat}
                 showDate
                 onPress={(occ) =>
-                  router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } })
+                  router.push({
+                    pathname: '/event/[id]',
+                    params: { id: occ.event.id, date: occ.originalDate },
+                  })
                 }
               />
             ))

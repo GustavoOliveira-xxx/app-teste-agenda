@@ -190,7 +190,10 @@ export default function TasksScreen() {
 
   const ordered = sort === 'manual' ? sections.flatMap((s) => s.data) : undefined;
   const { toggle, openMenu, sheet } = useTaskActions({ ordered });
-  const openTask = useCallback((task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }), []);
+  const openTask = useCallback(
+    (task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }),
+    [],
+  );
   const nFilters = activeTaskFilterCount(filters);
 
   const loadOlderDone = async () => {
@@ -274,9 +277,27 @@ export default function TasksScreen() {
 
   const links = (
     <View style={styles.links}>
-      <Button title={t('tasks.habitsLink')} icon="leaf-outline" variant="tonal" compact onPress={() => router.push('/habits')} />
-      <Button title={t('tasks.notesLink')} icon="document-text-outline" variant="tonal" compact onPress={() => router.push('/notes')} />
-      <Button title={t('tasks.plannerLink')} icon="sparkles-outline" variant="tonal" compact onPress={() => router.push('/planner')} />
+      <Button
+        title={t('tasks.habitsLink')}
+        icon="leaf-outline"
+        variant="tonal"
+        compact
+        onPress={() => router.push('/habits')}
+      />
+      <Button
+        title={t('tasks.notesLink')}
+        icon="document-text-outline"
+        variant="tonal"
+        compact
+        onPress={() => router.push('/notes')}
+      />
+      <Button
+        title={t('tasks.plannerLink')}
+        icon="sparkles-outline"
+        variant="tonal"
+        compact
+        onPress={() => router.push('/planner')}
+      />
     </View>
   );
 
@@ -287,10 +308,16 @@ export default function TasksScreen() {
           {twoPane ? viewTitle : t('tasks.title')}
         </AppText>
         <IconButton icon="search" label={t('common.search')} onPress={() => router.push('/search')} />
-        <IconButton icon="options-outline" label={`${t('tasks.sort')}: ${strings.tasks.sorts[sort]}`} onPress={() => setSortOpen(true)} />
+        <IconButton
+          icon="options-outline"
+          label={`${t('tasks.sort')}: ${strings.tasks.sorts[sort]}`}
+          onPress={() => setSortOpen(true)}
+        />
         <IconButton
           icon={nFilters ? 'funnel' : 'funnel-outline'}
-          label={nFilters ? `${t('tasks.filter')}, ${t('filters.active', { n: nFilters })}` : t('tasks.filter')}
+          label={
+            nFilters ? `${t('tasks.filter')}, ${t('filters.active', { n: nFilters })}` : t('tasks.filter')
+          }
           onPress={() => router.push('/task-filters')}
           color={nFilters ? colors.primaryInk : undefined}
         />
@@ -330,12 +357,19 @@ export default function TasksScreen() {
       ListHeaderComponent={header}
       stickySectionHeadersEnabled={false}
       contentContainerStyle={[styles.scroll, styles.column]}
-      refreshControl={<RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} tintColor={colors.primary} />}
+      refreshControl={
+        <RefreshControl refreshing={syncing} onRefresh={() => void syncNow()} tintColor={colors.primary} />
+      }
       initialNumToRender={20}
       windowSize={9}
       renderSectionHeader={({ section }) =>
         section.title ? (
-          <AppText variant="overline" tone={section.key === 'late' ? 'danger' : 'muted'} style={styles.section} accessibilityRole="header">
+          <AppText
+            variant="overline"
+            tone={section.key === 'late' ? 'danger' : 'muted'}
+            style={styles.section}
+            accessibilityRole="header"
+          >
             {`${section.title} · ${section.data.length}`}
           </AppText>
         ) : null
@@ -370,7 +404,13 @@ export default function TasksScreen() {
       }
       ListFooterComponent={
         activeView === 'done' ? (
-          <Button title={t('tasks.loadMoreDone')} variant="ghost" icon="refresh" loading={loadingDone} onPress={() => void loadOlderDone()} />
+          <Button
+            title={t('tasks.loadMoreDone')}
+            variant="ghost"
+            icon="refresh"
+            loading={loadingDone}
+            onPress={() => void loadOlderDone()}
+          />
         ) : undefined
       }
     />
@@ -437,7 +477,8 @@ export default function TasksScreen() {
         value={null}
         onSelect={(v) => {
           setListMenu(false);
-          if (v === 'rename' && currentList) router.push({ pathname: '/list/[id]', params: { id: currentList.id } });
+          if (v === 'rename' && currentList)
+            router.push({ pathname: '/list/[id]', params: { id: currentList.id } });
           if (v === 'delete') void removeList();
         }}
         onClose={() => setListMenu(false)}

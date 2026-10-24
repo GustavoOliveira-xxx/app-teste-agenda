@@ -53,7 +53,10 @@ export default function TimeBlockScreen() {
   if (!task || !calendarId) {
     return (
       <Screen>
-        <EmptyState icon="alert-circle-outline" title={!task ? t('tasks.notFound') : t('planner.noPersonal')} />
+        <EmptyState
+          icon="alert-circle-outline"
+          title={!task ? t('tasks.notFound') : t('planner.noPersonal')}
+        />
       </Screen>
     );
   }
@@ -123,17 +126,33 @@ export default function TimeBlockScreen() {
       )}
       <View style={styles.row}>
         <View style={styles.flex}>
-          <DateTimeField mode="date" label={t('events.startDate')} value={date} onChange={setDate} dateFormat={display.dateFormat} />
+          <DateTimeField
+            mode="date"
+            label={t('events.startDate')}
+            value={date}
+            onChange={setDate}
+            dateFormat={display.dateFormat}
+          />
         </View>
         <View style={styles.flex}>
-          <DateTimeField mode="time" label={t('events.startTime')} value={time} onChange={setTime} timeFormat={display.timeFormat} />
+          <DateTimeField
+            mode="time"
+            label={t('events.startTime')}
+            value={time}
+            onChange={setTime}
+            timeFormat={display.timeFormat}
+          />
         </View>
       </View>
       <SelectField<string>
         label={t('planner.calendar')}
         value={calendarId}
         onChange={setCalendarId}
-        options={calendars.map((c) => ({ value: c.id, label: c.name, description: strings.calendarKinds[c.kind] }))}
+        options={calendars.map((c) => ({
+          value: c.id,
+          label: c.name,
+          description: strings.calendarKinds[c.kind],
+        }))}
       />
     </Screen>
   );

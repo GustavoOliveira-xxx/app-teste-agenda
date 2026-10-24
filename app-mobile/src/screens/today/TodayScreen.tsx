@@ -213,7 +213,6 @@ function SyncPill({ calendars }: { calendars: number }) {
   );
 }
 
-
 /** Seção recolhível (o estado fica guardado no aparelho). */
 function Section({
   id,
@@ -276,11 +275,15 @@ function NextUp({ occ, now, timezone }: { occ: Occurrence; now: number; timezone
     ? t('todayHub.happening')
     : minutes < 60
       ? t('todayHub.nextIn', { time: `${minutes} min` })
-      : t('todayHub.nextIn', { time: `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}` });
+      : t('todayHub.nextIn', {
+          time: `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`,
+        });
   return (
     <Card
       outlined={happening}
-      onPress={() => router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } })}
+      onPress={() =>
+        router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } })
+      }
       accessibilityLabel={`${t('todayHub.next')}: ${occ.event.is_masked ? t('events.maskedTitle') : occ.title}. ${when}`}
       style={[styles.next, { backgroundColor: colors.tide }]}
     >
@@ -387,11 +390,16 @@ export default function TodayScreen() {
 
   const open = tasks.filter(isOpen);
   const dayTasks = sortTasks(
-    open.filter((x) => x.item_type === 'task' && (x.due_date === selected || (isToday && x.plan_day === today))),
+    open.filter(
+      (x) => x.item_type === 'task' && (x.due_date === selected || (isToday && x.plan_day === today)),
+    ),
     'due',
   );
   const overdue = isToday
-    ? sortTasks(open.filter((x) => isOverdue(x, today) && x.due_date !== today && x.plan_day !== today), 'due')
+    ? sortTasks(
+        open.filter((x) => isOverdue(x, today) && x.due_date !== today && x.plan_day !== today),
+        'due',
+      )
     : [];
   const reminders = sortTasks(
     open.filter(
@@ -418,7 +426,10 @@ export default function TodayScreen() {
       router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } }),
     [],
   );
-  const openTask = useCallback((task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }), []);
+  const openTask = useCallback(
+    (task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }),
+    [],
+  );
   const active = calendars.filter((c) => !c.deleted_at && c.status === 'active').length;
 
   if (!hydrated) return <LoadingState />;
@@ -498,7 +509,9 @@ export default function TodayScreen() {
           {isToday && (
             <Card
               onPress={() => router.push('/plan-day')}
-              accessibilityLabel={checkedIn ? t('planDay.title') : `${t('planDay.open')}. ${t('planDay.openHint')}`}
+              accessibilityLabel={
+                checkedIn ? t('planDay.title') : `${t('planDay.open')}. ${t('planDay.openHint')}`
+              }
               style={[styles.planCard, { backgroundColor: colors.primarySoft }]}
             >
               <View style={[styles.planIcon, { backgroundColor: colors.primary }]}>
@@ -588,7 +601,12 @@ export default function TodayScreen() {
           )}
 
           {reminders.length > 0 && (
-            <Section id="reminders" title={t('todayHub.reminders')} count={reminders.length} icon="notifications-outline">
+            <Section
+              id="reminders"
+              title={t('todayHub.reminders')}
+              count={reminders.length}
+              icon="notifications-outline"
+            >
               <View style={styles.list}>{reminders.map(taskRow)}</View>
             </Section>
           )}
@@ -623,7 +641,13 @@ export default function TodayScreen() {
           )}
 
           {(list.length > 0 || dayTasks.length > 0) && (
-            <Section id="free" title={t('todayHub.freeSlots')} count={slots.length} icon="time-outline" defaultCollapsed>
+            <Section
+              id="free"
+              title={t('todayHub.freeSlots')}
+              count={slots.length}
+              icon="time-outline"
+              defaultCollapsed
+            >
               {slots.length ? (
                 <View style={styles.chips}>
                   {slots.map((s) => (
@@ -648,7 +672,11 @@ export default function TodayScreen() {
             </Section>
           )}
 
-          <Card onPress={() => router.push('/week')} accessibilityLabel={t('todayHub.weekSummary')} style={styles.weekCard}>
+          <Card
+            onPress={() => router.push('/week')}
+            accessibilityLabel={t('todayHub.weekSummary')}
+            style={styles.weekCard}
+          >
             <Icon name="sparkles-outline" size={22} color={colors.primaryInk} />
             <View style={styles.flex}>
               <AppText variant="heading">{t('todayHub.weekSummary')}</AppText>
@@ -660,7 +688,10 @@ export default function TodayScreen() {
           </Card>
         </View>
       </ScrollView>
-      <FAB label={t('create.title')} onPress={() => router.push({ pathname: '/create', params: { date: selected } })} />
+      <FAB
+        label={t('create.title')}
+        onPress={() => router.push({ pathname: '/create', params: { date: selected } })}
+      />
       {sheet}
     </View>
   );

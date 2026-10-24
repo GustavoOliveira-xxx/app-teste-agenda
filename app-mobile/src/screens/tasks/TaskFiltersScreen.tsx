@@ -50,7 +50,11 @@ export default function TaskFiltersScreen() {
       footer={
         <View style={styles.footer}>
           <View style={styles.flex}>
-            <Button title={t('tasks.clearFilters')} variant="secondary" onPress={() => setFilters(DEFAULT_TASK_FILTERS)} />
+            <Button
+              title={t('tasks.clearFilters')}
+              variant="secondary"
+              onPress={() => setFilters(DEFAULT_TASK_FILTERS)}
+            />
           </View>
           <View style={styles.flex}>
             <Button title={t('common.apply')} onPress={() => router.back()} />
@@ -61,7 +65,12 @@ export default function TaskFiltersScreen() {
       <Stack.Screen options={{ title: t('tasks.filter') }} />
       <Group title={t('tasks.filterDue')}>
         {DUE.map((d) => (
-          <Chip key={d} label={strings.tasks.filterDueOptions[d]} selected={filters.due === d} onPress={() => set('due', d)} />
+          <Chip
+            key={d}
+            label={strings.tasks.filterDueOptions[d]}
+            selected={filters.due === d}
+            onPress={() => set('due', d)}
+          />
         ))}
       </Group>
       <Group title={t('tasks.priority')}>
@@ -88,43 +97,90 @@ export default function TaskFiltersScreen() {
         {([null, 'task', 'reminder'] as (ItemType | null)[]).map((v) => (
           <Chip
             key={v ?? 'all'}
-            label={v === 'task' ? t('tasks.filterTypeTask') : v === 'reminder' ? t('tasks.filterTypeReminder') : t('search.all')}
+            label={
+              v === 'task'
+                ? t('tasks.filterTypeTask')
+                : v === 'reminder'
+                  ? t('tasks.filterTypeReminder')
+                  : t('search.all')
+            }
             selected={filters.itemType === v}
             onPress={() => set('itemType', v)}
           />
         ))}
       </Group>
       <Group title={t('tasks.filterAssignee')}>
-        <Chip label={t('tasks.filterAnyone')} selected={!filters.assignee} onPress={() => set('assignee', null)} />
-        <Chip label={t('tasks.filterMe')} selected={filters.assignee === 'me'} onPress={() => set('assignee', 'me')} />
+        <Chip
+          label={t('tasks.filterAnyone')}
+          selected={!filters.assignee}
+          onPress={() => set('assignee', null)}
+        />
+        <Chip
+          label={t('tasks.filterMe')}
+          selected={filters.assignee === 'me'}
+          onPress={() => set('assignee', 'me')}
+        />
         <Chip
           label={t('tasks.filterUnassigned')}
           selected={filters.assignee === 'unassigned'}
           onPress={() => set('assignee', 'unassigned')}
         />
         {assignees.map(([id, p]) => (
-          <Chip key={id} label={p.name} selected={filters.assignee === id} onPress={() => set('assignee', id)} />
+          <Chip
+            key={id}
+            label={p.name}
+            selected={filters.assignee === id}
+            onPress={() => set('assignee', id)}
+          />
         ))}
       </Group>
       <Group title={t('tasks.filterCalendar')}>
-        <Chip label={t('tasks.filterAnyCalendar')} selected={!filters.calendarId} onPress={() => set('calendarId', null)} />
-        <Chip label={t('tasks.personal')} selected={filters.calendarId === 'personal'} onPress={() => set('calendarId', 'personal')} />
+        <Chip
+          label={t('tasks.filterAnyCalendar')}
+          selected={!filters.calendarId}
+          onPress={() => set('calendarId', null)}
+        />
+        <Chip
+          label={t('tasks.personal')}
+          selected={filters.calendarId === 'personal'}
+          onPress={() => set('calendarId', 'personal')}
+        />
         {calendars
           .filter((c) => c.kind !== 'personal')
           .map((c) => (
-            <Chip key={c.id} label={c.name} selected={filters.calendarId === c.id} onPress={() => set('calendarId', c.id)} />
+            <Chip
+              key={c.id}
+              label={c.name}
+              selected={filters.calendarId === c.id}
+              onPress={() => set('calendarId', c.id)}
+            />
           ))}
       </Group>
       <SelectField<string | null>
         label={t('tasks.list')}
         value={filters.listId}
         onChange={(v) => set('listId', v)}
-        options={[{ value: null, label: t('tasks.filterAnyCalendar') }, ...lists.map((l) => ({ value: l.id as string | null, label: l.name }))]}
+        options={[
+          { value: null, label: t('tasks.filterAnyCalendar') },
+          ...lists.map((l) => ({ value: l.id as string | null, label: l.name })),
+        ]}
       />
       <Group title={t('tasks.filterRecurring')}>
-        <Chip label={t('tasks.filterAnyone')} selected={filters.recurring === null} onPress={() => set('recurring', null)} />
-        <Chip label={t('tasks.filterRecurringYes')} selected={filters.recurring === true} onPress={() => set('recurring', true)} />
-        <Chip label={t('tasks.filterRecurringNo')} selected={filters.recurring === false} onPress={() => set('recurring', false)} />
+        <Chip
+          label={t('tasks.filterAnyone')}
+          selected={filters.recurring === null}
+          onPress={() => set('recurring', null)}
+        />
+        <Chip
+          label={t('tasks.filterRecurringYes')}
+          selected={filters.recurring === true}
+          onPress={() => set('recurring', true)}
+        />
+        <Chip
+          label={t('tasks.filterRecurringNo')}
+          selected={filters.recurring === false}
+          onPress={() => set('recurring', false)}
+        />
       </Group>
       {tags.length > 0 && (
         <Group title={t('tasks.tags')}>

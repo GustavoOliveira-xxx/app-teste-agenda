@@ -20,7 +20,9 @@ export default function ListFormScreen() {
   const { id, calendarId } = useLocalSearchParams<{ id?: string; calendarId?: string }>();
   const lists = useLists();
   const existing = id ? lists.find((l) => l.id === id) : undefined;
-  const calendars = useDataStore((s) => s.calendars).filter((c) => canCreateEvents(c) && c.kind !== 'personal');
+  const calendars = useDataStore((s) => s.calendars).filter(
+    (c) => canCreateEvents(c) && c.kind !== 'personal',
+  );
   const setView = useUiStore((s) => s.setTaskView);
   const { toast } = useFeedback();
   const [name, setName] = useState(existing?.name ?? '');
@@ -71,11 +73,21 @@ export default function ListFormScreen() {
           onChange={setCalendar}
           options={[
             { value: null, label: t('tasks.personal') },
-            ...calendars.map((c) => ({ value: c.id as string | null, label: c.name, description: strings.calendarKinds[c.kind] })),
+            ...calendars.map((c) => ({
+              value: c.id as string | null,
+              label: c.name,
+              description: strings.calendarKinds[c.kind],
+            })),
           ]}
         />
       )}
-      <ColorPicker label={t('calendars.color')} value={color} onChange={setColor} allowNone noneLabel={t('events.useCalendarColor')} />
+      <ColorPicker
+        label={t('calendars.color')}
+        value={color}
+        onChange={setColor}
+        allowNone
+        noneLabel={t('events.useCalendarColor')}
+      />
     </Screen>
   );
 }

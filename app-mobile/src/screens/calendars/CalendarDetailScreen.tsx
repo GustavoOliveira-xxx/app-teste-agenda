@@ -14,6 +14,7 @@ import { useAction } from '@/hooks/useAction';
 import { useCalendar } from '@/hooks/useCalendar';
 import { strings, t } from '@/i18n';
 import { syncNow } from '@/offline/syncEngine';
+import { saveTextFile } from '@/services/share';
 import * as api from '@/services/api';
 import { useUserId } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
@@ -21,14 +22,15 @@ import { useUiStore } from '@/stores/uiStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { agendaColor, radius, spacing } from '@/theme/tokens';
 import { DEFAULT_FILTERS } from '@/utils/filters';
-import { canEditCalendarSettings, canInvite, isOwner } from '@/utils/permissions';
+import { toIcs } from '@/utils/ics';
+import { canCreateEvents, canEditCalendarSettings, canInvite, isOwner } from '@/utils/permissions';
 
 export default function CalendarDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { dark } = useAppTheme();
   const calendar = useCalendar(id);
   const userId = useUserId();
-  const { confirm } = useFeedback();
+  const { confirm, toast } = useFeedback();
   const { run, busy } = useAction();
 
   if (!calendar) {
@@ -90,6 +92,13 @@ export default function CalendarDetailScreen() {
       await syncNow();
       router.back();
     }
+  };
+
+  const exportIcs = async () => {
+    const events = Object.values(useDataStore.getState().events).filter((e) => e.calendar_id === calendar.id);
+    const name = calendar.name.replace(/[^\p{L}\p{N}]+/gu, '-').toLowerCase() || 'agenda';
+    const result = await saveTextFile(`${name}.ics`, toIcs(events, calendar.name), 'text/calendar');
+    if (result !== 'cancelled') toast(t('ics.exported'));
   };
 
   const toggleNotifications = (enabled: boolean) =>
@@ -177,6 +186,44 @@ export default function CalendarDetailScreen() {
               title={t('calendars.history')}
               onPress={() => router.push({ pathname: '/calendar/[id]/history', params: { id: calendar.id } })}
             />
+            <ListItem
+              icon="leaf-outline"
+              title={t('calendars.notes')}
+              onPress={() => router.push({ pathname: '/notes', params: { calendarId: calendar.id } })}
+            />
+            {calendar.kind !== 'personal' && (
+              <>
+                <ListItem
+                  icon="grid-outline"
+                  title={t('calendars.findTime')}
+                  onPress={() =>
+                    router.push({ pathname: '/calendar/[id]/find-time', params: { id: calendar.id } })
+                  }
+                />
+                <ListItem
+                  icon="poll-outline"
+                  title={t('calendars.polls')}
+                  onPress={() =>
+                    router.push({ pathname: '/calendar/[id]/polls', params: { id: calendar.id } })
+                  }
+                />
+              </>
+            )}
+            <ListItem
+              icon="export-outline"
+              title={t('ics.export')}
+              subtitle={t('ics.exportHint')}
+              onPress={() => void exportIcs()}
+            />
+            {canCreateEvents(calendar) && (
+              <ListItem
+                icon="import-outline"
+                title={t('ics.import')}
+                onPress={() =>
+                  router.push({ pathname: '/calendar/[id]/import', params: { id: calendar.id } })
+                }
+              />
+            )}
             {canEditCalendarSettings(calendar.my_role) && (
               <ListItem
                 icon="settings-outline"

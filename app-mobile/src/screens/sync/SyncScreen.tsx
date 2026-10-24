@@ -109,7 +109,12 @@ export default function SyncScreen() {
       ) : (
         sync.outbox.map((op) => {
           const event = events[op.entityId];
-          const item = op.entity === 'task' ? items.tasks[op.entityId] : op.entity === 'note' ? items.notes[op.entityId] : undefined;
+          const item =
+            op.entity === 'task'
+              ? items.tasks[op.entityId]
+              : op.entity === 'note'
+                ? items.notes[op.entityId]
+                : undefined;
           const title =
             (op.payload.title as string | undefined) ??
             (op.payload.name as string | undefined) ??

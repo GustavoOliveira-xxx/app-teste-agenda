@@ -33,13 +33,7 @@ import { instantToLocal, isValidDateKey, todayKey } from '@/utils/dates';
 import { canCreateEvents } from '@/utils/permissions';
 import { PRIORITIES, priorityMarks } from '@/utils/tasks';
 import { timezoneOptions } from '@/utils/timezones';
-import {
-  newTaskForm,
-  parseTags,
-  taskToForm,
-  validateTaskForm,
-  type TaskForm,
-} from '@/validation/task';
+import { newTaskForm, parseTags, taskToForm, validateTaskForm, type TaskForm } from '@/validation/task';
 
 import { ReminderPicker } from '../events/ReminderPicker';
 
@@ -77,7 +71,8 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
   const [tagText, setTagText] = useState(initial.tags.join(', '));
   const [linkText, setLinkText] = useState(initial.links.join('\n'));
   const [step, setStep] = useState('');
-  const set = <K extends keyof TaskForm>(key: K, value: TaskForm[K]) => setForm((f) => ({ ...f, [key]: value }));
+  const set = <K extends keyof TaskForm>(key: K, value: TaskForm[K]) =>
+    setForm((f) => ({ ...f, [key]: value }));
   const people = useCalendarMembers(form.calendarId ?? undefined);
   const reminder = form.itemType === 'reminder';
 
@@ -141,7 +136,13 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
       </View>
       <View style={styles.inline}>
         {form.dueTime ? (
-          <Button title={t('tasks.removeTime')} variant="ghost" compact icon="close" onPress={() => set('dueTime', null)} />
+          <Button
+            title={t('tasks.removeTime')}
+            variant="ghost"
+            compact
+            icon="close"
+            onPress={() => set('dueTime', null)}
+          />
         ) : (
           <Button
             title={t('tasks.addTime')}
@@ -251,7 +252,11 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
               }
               options={[
                 { value: 'calendar', label: t('tasks.repeatCalendar') },
-                { value: 'completion', label: t('tasks.repeatCompletion'), description: t('tasks.repeatCompletionHint') },
+                {
+                  value: 'completion',
+                  label: t('tasks.repeatCompletion'),
+                  description: t('tasks.repeatCompletionHint'),
+                },
               ]}
             />
           )}
@@ -282,7 +287,11 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
           { value: null, label: t('tasks.personal') },
           ...writable
             .filter((c) => c.kind !== 'personal')
-            .map((c) => ({ value: c.id as string | null, label: c.name, description: strings.calendarKinds[c.kind] })),
+            .map((c) => ({
+              value: c.id as string | null,
+              label: c.name,
+              description: strings.calendarKinds[c.kind],
+            })),
         ]}
       />
       <SelectField<string | null>
@@ -304,7 +313,12 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
               <IconButton
                 icon="close"
                 label={t('tasks.removeStep')}
-                onPress={() => set('checklist', form.checklist.filter((x) => x.id !== c.id))}
+                onPress={() =>
+                  set(
+                    'checklist',
+                    form.checklist.filter((x) => x.id !== c.id),
+                  )
+                }
               />
             </View>
           ))}
@@ -374,7 +388,11 @@ function Form({ initial, editing, taskId }: { initial: TaskForm; editing: boolea
                         error={errors.start}
                       />
                     </View>
-                    <IconButton icon="close" label={t('common.clear')} onPress={() => set('startDate', null)} />
+                    <IconButton
+                      icon="close"
+                      label={t('common.clear')}
+                      onPress={() => set('startDate', null)}
+                    />
                   </View>
                 ) : (
                   <Button

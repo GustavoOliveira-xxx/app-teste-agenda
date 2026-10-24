@@ -123,6 +123,12 @@ export default function NotificationSettingsScreen() {
           disabled={!prefs.enabled}
         />
         <SwitchRow
+          label={t('notificationSettings.tasks')}
+          value={prefs.notify_tasks ?? true}
+          onChange={(notify_tasks) => save({ notify_tasks })}
+          disabled={!prefs.enabled}
+        />
+        <SwitchRow
           label={t('notificationSettings.invites')}
           value={prefs.notify_invites}
           onChange={(notify_invites) => save({ notify_invites })}

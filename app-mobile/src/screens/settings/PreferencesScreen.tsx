@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { AppText } from '@/components/AppText';
 import { Card } from '@/components/Card';
 import { Screen } from '@/components/Screen';
+import { SectionHeader } from '@/components/SectionHeader';
 import { SelectField } from '@/components/SelectField';
 import { SwitchRow } from '@/components/SwitchRow';
 import { useAction } from '@/hooks/useAction';
@@ -13,6 +14,11 @@ import type { DateFormat, TimeFormat, UserPreferences } from '@/models/types';
 import { useAuthStore } from '@/stores/authStore';
 import { formatDateKey } from '@/utils/dates';
 import { timezoneOptions } from '@/utils/timezones';
+
+const HOURS = Array.from(
+  { length: 48 },
+  (_, i) => `${String(Math.floor(i / 2)).padStart(2, '0')}:${i % 2 ? '30' : '00'}`,
+);
 
 export default function PreferencesScreen() {
   const prefs = useAuthStore((s) => s.account?.preferences);
@@ -73,6 +79,42 @@ export default function PreferencesScreen() {
             { value: 0, label: t('preferences.weekStartSunday') },
             { value: 1, label: t('preferences.weekStartMonday') },
           ]}
+        />
+      </Card>
+      <SectionHeader title={t('preferences.planning')} />
+      <Card>
+        <SwitchRow
+          label={t('preferences.dailyCheckin')}
+          hint={t('preferences.dailyCheckinHint')}
+          value={prefs.daily_checkin ?? true}
+          onChange={(daily_checkin) => save({ daily_checkin })}
+        />
+        <SelectField<string>
+          label={t('preferences.dayStart')}
+          value={(prefs.day_start ?? '08:00').slice(0, 5)}
+          onChange={(day_start) => save({ day_start })}
+          options={HOURS.filter((h) => h < (prefs.day_end ?? '22:00').slice(0, 5)).map((h) => ({
+            value: h,
+            label: h,
+          }))}
+        />
+        <SelectField<string>
+          label={t('preferences.dayEnd')}
+          value={(prefs.day_end ?? '22:00').slice(0, 5)}
+          onChange={(day_end) => save({ day_end })}
+          options={HOURS.filter((h) => h > (prefs.day_start ?? '08:00').slice(0, 5)).map((h) => ({
+            value: h,
+            label: h,
+          }))}
+        />
+        <AppText variant="small" tone="muted">
+          {t('preferences.dayWindowHint')}
+        </AppText>
+        <SwitchRow
+          label={t('preferences.shareAvailability')}
+          hint={t('preferences.shareAvailabilityHint')}
+          value={prefs.share_availability ?? false}
+          onChange={(share_availability) => save({ share_availability })}
         />
       </Card>
       <AppText variant="small" tone="muted">

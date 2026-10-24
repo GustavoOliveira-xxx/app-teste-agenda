@@ -36,14 +36,21 @@ interface Option {
 const KINDS: QuickKind[] = ['task', 'reminder', 'event'];
 
 export default function CreateScreen() {
-  const params = useLocalSearchParams<{ text?: string; listId?: string; calendarId?: string; date?: string }>();
+  const params = useLocalSearchParams<{
+    text?: string;
+    listId?: string;
+    calendarId?: string;
+    date?: string;
+  }>();
   const { colors } = useAppTheme();
   const { size } = useLayout();
   const { toast } = useFeedback();
   const display = useDisplaySettings();
   const calendars = useDataStore((s) => s.calendars);
   const online = useSyncStore((s) => s.online);
-  const defaultReminder = useAuthStore((s) => s.account?.notification_preferences.default_reminder_minutes ?? null);
+  const defaultReminder = useAuthStore(
+    (s) => s.account?.notification_preferences.default_reminder_minutes ?? null,
+  );
   const today = todayKey(display.timezone);
   const [text, setText] = useState(params.text ?? '');
   const [kind, setKind] = useState<QuickKind | null>(null);
@@ -55,7 +62,12 @@ export default function CreateScreen() {
   const options: Option[] = [
     { key: 'event', icon: 'calendar-outline', title: t('create.event'), hint: t('create.eventHint') },
     { key: 'task', icon: 'task-outline', title: t('create.task'), hint: t('create.taskHint') },
-    { key: 'reminder', icon: 'notifications-outline', title: t('create.reminder'), hint: t('create.reminderHint') },
+    {
+      key: 'reminder',
+      icon: 'notifications-outline',
+      title: t('create.reminder'),
+      hint: t('create.reminderHint'),
+    },
     { key: 'note', icon: 'document-text-outline', title: t('create.note'), hint: t('create.noteHint') },
     { key: 'habit', icon: 'leaf-outline', title: t('create.habit'), hint: t('create.habitHint') },
   ];
@@ -79,7 +91,13 @@ export default function CreateScreen() {
       case 'reminder':
         return router.replace({
           pathname: '/task/new',
-          params: { type: key, title, date: day, listId: params.listId ?? '', calendarId: params.calendarId ?? '' },
+          params: {
+            type: key,
+            title,
+            date: day,
+            listId: params.listId ?? '',
+            calendarId: params.calendarId ?? '',
+          },
         });
       case 'note':
         return router.replace({ pathname: '/notes/new', params: { calendarId: params.calendarId ?? '' } });
@@ -188,7 +206,11 @@ export default function CreateScreen() {
       <View style={styles.grid}>
         {options.map((o, i) => (
           <EnterItem key={o.key} index={i} style={{ width: `${100 / columns}%`, padding: spacing.xs }}>
-            <Card onPress={() => open(o.key)} accessibilityLabel={`${o.title}. ${o.hint}`} style={styles.tile}>
+            <Card
+              onPress={() => open(o.key)}
+              accessibilityLabel={`${o.title}. ${o.hint}`}
+              style={styles.tile}
+            >
               <View style={[styles.tileIcon, { backgroundColor: colors.primarySoft }]}>
                 <Icon name={o.icon} size={24} color={colors.primaryInk} />
               </View>
