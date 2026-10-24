@@ -116,7 +116,7 @@ O que está testado: o cálculo de quando cada aviso toca (eventos e tarefas), o
 
 **Aprovado em parte.**
 
-- O workflow Android gera o APK com a versão 3.0.0, o número da compilação crescente e a mesma chave de assinatura da 2.0 (guardada nos segredos do GitHub), e publica em Releases.
+- O workflow Android gerou e publicou o APK `synck-v3.0.0-build23.apk` em Releases (versão 3.0.0, compilação 23, maior que a 20 da 2.0). Ele usa a mesma chave da 2.0, a **chave de testes** (os segredos de assinatura própria ainda não foram cadastrados no GitHub), por isso sai como "pré-lançamento" e atualiza por cima da 2.0. Para distribuir publicamente, cadastre a chave própria (GUIA_DE_DEPLOY.md, parte 3); a troca de chave exige desinstalar a versão de testes uma vez.
 
 **Pendente:** instalar por cima da 2.0 num Android e conferir que a conta e as agendas continuam lá (roteiro A, passo 1).
 
