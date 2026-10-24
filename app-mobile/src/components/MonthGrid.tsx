@@ -13,6 +13,11 @@ import { AppText } from './AppText';
 export interface DayInfo {
   count: number;
   colors: string[];
+  /** Tarefas e lembretes com prazo no dia (marcadores quadrado e anel). */
+  tasks?: number;
+  reminders?: number;
+  /** Tudo concluído no dia (marcadores mais claros). */
+  allDone?: boolean;
 }
 
 /** Grade mensal. Cada dia diz por voz quantos eventos tem (não só pelos pontinhos). */
@@ -60,6 +65,8 @@ export const MonthGrid = memo(function MonthGrid({
               formatLongDate(day),
               isToday ? t('common.today') : null,
               info?.count ? t('calendarView.eventsCount', { n: info.count }) : null,
+              info?.tasks ? `${info.tasks} ${t('tasks.title').toLowerCase()}` : null,
+              info?.reminders ? `${info.reminders} ${t('tasks.views.reminders').toLowerCase()}` : null,
             ]
               .filter(Boolean)
               .join(', ');
@@ -113,6 +120,15 @@ export const MonthGrid = memo(function MonthGrid({
                       +
                     </AppText>
                   ) : null}
+                  {info?.tasks ? (
+                    <View
+                      style={[
+                        styles.taskMark,
+                        { borderColor: colors.primaryInk, opacity: info.allDone ? 0.45 : 1 },
+                      ]}
+                    />
+                  ) : null}
+                  {info?.reminders ? <View style={[styles.reminderMark, { borderColor: colors.coral }]} /> : null}
                 </View>
               </Pressable>
             );
@@ -137,4 +153,6 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', gap: 3, height: 8, alignItems: 'center', marginTop: 3 },
   dot: { width: 5, height: 5, borderRadius: 3 },
   more: { fontSize: 10, lineHeight: 10 },
+  taskMark: { width: 6, height: 6, borderRadius: 1.5, borderWidth: 1.5 },
+  reminderMark: { width: 6, height: 6, borderRadius: 3, borderWidth: 1.5 },
 });

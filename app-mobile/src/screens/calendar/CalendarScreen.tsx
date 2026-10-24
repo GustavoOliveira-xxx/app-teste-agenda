@@ -12,14 +12,23 @@ import { FAB } from '@/components/FAB';
 import { IconButton } from '@/components/IconButton';
 import { EnterItem } from '@/components/motion';
 import { MonthGrid, type DayInfo } from '@/components/MonthGrid';
+import { TaskRow } from '@/components/TaskRow';
+import { TimeGrid } from '@/components/TimeGrid';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { SegmentedControl } from '@/components/SegmentedControl';
 import { EmptyState, LoadingState } from '@/components/StateViews';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
 import { useLayout } from '@/hooks/useLayout';
 import { useCalendarsMap, useOccurrences } from '@/hooks/useEventsView';
+import { useTasks } from '@/hooks/useItems';
+import { useNow } from '@/hooks/useNow';
+import { myBusy } from '@/hooks/usePlanning';
+import { useTaskActions } from '@/hooks/useTaskActions';
+import { useFeedback } from '@/components/Feedback';
+import { moveEvent } from '@/services/eventActions';
+import { useUserId } from '@/stores/authStore';
 import { t } from '@/i18n';
-import type { DateKey, Occurrence } from '@/models/types';
+import type { DateKey, Occurrence, Task } from '@/models/types';
 import { ensureRange, syncNow } from '@/offline/syncEngine';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
@@ -36,20 +45,25 @@ import {
   formatMonthYear,
   formatShortDate,
   monthMatrix,
+  toDateKey,
   spannedDayKeys,
   startOfDayInstant,
   todayKey,
   weekKeys,
 } from '@/utils/dates';
 import { activeFilterCount } from '@/utils/filters';
+import { freeSlots } from '@/utils/freeTime';
+import { isOpen, sortTasks } from '@/utils/tasks';
 import { CONTENT_MAX_WIDTH } from '@/utils/layout';
-import { canCreateEvents } from '@/utils/permissions';
+import { canCreateEvents, canEditEvent } from '@/utils/permissions';
 
 interface Section {
   title: string;
   day: DateKey;
-  data: Occurrence[];
+  data: (Occurrence | Task)[];
 }
+
+const isOccurrence = (item: Occurrence | Task): item is Occurrence => 'event' in item;
 
 function groupByDay(list: Occurrence[], tz: string, days?: DateKey[]): Map<DateKey, Occurrence[]> {
   const map = new Map<DateKey, Occurrence[]>();
@@ -81,6 +95,13 @@ export default function CalendarScreen() {
   const setFilters = useUiStore((s) => s.setFilters);
   const listTab = useUiStore((s) => s.listTab);
   const setListTab = useUiStore((s) => s.setListTab);
+  const layers = useUiStore((s) => s.layers);
+  const setLayers = useUiStore((s) => s.setLayers);
+  const userId = useUserId();
+  const now = useNow();
+  const { toast } = useFeedback();
+  const allTasks = useTasks();
+  const { toggle, openMenu, sheet } = useTaskActions();
 
   const calendars = useDataStore((s) => s.calendars);
   const hydrated = useDataStore((s) => s.hydrated);
@@ -105,7 +126,22 @@ export default function CalendarScreen() {
 
   const from = useMemo(() => startOfDayInstant(firstDay, tz), [firstDay, tz]);
   const to = useMemo(() => startOfDayInstant(addDaysToKey(lastDay, 1), tz), [lastDay, tz]);
-  const occurrences = useOccurrences(from, to, filters);
+  const rawOccurrences = useOccurrences(from, to, filters);
+  const occurrences = useMemo(() => (layers.events ? rawOccurrences : []), [rawOccurrences, layers.events]);
+  // Tarefas e lembretes com prazo no período, conforme as camadas ligadas.
+  const periodTasks = useMemo(
+    () =>
+      allTasks.filter(
+        (x) =>
+          !!x.due_date &&
+          x.due_date >= firstDay &&
+          x.due_date <= lastDay &&
+          (x.item_type === 'reminder' ? layers.reminders : layers.tasks) &&
+          (filters.calendarIds.length === 0 ||
+            (x.calendar_id && filters.calendarIds.includes(x.calendar_id))),
+      ),
+    [allTasks, firstDay, lastDay, layers.tasks, layers.reminders, filters.calendarIds],
+  );
   const conflicts = useMemo(() => conflictingKeys(occurrences), [occurrences]);
 
   useEffect(() => {
@@ -125,8 +161,56 @@ export default function CalendarScreen() {
         ),
       };
     });
+    for (const x of periodTasks) {
+      const day = x.due_date!;
+      const current = info[day] ?? { count: 0, colors: [] };
+      const isReminder = x.item_type === 'reminder';
+      info[day] = {
+        ...current,
+        tasks: (current.tasks ?? 0) + (isReminder ? 0 : 1),
+        reminders: (current.reminders ?? 0) + (isReminder ? 1 : 0),
+        allDone: (current.allDone ?? true) && !isOpen(x),
+      };
+    }
     return info;
-  }, [byDay, calendarsMap, colors.primary, dark]);
+  }, [byDay, periodTasks, calendarsMap, colors.primary, dark]);
+  const tasksOn = (day: DateKey) =>
+    sortTasks(
+      periodTasks.filter((x) => x.due_date === day),
+      'due',
+    );
+  const openTask = useCallback(
+    (task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }),
+    [],
+  );
+  const taskRow = (task: Task) => (
+    <TaskRow
+      key={task.id}
+      task={task}
+      today={today}
+      timeFormat={display.timeFormat}
+      calendarName={task.calendar_id ? calendarsMap[task.calendar_id]?.name : undefined}
+      calendarColor={task.calendar_id ? calendarsMap[task.calendar_id]?.color : undefined}
+      onPress={openTask}
+      onToggle={(x) => void toggle(x)}
+      onLongPress={openMenu}
+      compact
+    />
+  );
+  const canMove = (occ: Occurrence) => {
+    const cal = calendarsMap[occ.event.calendar_id];
+    return !!cal && canEditEvent(cal, occ.event, userId);
+  };
+  const moveTo = async (occ: Occurrence, start: Date) => {
+    await moveEvent(occ.event, occ, start);
+    toast(
+      `${t('calendarGrid.moved', { when: formatShortDate(toDateKey(start, tz)) })}${occ.isRecurring ? ` ${t('calendarGrid.moveRecurring')}` : ''}`,
+    );
+  };
+  const calendarColors = useMemo(
+    () => Object.fromEntries(Object.values(calendarsMap).map((c) => [c.id, c.color])),
+    [calendarsMap],
+  );
 
   const writable = calendars.filter((c) => canCreateEvents(c));
   const nFilters = activeFilterCount(filters);
@@ -247,6 +331,23 @@ export default function CalendarScreen() {
           color={nFilters ? colors.primaryInk : undefined}
         />
       </View>
+      <View style={styles.layers} accessibilityLabel={t('calendarGrid.types')}>
+        <Chip
+          label={t('calendarGrid.typeEvents')}
+          selected={layers.events}
+          onPress={() => setLayers({ ...layers, events: !layers.events })}
+        />
+        <Chip
+          label={t('calendarGrid.typeTasks')}
+          selected={layers.tasks}
+          onPress={() => setLayers({ ...layers, tasks: !layers.tasks })}
+        />
+        <Chip
+          label={t('calendarGrid.typeReminders')}
+          selected={layers.reminders}
+          onPress={() => setLayers({ ...layers, reminders: !layers.reminders })}
+        />
+      </View>
       {viewMode === 'list' ? (
         <SegmentedControl
           label={t('calendarView.list')}
@@ -268,13 +369,14 @@ export default function CalendarScreen() {
   const emptyMessage = nFilters ? t('calendarView.noResults') : t('calendarView.emptyMessage');
 
   const dayEvents = (dayList: Occurrence[]) =>
-    dayList.length ? (
+    dayList.length || tasksOn(selected).length ? (
       <View style={styles.list} key={selected}>
         {dayList.map((occ, i) => (
           <EnterItem key={occ.key} index={i}>
             {renderRow(occ)}
           </EnterItem>
         ))}
+        {tasksOn(selected).map(taskRow)}
       </View>
     ) : (
       <AppText tone="muted">
@@ -324,43 +426,61 @@ export default function CalendarScreen() {
         </ScrollView>
       </View>
     );
-  } else if (viewMode === 'month' || viewMode === 'day') {
+  } else if (viewMode === 'month') {
     const dayList = byDay.get(selected) ?? [];
     content = (
       <ScrollView refreshControl={refresh} contentContainerStyle={[styles.scroll, styles.column]}>
         {header}
-        {viewMode === 'month' && grid}
+        {grid}
         <AppText variant="overline" tone="muted" style={styles.dayTitle} accessibilityRole="header">
           {dayHeader}
         </AppText>
         {dayEvents(dayList)}
       </ScrollView>
     );
-  } else if (viewMode === 'week') {
-    const days = weekKeys(selected, display.weekStartsOn);
-    const grouped = groupByDay(occurrences, tz, days);
+  } else if (viewMode === 'week' || viewMode === 'day') {
+    // Semana e dia: grade de horários de verdade.
+    const days = viewMode === 'week' ? weekKeys(selected, display.weekStartsOn) : [selected];
+    const slots =
+      viewMode === 'day'
+        ? freeSlots(
+            myBusy(byDay.get(selected) ?? [], userId),
+            [selected],
+            tz,
+            display.dayStart,
+            display.dayEnd,
+            {
+              minMinutes: 30,
+              now: new Date(now),
+            },
+          )
+        : undefined;
     content = (
-      <ScrollView refreshControl={refresh} contentContainerStyle={[styles.scroll, styles.column]}>
-        {header}
-        {days.map((day) => {
-          const list = grouped.get(day) ?? [];
-          return (
-            <View key={day} style={styles.weekDay}>
-              <AppText variant="overline" tone={day === today ? 'brand' : 'muted'} accessibilityRole="header">
-                {capitalize(formatLongDate(day))}
-                {day === today ? ` · ${t('common.today')}` : ''}
-              </AppText>
-              {list.length ? (
-                <View style={styles.list}>{list.map(renderRow)}</View>
-              ) : (
-                <AppText variant="small" tone="muted">
-                  {t('calendarView.noEventsDay')}
-                </AppText>
-              )}
-            </View>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.flex}>
+        <View style={[styles.gridHeader, styles.column]}>{header}</View>
+        <View style={[styles.flex, styles.gridBody]}>
+          <TimeGrid
+            days={days}
+            today={today}
+            occurrences={occurrences}
+            tasks={periodTasks}
+            timezone={tz}
+            timeFormat={display.timeFormat}
+            calendarColors={calendarColors}
+            conflicts={conflicts}
+            now={now}
+            freeSlots={slots}
+            canMove={canMove}
+            onPressEvent={openEvent}
+            onPressTask={openTask}
+            onMove={(occ, start) => void moveTo(occ, start)}
+            onPressDay={(day) => {
+              setSelected(day);
+              setViewMode('day');
+            }}
+          />
+        </View>
+      </View>
     );
   } else {
     // Lista: seções por dia, com rolagem virtualizada (listas longas).
@@ -369,14 +489,20 @@ export default function CalendarScreen() {
       listTab === 'upcoming' ? day >= today : day <= today,
     );
     entries.sort(([a], [b]) => (listTab === 'upcoming' ? a.localeCompare(b) : b.localeCompare(a)));
+    const taskDays = new Set(periodTasks.map((x) => x.due_date!));
+    for (const day of taskDays)
+      if (!entries.some(([d]) => d === day) && (listTab === 'upcoming' ? day >= today : day <= today))
+        entries.push([day, []]);
+    entries.sort(([a], [b]) => (listTab === 'upcoming' ? a.localeCompare(b) : b.localeCompare(a)));
     for (const [day, data] of entries) {
       const items = listTab === 'past' ? data.filter((o) => o.end <= new Date() || day < today) : data;
-      if (items.length) sections.push({ day, title: capitalize(formatLongDate(day, true)), data: items });
+      const all = [...items, ...tasksOn(day)];
+      if (all.length) sections.push({ day, title: capitalize(formatLongDate(day, true)), data: all });
     }
     content = (
       <SectionList
         sections={sections}
-        keyExtractor={(item, index) => `${item.key}-${index}`}
+        keyExtractor={(item, index) => `${isOccurrence(item) ? item.key : item.id}-${index}`}
         ListHeaderComponent={header}
         refreshControl={refresh}
         contentContainerStyle={[styles.scroll, styles.column]}
@@ -393,7 +519,9 @@ export default function CalendarScreen() {
             {section.title}
           </AppText>
         )}
-        renderItem={({ item }) => <View style={styles.listItem}>{renderRow(item)}</View>}
+        renderItem={({ item }) => (
+          <View style={styles.listItem}>{isOccurrence(item) ? renderRow(item) : taskRow(item)}</View>
+        )}
         ListEmptyComponent={
           <EmptyState
             title={nFilters ? t('calendarView.noResults') : t('calendarView.emptyTitle')}
@@ -421,9 +549,10 @@ export default function CalendarScreen() {
       {writable.length > 0 && (
         <FAB
           label={t('calendarView.newEvent')}
-          onPress={() => router.push({ pathname: '/event/new', params: { date: selected } })}
+          onPress={() => router.push({ pathname: '/create', params: { date: selected } })}
         />
       )}
+      {sheet}
     </View>
   );
 }
@@ -441,6 +570,9 @@ const styles = StyleSheet.create({
   chips: { gap: spacing.sm, paddingRight: spacing.lg },
   modeRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   dayTitle: { marginTop: spacing.md, marginBottom: spacing.xs },
+  layers: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  gridHeader: { paddingHorizontal: SCREEN_MARGIN },
+  gridBody: { paddingHorizontal: spacing.sm, paddingBottom: spacing.sm },
   list: { gap: spacing.sm },
   listItem: { marginBottom: spacing.sm },
   weekDay: { gap: spacing.sm, marginTop: spacing.sm },

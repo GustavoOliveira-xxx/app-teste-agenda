@@ -264,7 +264,10 @@ function Form({
                 label={t('events.type')}
                 value={form.eventType}
                 onChange={(v) => set('eventType', v)}
-                options={TYPES.map((v) => ({ value: v, label: strings.eventTypes[v] }))}
+                options={TYPES.filter(
+                  // Tarefas e lembretes têm módulo próprio; eventos antigos desses tipos continuam editáveis.
+                  (v) => (v !== 'task' && v !== 'reminder') || v === initial.eventType,
+                ).map((v) => ({ value: v, label: strings.eventTypes[v] }))}
               />
               <SelectField<EventStatus>
                 label={t('events.status')}

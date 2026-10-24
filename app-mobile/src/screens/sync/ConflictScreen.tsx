@@ -44,7 +44,12 @@ export default function ConflictScreen() {
         display.timeFormat,
       );
     }
-    if (key === 'status') return strings.eventStatus[value as EventStatus] ?? String(value);
+    if (key === 'status')
+      return op.entity === 'task'
+        ? (strings.tasks.statuses[value as keyof typeof strings.tasks.statuses] ?? String(value))
+        : (strings.eventStatus[value as EventStatus] ?? String(value));
+    if (key === 'priority') return strings.tasks.priorities[Number(value) as 0] ?? String(value);
+    if (Array.isArray(value)) return value.join(', ') || '-';
     if (key === 'event_type') return strings.eventTypes[value as EventType] ?? String(value);
     if (key === 'privacy') return strings.privacy[value as EventPrivacy] ?? String(value);
     if (typeof value === 'boolean') return value ? t('common.yes') : t('common.no');
@@ -62,6 +67,16 @@ export default function ConflictScreen() {
       event_type: t('events.type'),
       recurrence_rule: t('events.repeat'),
       all_day: t('events.allDay'),
+      due: t('tasks.due'),
+      due_date: t('tasks.dueDate'),
+      due_time: t('tasks.dueTime'),
+      priority: t('tasks.priority'),
+      tags: t('tasks.tags'),
+      list_id: t('tasks.list'),
+      assignee_id: t('tasks.assignee'),
+      body: t('notes.body'),
+      name: t('tasks.listName'),
+      estimated_minutes: t('tasks.estimate'),
     };
     return map[key] ?? tDynamic(`activity.changed.${key}`);
   };

@@ -652,6 +652,13 @@ export default function EventDetailScreen() {
         </>
       )}
 
+      {event.task_id && !event.is_masked && (
+        <Card onPress={() => router.push({ pathname: '/task/[id]', params: { id: event.task_id! } })}>
+          <AppText variant="label">{t('events.blockOf')}</AppText>
+          <AppText tone="brand">{t('events.openTask')}</AppText>
+        </Card>
+      )}
+
       {!event.is_masked && calendar && (
         <>
           <Comments event={event} canWrite={canComment(calendar)} />

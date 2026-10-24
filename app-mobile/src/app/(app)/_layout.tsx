@@ -4,19 +4,25 @@ import { useEffect } from 'react';
 import { Linking, Platform } from 'react-native';
 
 import { useFeedback } from '@/components/Feedback';
-import { ACTION_SNOOZE, snoozeReminder } from '@/services/localNotifications';
+import { completeTask } from '@/services/itemActions';
+import { ACTION_DONE, ACTION_SNOOZE, forgetSnoozesFor, snoozeReminder } from '@/services/localNotifications';
+import { useDataStore } from '@/stores/dataStore';
 import { IconButton } from '@/components/IconButton';
 import { useAvailableUpdate } from '@/hooks/useAvailableUpdate';
 import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { fonte } from '@/theme/tokens';
 
-/** Ao tocar num lembrete, abre o evento; em "Adiar 10 min", reagenda. */
+/** Ao tocar num lembrete, abre o evento ou a tarefa; "Adiar 10 min" reagenda; "Concluir" conclui. */
 function useOpenEventFromNotification() {
   const { toast } = useFeedback();
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const open = (data: Record<string, unknown> | undefined) => {
+      if (data && typeof data.taskId === 'string') {
+        router.push({ pathname: '/task/[id]', params: { id: data.taskId } });
+        return;
+      }
       if (data && typeof data.eventId === 'string') {
         router.push({
           pathname: '/event/[id]',
@@ -27,6 +33,20 @@ function useOpenEventFromNotification() {
     const handle = (response: Notifications.NotificationResponse) => {
       if (response.actionIdentifier === ACTION_SNOOZE) {
         void snoozeReminder(response.notification.request).then(() => toast(t('reminders.snoozed')));
+        return;
+      }
+      const data = response.notification.request.content.data as Record<string, unknown> | undefined;
+      if (response.actionIdentifier === ACTION_DONE && data && typeof data.taskId === 'string') {
+        const task = useDataStore.getState().tasks[data.taskId];
+        void Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(() => undefined);
+        void forgetSnoozesFor(`task:${data.taskId}:`);
+        if (task) {
+          void completeTask(task, typeof data.occurrence === 'string' ? data.occurrence : null).then(() =>
+            toast(t('tasks.completed'), 'success'),
+          );
+        } else {
+          open(data);
+        }
         return;
       }
       open(response.notification.request.content.data);
@@ -89,6 +109,18 @@ export default function AppLayout() {
       <Stack.Screen name="event/new" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="event/[id]/edit" options={{ animation: 'slide_from_bottom' }} />
       <Stack.Screen name="calendar/new" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="create" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="plan-day" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="task/new" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="task/[id]/edit" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="task/[id]/block" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="list/new" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="notes/new" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen name="habits/new" options={{ animation: 'slide_from_bottom' }} />
+      <Stack.Screen
+        name="task-filters"
+        options={{ presentation: 'modal', title: t('tasks.filter'), animation: 'slide_from_bottom' }}
+      />
       <Stack.Screen
         name="filters"
         options={{ presentation: 'modal', title: t('filters.title'), animation: 'slide_from_bottom' }}

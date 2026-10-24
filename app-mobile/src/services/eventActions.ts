@@ -328,14 +328,39 @@ export async function resolveConflict(op: OutboxOp, choice: ConflictChoice): Pro
       status: 'pending',
       conflict: null,
       baseVersion: (server.version as number | undefined) ?? op.baseVersion,
-      baseSnapshot: snapshot(server, op.payload as Partial<EventFields>),
+      baseSnapshot:
+        op.entity && op.entity !== 'event'
+          ? Object.fromEntries(Object.keys(op.payload).map((k) => [k, server[k] ?? null]))
+          : snapshot(server, op.payload as Partial<EventFields>),
       attempts: 0,
     });
     return;
   }
-  // Recriar: o evento foi excluído por outra pessoa; cria um novo com meus dados.
+  // Recriar: o item foi excluído por outra pessoa; cria um novo com meus dados.
   const id = newId();
   await discardOperation(op.id);
+  if (op.entity && op.entity !== 'event') {
+    const KEEP: Record<string, string[]> = {
+      task: ['item_type', 'calendar_id', 'list_id', 'title', 'description', 'links', 'tags', 'start_date',
+        'due_date', 'due_time', 'timezone', 'estimated_minutes', 'priority', 'status', 'recurrence_rule',
+        'recurrence_mode', 'assignee_id', 'privacy'],
+      note: ['calendar_id', 'title', 'body', 'pinned'],
+      habit: ['calendar_id', 'title', 'description', 'color', 'recurrence_rule', 'start_date', 'show_streak'],
+      list: ['calendar_id', 'name', 'color'],
+    };
+    const fields = Object.fromEntries((KEEP[op.entity] ?? []).map((k) => [k, server[k] ?? null]));
+    await enqueueOp(
+      makeOp({
+        id: newId(),
+        entity: op.entity,
+        kind: 'create',
+        entityId: id,
+        calendarId: op.calendarId,
+        payload: { ...fields, ...op.payload },
+      }),
+    );
+    return;
+  }
   const payload: Record<string, unknown> = {
     calendar_id: op.calendarId,
     title: server.title,
@@ -357,4 +382,45 @@ export async function resolveConflict(op: OutboxOp, choice: ConflictChoice): Pro
     ...op.payload,
   };
   await enqueueOp(makeOp({ id: newId(), kind: 'create', entityId: id, calendarId: op.calendarId, payload }));
+}
+
+/**
+ * Mover um evento para outro horário mantendo a duração (arrastar na grade ou
+ * botões "15 min antes/depois"). Em séries, move só esta ocorrência.
+ */
+export async function moveEvent(event: CalendarEvent, occurrence: Occurrence, start: Date): Promise<void> {
+  const duration = occurrence.end.getTime() - occurrence.start.getTime();
+  const end = new Date(start.getTime() + duration);
+  if (event.recurrence_rule) {
+    await enqueueOp(
+      makeOp({
+        id: newId(),
+        kind: 'exception_upsert',
+        entityId: event.id,
+        calendarId: event.calendar_id,
+        payload: {
+          original_date: occurrence.originalDate,
+          is_cancelled: false,
+          title: occurrence.isException ? occurrence.title : null,
+          description: null,
+          location: occurrence.isException ? occurrence.location : null,
+          starts_at: start.toISOString(),
+          ends_at: end.toISOString(),
+        },
+      }),
+    );
+    return;
+  }
+  const changes = { starts_at: start.toISOString(), ends_at: end.toISOString() };
+  await enqueueOp(
+    makeOp({
+      id: newId(),
+      kind: 'update',
+      entityId: event.id,
+      calendarId: event.calendar_id,
+      payload: changes,
+      baseVersion: event.version,
+      baseSnapshot: snapshot(event, changes) as Record<string, unknown>,
+    }),
+  );
 }
