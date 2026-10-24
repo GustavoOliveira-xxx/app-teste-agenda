@@ -36,6 +36,11 @@ const TINTS: Record<NotificationType, number> = {
   role_changed: 4,
   ownership_received: 2,
   comment_added: 0,
+  task_assigned: 4,
+  task_completed: 6,
+  task_comment: 0,
+  poll_created: 3,
+  poll_closed: 6,
 };
 
 const ICONS: Record<NotificationType, IconName> = {
@@ -51,9 +56,14 @@ const ICONS: Record<NotificationType, IconName> = {
   role_changed: 'shield-outline',
   ownership_received: 'key-outline',
   comment_added: 'chatbubble-outline',
+  task_assigned: 'task-outline',
+  task_completed: 'checkmark-circle-outline',
+  task_comment: 'chatbubble-outline',
+  poll_created: 'poll-outline',
+  poll_closed: 'poll-outline',
 };
 
-/** Central de avisos: convites, alterações em eventos, membros e comentários. */
+/** Central de avisos: convites, eventos, tarefas, enquetes, membros e comentários. */
 export default function NotificationsScreen() {
   const { colors } = useAppTheme();
   const navigation = useNavigation();
@@ -97,7 +107,11 @@ export default function NotificationsScreen() {
         ),
       });
     }
+    const taskId = typeof n.data?.task_id === 'string' ? n.data.task_id : null;
     if (n.type === 'invite_received') router.push('/invites');
+    else if (taskId) router.push({ pathname: '/task/[id]', params: { id: taskId } });
+    else if (n.type === 'poll_created' && n.calendar_id)
+      router.push({ pathname: '/calendar/[id]/polls', params: { id: n.calendar_id } });
     else if (n.event_id && n.type !== 'event_deleted')
       router.push({ pathname: '/event/[id]', params: { id: n.event_id } });
     else if (n.calendar_id && n.type !== 'member_removed')

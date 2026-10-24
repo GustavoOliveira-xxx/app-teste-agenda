@@ -15,10 +15,14 @@ export function ReminderPicker({
   value,
   onChange,
   error,
+  label,
+  hint,
 }: {
   value: number[];
   onChange: (value: number[]) => void;
   error?: string;
+  label?: string;
+  hint?: string;
 }) {
   const [custom, setCustom] = useState('');
   const toggle = (minutes: number) =>
@@ -31,9 +35,9 @@ export function ReminderPicker({
 
   return (
     <View style={styles.wrapper}>
-      <AppText variant="label">{t('events.reminders')}</AppText>
+      <AppText variant="label">{label ?? t('events.reminders')}</AppText>
       <AppText variant="small" tone="muted">
-        {t('events.remindersHint')} {t('reminders.max')}
+        {hint ?? t('events.remindersHint')} {t('reminders.max')}
       </AppText>
       {!notificationsSupported && (
         <AppText variant="small" tone="muted">

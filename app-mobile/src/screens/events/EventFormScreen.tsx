@@ -5,9 +5,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { AppText } from '@/components/AppText';
 import { Button } from '@/components/Button';
-import { Card } from '@/components/Card';
 import { Chip } from '@/components/Chip';
 import { ColorPicker } from '@/components/ColorPicker';
+import { RecurrenceEditor } from '@/components/RecurrenceEditor';
 import { DateTimeField } from '@/components/DateTimeField';
 import { useFeedback } from '@/components/Feedback';
 import { Screen } from '@/components/Screen';
@@ -37,16 +37,7 @@ import { spacing } from '@/theme/tokens';
 import { findConflicts } from '@/utils/conflicts';
 import { addDaysToKey, diffDays, todayKey } from '@/utils/dates';
 import { canCreateEvents } from '@/utils/permissions';
-import {
-  describeRule,
-  presetToRule,
-  ruleToPreset,
-  WEEKDAY_CODES,
-  expandEvent,
-  type Frequency,
-  type RecurrencePreset,
-  type RecurrenceRule,
-} from '@/utils/recurrence';
+import { expandEvent } from '@/utils/recurrence';
 import { timezoneOptions } from '@/utils/timezones';
 import {
   eventToForm,
@@ -61,147 +52,6 @@ import { ReminderPicker } from './ReminderPicker';
 const TYPES = Object.keys(strings.eventTypes) as EventType[];
 const STATUSES = Object.keys(strings.eventStatus) as EventStatus[];
 const PRIVACIES = Object.keys(strings.privacy) as EventPrivacy[];
-
-function RecurrenceEditor({
-  rule,
-  startDate,
-  onChange,
-  error,
-}: {
-  rule: RecurrenceRule | null;
-  startDate: string;
-  onChange: (rule: RecurrenceRule | null) => void;
-  error?: string;
-}) {
-  const r = strings.recurrence;
-  const preset = ruleToPreset(rule, startDate);
-  const [custom, setCustom] = useState(preset === 'custom');
-  const choose = (value: RecurrencePreset) => {
-    if (value === 'custom') {
-      setCustom(true);
-      onChange(rule ?? presetToRule('weekly', startDate));
-    } else {
-      setCustom(false);
-      onChange(presetToRule(value, startDate));
-    }
-  };
-  const end: 'never' | 'until' | 'count' = rule?.until ? 'until' : rule?.count ? 'count' : 'never';
-
-  return (
-    <View style={styles.gap}>
-      <SelectField<RecurrencePreset>
-        label={t('events.repeat')}
-        value={custom ? 'custom' : preset}
-        onChange={choose}
-        options={(['none', 'daily', 'weekly', 'biweekly', 'monthly', 'yearly', 'custom'] as const).map(
-          (p) => ({
-            value: p,
-            label: r[p],
-          }),
-        )}
-      />
-      {rule && custom && (
-        <Card>
-          <SelectField<Frequency>
-            label={r.frequency}
-            value={rule.freq}
-            onChange={(freq) =>
-              onChange({ ...rule, freq, byDay: freq === 'WEEKLY' ? rule.byDay : [], byMonthDay: null })
-            }
-            options={[
-              { value: 'DAILY', label: r.unitDays },
-              { value: 'WEEKLY', label: r.unitWeeks },
-              { value: 'MONTHLY', label: r.unitMonths },
-              { value: 'YEARLY', label: r.unitYears },
-            ]}
-          />
-          <TextField
-            label={r.interval}
-            value={String(rule.interval)}
-            keyboardType="number-pad"
-            onChangeText={(v) =>
-              onChange({ ...rule, interval: Math.max(1, Math.min(99, Number(v.replace(/\D/g, '')) || 1)) })
-            }
-          />
-          {rule.freq === 'WEEKLY' && (
-            <View style={styles.gap}>
-              <AppText variant="label">{r.weekdaysLabel}</AppText>
-              <View style={styles.chips}>
-                {[1, 2, 3, 4, 5, 6, 0].map((wd) => {
-                  const code = WEEKDAY_CODES[wd];
-                  const selected = rule.byDay.includes(code);
-                  return (
-                    <Chip
-                      key={code}
-                      label={strings.weekdays.short[wd]}
-                      accessibilityLabel={strings.weekdays.long[wd]}
-                      selected={selected}
-                      onPress={() =>
-                        onChange({
-                          ...rule,
-                          byDay: selected ? rule.byDay.filter((d) => d !== code) : [...rule.byDay, code],
-                        })
-                      }
-                    />
-                  );
-                })}
-              </View>
-            </View>
-          )}
-          {rule.freq === 'MONTHLY' && Number(startDate.slice(8)) > 28 && (
-            <AppText variant="small" tone="muted">
-              {r.month31Note}
-            </AppText>
-          )}
-          <SelectField<'never' | 'until' | 'count'>
-            label={r.endLabel}
-            value={end}
-            onChange={(v) =>
-              onChange({
-                ...rule,
-                until: v === 'until' ? (rule.until ?? addDaysToKey(startDate, 90)) : null,
-                count: v === 'count' ? (rule.count ?? 10) : null,
-              })
-            }
-            options={[
-              { value: 'never', label: r.endNever },
-              { value: 'until', label: r.endUntil },
-              { value: 'count', label: r.endCount },
-            ]}
-          />
-          {end === 'until' && rule.until && (
-            <DateTimeField
-              mode="date"
-              label={r.endUntil}
-              value={rule.until}
-              onChange={(v) => onChange({ ...rule, until: v })}
-            />
-          )}
-          {end === 'count' && (
-            <TextField
-              label={r.endCount}
-              value={String(rule.count ?? '')}
-              keyboardType="number-pad"
-              onChangeText={(v) =>
-                onChange({ ...rule, count: Math.min(999, Number(v.replace(/\D/g, '')) || 1) })
-              }
-            />
-          )}
-        </Card>
-      )}
-      {rule && (
-        <AppText variant="small" tone="muted">
-          {describeRule(rule, startDate)}
-        </AppText>
-      )}
-      {error ? (
-        <AppText variant="small" tone="danger">
-          {error}
-        </AppText>
-      ) : null}
-    </View>
-  );
-}
 
 function Form({
   initial,
@@ -503,6 +353,10 @@ export default function EventFormScreen() {
     date?: string;
     calendarId?: string;
     scope?: RecurrenceScope;
+    /** Vindos da adição rápida. */
+    title?: string;
+    start?: string;
+    end?: string;
   }>();
   const display = useDisplaySettings();
   const account = useAuthStore((s) => s.account);
@@ -559,6 +413,15 @@ export default function EventFormScreen() {
       new Date(),
       account?.notification_preferences.default_reminder_minutes ?? null,
     );
+    const time = /^([01]\d|2[0-3]):[0-5]\d$/;
+    if (params.title) initial.title = params.title.slice(0, 150);
+    if (params.start && time.test(params.start)) {
+      initial.startTime = params.start;
+      const hour = Math.min(23, Number(params.start.slice(0, 2)) + 1);
+      initial.endTime = `${String(hour).padStart(2, '0')}:${params.start.slice(3)}`;
+      initial.endDate = initial.startDate;
+    }
+    if (params.end && time.test(params.end) && params.end > initial.startTime) initial.endTime = params.end;
   }
 
   return (

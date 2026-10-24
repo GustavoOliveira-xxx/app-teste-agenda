@@ -1,7 +1,8 @@
 // Fila de operações locais ("outbox").
 //
-// Toda alteração de evento entra aqui primeiro (mesmo com internet) e o
-// motor de sincronização envia na ordem. Cada operação tem um id único:
+// Toda alteração (eventos, tarefas, lembretes, listas, anotações, hábitos e
+// o plano do dia) entra aqui primeiro, mesmo com internet, e o motor de
+// sincronização envia na ordem. Cada operação tem um id único:
 // se for reenviada (ex.: app fechou no meio), o servidor reconhece e não
 // duplica nada. Este arquivo só tem funções puras (fáceis de testar).
 import type { CalendarEvent, EventFields } from '@/models/types';
@@ -15,13 +16,27 @@ export type OpKind =
   | 'exception_upsert'
   | 'exception_delete'
   | 'reminders_set'
-  | 'attendees_set';
+  | 'attendees_set'
+  // Tarefas e lembretes
+  | 'complete'
+  | 'reopen'
+  | 'checklist_upsert'
+  | 'checklist_delete'
+  | 'participants_set'
+  | 'alerts_set'
+  | 'plan_set'
+  // Hábitos e plano do dia
+  | 'log_set'
+  | 'mark';
+
+export type OpEntity = 'event' | 'task' | 'list' | 'note' | 'habit' | 'checkin';
 
 export type OpStatus = 'pending' | 'syncing' | 'failed' | 'conflict';
 
 export interface OpConflict {
   reason: 'version' | 'deleted';
-  server: Partial<CalendarEvent>;
+  /** Versão atual no servidor (evento, tarefa, anotação...). */
+  server: Record<string, unknown>;
   fields: string[];
 }
 
@@ -30,14 +45,15 @@ export interface OutboxOp {
   id: string;
   createdAt: string;
   kind: OpKind;
-  entity: 'event';
+  entity: OpEntity;
   entityId: string;
-  calendarId: string;
+  /** Agenda do item (null em itens pessoais sem agenda). */
+  calendarId: string | null;
   payload: Record<string, unknown>;
-  /** Versão do evento em que a alteração se baseou (controle de concorrência). */
+  /** Versão do item em que a alteração se baseou (controle de concorrência). */
   baseVersion: number | null;
   /** Valores originais dos campos alterados (para mesclagem automática). */
-  baseSnapshot: Partial<EventFields> | null;
+  baseSnapshot: Record<string, unknown> | null;
   status: OpStatus;
   attempts: number;
   lastError: string | null;
@@ -50,7 +66,7 @@ export const MAX_AUTO_ATTEMPTS = 8;
 
 export function makeOp(
   input: Pick<OutboxOp, 'id' | 'kind' | 'entityId' | 'calendarId' | 'payload'> &
-    Partial<Pick<OutboxOp, 'baseVersion' | 'baseSnapshot'>>,
+    Partial<Pick<OutboxOp, 'baseVersion' | 'baseSnapshot' | 'entity'>>,
   now: Date = new Date(),
 ): OutboxOp {
   return {
@@ -69,6 +85,15 @@ export function makeOp(
 }
 
 const isMutable = (op: OutboxOp) => op.status === 'pending' || op.status === 'failed';
+
+/** Operações em que só a lista mais recente importa (substituem a anterior). */
+const LATEST_ONLY: OpKind[] = [
+  'reminders_set',
+  'attendees_set',
+  'participants_set',
+  'alerts_set',
+  'plan_set',
+];
 
 /**
  * Adiciona uma operação, juntando com operações ainda não enviadas do mesmo
@@ -104,8 +129,7 @@ export function enqueue(queue: OutboxOp[], op: OutboxOp): OutboxOp[] {
     const withoutUpdate = queue.filter((q) => q !== pendingUpdate);
     return [...withoutUpdate, { ...op, baseVersion: pendingUpdate.baseVersion ?? op.baseVersion }];
   }
-  if (op.kind === 'reminders_set' || op.kind === 'attendees_set') {
-    // Só a lista mais recente importa.
+  if (LATEST_ONLY.includes(op.kind)) {
     const rest = queue.filter((q) => !(q.entityId === op.entityId && q.kind === op.kind && isMutable(q)));
     return [...rest, op];
   }
@@ -210,6 +234,7 @@ export function overlayPending(
 ): Record<string, CalendarEvent> {
   const result: Record<string, CalendarEvent> = { ...events };
   for (const op of queue) {
+    if (op.entity && op.entity !== 'event') continue;
     const current = result[op.entityId];
     switch (op.kind) {
       case 'create': {

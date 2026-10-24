@@ -60,7 +60,11 @@ async function queueExtras(eventId: string, calendarId: string, form: EventForm,
   }
 }
 
-export async function createEvent(form: EventForm): Promise<string> {
+/** `extra`: campos além do formulário (ex.: task_id de um bloco de tempo, external_uid de importação). */
+export async function createEvent(
+  form: EventForm,
+  extra: { task_id?: string; external_uid?: string } = {},
+): Promise<string> {
   const id = newId();
   const fields = formToFields(form);
   await enqueueOp(
@@ -69,7 +73,7 @@ export async function createEvent(form: EventForm): Promise<string> {
       kind: 'create',
       entityId: id,
       calendarId: form.calendarId,
-      payload: { ...fields, calendar_id: form.calendarId },
+      payload: { ...fields, calendar_id: form.calendarId, ...extra },
     }),
   );
   await queueExtras(id, form.calendarId, form);

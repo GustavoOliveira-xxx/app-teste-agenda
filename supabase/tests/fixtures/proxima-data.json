@@ -1,0 +1,29 @@
+{
+  "descricao": "Próxima data de uma série (regra, início, depois de) -> data esperada. Usado pelos testes do banco (rrule_next) e do app (nextSeriesDate).",
+  "casos": [
+    { "regra": "FREQ=DAILY", "inicio": "2026-10-01", "depois": "2026-10-01", "esperado": "2026-10-02" },
+    { "regra": "FREQ=DAILY", "inicio": "2026-10-01", "depois": "2026-09-01", "esperado": "2026-10-01" },
+    { "regra": "FREQ=DAILY;INTERVAL=3", "inicio": "2026-10-01", "depois": "2026-10-05", "esperado": "2026-10-07" },
+    { "regra": "FREQ=DAILY;INTERVAL=3;COUNT=3", "inicio": "2026-10-01", "depois": "2026-10-04", "esperado": "2026-10-07" },
+    { "regra": "FREQ=DAILY;INTERVAL=3;COUNT=3", "inicio": "2026-10-01", "depois": "2026-10-07", "esperado": null },
+    { "regra": "FREQ=DAILY;UNTIL=20261010", "inicio": "2026-10-01", "depois": "2026-10-09", "esperado": "2026-10-10" },
+    { "regra": "FREQ=DAILY;UNTIL=20261010", "inicio": "2026-10-01", "depois": "2026-10-10", "esperado": null },
+    { "regra": "FREQ=WEEKLY", "inicio": "2026-10-05", "depois": "2026-10-05", "esperado": "2026-10-12" },
+    { "regra": "FREQ=WEEKLY;BYDAY=MO,WE", "inicio": "2026-10-05", "depois": "2026-10-05", "esperado": "2026-10-07" },
+    { "regra": "FREQ=WEEKLY;BYDAY=MO,WE", "inicio": "2026-10-05", "depois": "2026-10-07", "esperado": "2026-10-12" },
+    { "regra": "FREQ=WEEKLY;INTERVAL=2;BYDAY=FR", "inicio": "2026-10-09", "depois": "2026-10-09", "esperado": "2026-10-23" },
+    { "regra": "FREQ=WEEKLY;INTERVAL=2;BYDAY=SU,SA", "inicio": "2026-10-10", "depois": "2026-10-11", "esperado": "2026-10-24" },
+    { "regra": "FREQ=WEEKLY;BYDAY=TU;COUNT=2", "inicio": "2026-10-06", "depois": "2026-10-06", "esperado": "2026-10-13" },
+    { "regra": "FREQ=WEEKLY;BYDAY=TU;COUNT=2", "inicio": "2026-10-06", "depois": "2026-10-13", "esperado": null },
+    { "regra": "FREQ=MONTHLY", "inicio": "2026-11-05", "depois": "2026-11-05", "esperado": "2026-12-05" },
+    { "regra": "FREQ=MONTHLY;BYMONTHDAY=5", "inicio": "2026-11-05", "depois": "2026-12-20", "esperado": "2027-01-05" },
+    { "regra": "FREQ=MONTHLY;BYMONTHDAY=31", "inicio": "2026-01-31", "depois": "2026-01-31", "esperado": "2026-03-31" },
+    { "regra": "FREQ=MONTHLY;INTERVAL=3", "inicio": "2026-01-15", "depois": "2026-02-01", "esperado": "2026-04-15" },
+    { "regra": "FREQ=MONTHLY", "inicio": "2020-01-10", "depois": "2026-10-23", "esperado": "2026-11-10" },
+    { "regra": "FREQ=YEARLY", "inicio": "2024-02-29", "depois": "2024-02-29", "esperado": "2028-02-29" },
+    { "regra": "FREQ=YEARLY", "inicio": "2026-12-25", "depois": "2026-12-25", "esperado": "2027-12-25" },
+    { "regra": "FREQ=YEARLY;INTERVAL=2", "inicio": "2026-03-10", "depois": "2026-03-10", "esperado": "2028-03-10" },
+    { "regra": "FREQ=DAILY", "inicio": "2015-06-01", "depois": "2035-06-01", "esperado": "2035-06-02" },
+    { "regra": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR", "inicio": "2026-10-23", "depois": "2026-10-23", "esperado": "2026-10-26" }
+  ]
+}

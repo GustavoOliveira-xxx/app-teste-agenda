@@ -1,16 +1,20 @@
 // Lembretes como notificações LOCAIS: agendadas no próprio celular, funcionam
 // sem internet e com o app fechado. A cada sincronização, todos os lembretes
 // são recriados do zero (evita duplicidade e cobre evento alterado, cancelado,
-// série recorrente, troca de fuso e troca de aparelho).
+// série recorrente, troca de fuso e troca de aparelho). Os adiamentos ficam
+// guardados no aparelho e voltam a ser agendados junto.
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { AndroidImportance, AndroidNotificationVisibility } from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { t } from '@/i18n';
 import { marca } from '@/theme/marca';
-import type { NotificationPreferences, Occurrence, TimeFormat } from '@/models/types';
-import { formatOccurrenceTime, isWithinQuietHours } from '@/utils/dates';
+import { storageKeys } from '@/offline/storage';
+import type { NotificationPreferences, Occurrence, Task, TimeFormat } from '@/models/types';
+import { formatOccurrenceTime, isWithinQuietHours, todayKey } from '@/utils/dates';
 import { reminderTitle } from '@/utils/reminders';
+import { alertBase, describeDue, isOpen } from '@/utils/tasks';
 
 import { logError } from './errorLog';
 
@@ -19,8 +23,11 @@ const CHANNEL_PUBLIC = 'lembretes-detalhes';
 const CHANNEL_QUIET = 'lembretes-silencio';
 /** Categoria com os botões "Abrir" e "Adiar 10 min". */
 export const REMINDER_CATEGORY = 'lembrete';
+/** Tarefas e lembretes: "Abrir", "Concluir" e "Adiar 10 min". */
+export const TASK_CATEGORY = 'tarefa';
 export const ACTION_OPEN = 'abrir';
 export const ACTION_SNOOZE = 'adiar';
+export const ACTION_DONE = 'concluir';
 export const SNOOZE_MINUTES = 10;
 export { reminderTitle };
 const HORIZON_DAYS = 30;
@@ -54,28 +61,93 @@ async function ensureCategory(): Promise<void> {
       options: { opensAppToForeground: true },
     },
   ]).catch(() => undefined);
+  await Notifications.setNotificationCategoryAsync(TASK_CATEGORY, [
+    { identifier: ACTION_OPEN, buttonTitle: t('reminders.actionOpen'), options: { opensAppToForeground: true } },
+    { identifier: ACTION_DONE, buttonTitle: t('tasks.complete'), options: { opensAppToForeground: true } },
+    { identifier: ACTION_SNOOZE, buttonTitle: t('reminders.actionSnooze'), options: { opensAppToForeground: true } },
+  ]).catch(() => undefined);
 }
 
-/** Adia um lembrete já mostrado: a mesma notificação volta em 10 minutos. */
+/** Lembrete adiado, guardado para sobreviver ao reagendamento de cada sincronização. */
+export interface Snooze {
+  identifier: string;
+  at: string;
+  title: string;
+  body: string | null;
+  data: Record<string, unknown>;
+  category: string;
+}
+
+async function readSnoozes(): Promise<Snooze[]> {
+  try {
+    const raw = await AsyncStorage.getItem(storageKeys.snoozes);
+    return raw ? (JSON.parse(raw) as Snooze[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeSnoozes(list: Snooze[]): Promise<void> {
+  await AsyncStorage.setItem(storageKeys.snoozes, JSON.stringify(list)).catch(() => undefined);
+}
+
+/** Adiamentos ainda válidos, sem repetir o mesmo lembrete (o mais recente vale). */
+export function activeSnoozes(list: Snooze[], now: Date = new Date()): Snooze[] {
+  const byOrigin = new Map<string, Snooze>();
+  for (const s of list) {
+    if (new Date(s.at).getTime() <= now.getTime()) continue;
+    const origin = s.identifier.split(':adiado:')[0];
+    const prev = byOrigin.get(origin);
+    if (!prev || prev.at < s.at) byOrigin.set(origin, s);
+  }
+  return [...byOrigin.values()].sort((a, b) => a.at.localeCompare(b.at));
+}
+
+async function scheduleSnooze(s: Snooze): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    identifier: s.identifier,
+    content: {
+      title: s.title,
+      body: s.body ?? undefined,
+      data: s.data,
+      color: marca.cores.claro.primary,
+      categoryIdentifier: s.category,
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(s.at), channelId: CHANNEL_PRIVATE },
+  });
+}
+
+/** Adia um lembrete já mostrado: a mesma notificação volta em 10 minutos (uma vez só). */
 export async function snoozeReminder(request: Notifications.NotificationRequest): Promise<void> {
   if (!notificationsSupported) return;
   const { content } = request;
   await Notifications.dismissNotificationAsync(request.identifier).catch(() => undefined);
-  await Notifications.scheduleNotificationAsync({
-    identifier: `${request.identifier}:adiado:${Date.now()}`,
-    content: {
-      title: content.title ?? t('reminders.lockedContent'),
-      body: content.body ?? undefined,
-      data: content.data,
-      color: marca.cores.claro.primary,
-      categoryIdentifier: REMINDER_CATEGORY,
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-      seconds: SNOOZE_MINUTES * 60,
-      channelId: CHANNEL_PRIVATE,
-    },
-  });
+  const origin = request.identifier.split(':adiado:')[0];
+  const snooze: Snooze = {
+    identifier: `${origin}:adiado:${Date.now()}`,
+    at: new Date(Date.now() + SNOOZE_MINUTES * 60_000).toISOString(),
+    title: content.title ?? t('reminders.lockedContent'),
+    body: content.body ?? null,
+    data: (content.data ?? {}) as Record<string, unknown>,
+    category: content.categoryIdentifier ?? REMINDER_CATEGORY,
+  };
+  const previous = await readSnoozes();
+  for (const old of previous.filter((p) => p.identifier.startsWith(`${origin}:adiado:`))) {
+    await Notifications.cancelScheduledNotificationAsync(old.identifier).catch(() => undefined);
+  }
+  const next = activeSnoozes([...previous.filter((p) => !p.identifier.startsWith(`${origin}:adiado:`)), snooze]);
+  await writeSnoozes(next);
+  await scheduleSnooze(snooze);
+}
+
+/** Tarefa concluída pela notificação: some o adiamento pendente dela. */
+export async function forgetSnoozesFor(prefix: string): Promise<void> {
+  const list = await readSnoozes();
+  const keep = list.filter((s) => !s.identifier.startsWith(prefix));
+  for (const s of list.filter((x) => x.identifier.startsWith(prefix))) {
+    await Notifications.cancelScheduledNotificationAsync(s.identifier).catch(() => undefined);
+  }
+  await writeSnoozes(keep);
 }
 
 export async function ensureChannels(): Promise<void> {
@@ -124,6 +196,12 @@ interface ReminderCandidate {
   minutes: number;
 }
 
+interface TaskAlertCandidate {
+  at: Date;
+  task: Task;
+  minutes: number;
+}
+
 /** Calcula quais lembretes agendar (função pura, testável). */
 export function planReminders(occurrences: Occurrence[], now: Date = new Date()): ReminderCandidate[] {
   const horizon = now.getTime() + HORIZON_DAYS * 86_400_000;
@@ -138,11 +216,46 @@ export function planReminders(occurrences: Occurrence[], now: Date = new Date())
   return list.sort((a, b) => a.at.getTime() - b.at.getTime()).slice(0, MAX_SCHEDULED);
 }
 
+/** Avisos de tarefas e lembretes (só a próxima ocorrência de cada um). */
+export function planTaskAlerts(tasks: Task[], now: Date = new Date()): TaskAlertCandidate[] {
+  const horizon = now.getTime() + HORIZON_DAYS * 86_400_000;
+  const list: TaskAlertCandidate[] = [];
+  for (const task of tasks) {
+    if (!isOpen(task) || !task.my_alerts?.length) continue;
+    const base = alertBase(task);
+    if (!base) continue;
+    for (const minutes of task.my_alerts) {
+      const at = new Date(base.getTime() - minutes * 60_000);
+      if (at.getTime() > now.getTime() && at.getTime() <= horizon) list.push({ at, task, minutes });
+    }
+  }
+  return list.sort((a, b) => a.at.getTime() - b.at.getTime());
+}
+
+/** Junta eventos e tarefas respeitando o limite de agendamentos do aparelho. */
+export function combinePlans(
+  events: ReminderCandidate[],
+  tasks: TaskAlertCandidate[],
+  max = MAX_SCHEDULED,
+): { events: ReminderCandidate[]; tasks: TaskAlertCandidate[] } {
+  const all = [
+    ...events.map((e) => ({ at: e.at.getTime(), e })),
+    ...tasks.map((t) => ({ at: t.at.getTime(), t })),
+  ]
+    .sort((a, b) => a.at - b.at)
+    .slice(0, max);
+  return {
+    events: all.flatMap((x) => ('e' in x && x.e ? [x.e] : [])),
+    tasks: all.flatMap((x) => ('t' in x && x.t ? [x.t] : [])),
+  };
+}
+
 export async function rescheduleReminders(
   occurrences: Occurrence[],
   prefs: NotificationPreferences | null,
   timezone: string,
   timeFormat: TimeFormat,
+  tasks: Task[] = [],
 ): Promise<number> {
   if (!notificationsSupported) return 0;
   try {
@@ -151,8 +264,28 @@ export async function rescheduleReminders(
     if ((await getPermissionStatus()) !== 'granted') return 0;
     await ensureChannels();
 
-    const plan = planReminders(occurrences);
-    for (const { at, occ, minutes } of plan) {
+    const snoozes = activeSnoozes(await readSnoozes());
+    await writeSnoozes(snoozes);
+    const plan = combinePlans(planReminders(occurrences), planTaskAlerts(tasks), MAX_SCHEDULED - snoozes.length);
+    for (const s of snoozes) await scheduleSnooze(s);
+    const today = todayKey(timezone);
+    for (const { at, task, minutes } of plan.tasks) {
+      const quiet = isWithinQuietHours(at, timezone, prefs?.quiet_hours_start ?? null, prefs?.quiet_hours_end ?? null);
+      const channelId = quiet ? CHANNEL_QUIET : prefs?.show_details_on_lock_screen ? CHANNEL_PUBLIC : CHANNEL_PRIVATE;
+      await Notifications.scheduleNotificationAsync({
+        identifier: `task:${task.id}:${task.due_date}:${minutes}`,
+        content: {
+          title: task.due_time ? reminderTitle(task.title, minutes) : task.title,
+          body: describeDue(task, today, timeFormat) ?? undefined,
+          data: { taskId: task.id, occurrence: task.due_date },
+          sound: !quiet && prefs?.sound !== false ? 'default' : false,
+          color: marca.cores.claro.primary,
+          categoryIdentifier: TASK_CATEGORY,
+        },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId },
+      });
+    }
+    for (const { at, occ, minutes } of plan.events) {
       const quiet = isWithinQuietHours(
         at,
         timezone,
@@ -181,7 +314,7 @@ export async function rescheduleReminders(
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId },
       });
     }
-    return plan.length;
+    return plan.events.length + plan.tasks.length + snoozes.length;
   } catch (error) {
     await logError('lembretes', error);
     return 0;
@@ -191,4 +324,5 @@ export async function rescheduleReminders(
 export async function cancelAllReminders(): Promise<void> {
   if (!notificationsSupported) return;
   await Notifications.cancelAllScheduledNotificationsAsync().catch(() => undefined);
+  await AsyncStorage.removeItem(storageKeys.snoozes).catch(() => undefined);
 }

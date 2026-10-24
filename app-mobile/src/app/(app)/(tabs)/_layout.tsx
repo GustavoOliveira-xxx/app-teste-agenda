@@ -9,6 +9,7 @@ import { fonte } from '@/theme/tokens';
 const ITEMS: TabItem[] = [
   { name: 'index', label: t('tabs.today'), icon: 'today-outline' },
   { name: 'month', label: t('tabs.calendar'), icon: 'calendar-outline' },
+  { name: 'tasks', label: t('tabs.tasks'), icon: 'task-outline' },
   { name: 'calendars', label: t('tabs.calendars'), icon: 'people-outline' },
   { name: 'profile', label: t('tabs.profile'), icon: 'person-outline' },
 ];

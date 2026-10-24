@@ -1,5 +1,5 @@
 // Dados de teste reutilizáveis (fictícios).
-import type { CalendarEvent } from '@/models/types';
+import type { CalendarEvent, Task } from '@/models/types';
 
 export function makeEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent {
   return {
@@ -32,6 +32,46 @@ export function makeEvent(overrides: Partial<CalendarEvent> = {}): CalendarEvent
     exceptions: [],
     attendee_ids: [],
     my_reminders: [],
+    ...overrides,
+  };
+}
+
+export function makeTask(overrides: Partial<Task> = {}): Task {
+  return {
+    id: 'task-1',
+    item_type: 'task',
+    calendar_id: null,
+    list_id: null,
+    title: 'Tarefa',
+    description: null,
+    links: [],
+    tags: [],
+    start_date: null,
+    due_date: null,
+    due_time: null,
+    timezone: 'America/Sao_Paulo',
+    estimated_minutes: null,
+    priority: 0,
+    status: 'pending',
+    recurrence_rule: null,
+    recurrence_mode: 'calendar',
+    recurrence_start: null,
+    assignee_id: null,
+    privacy: 'members',
+    position: 1,
+    created_by: 'user-a',
+    updated_by: 'user-a',
+    completed_at: null,
+    completed_by: null,
+    version: 1,
+    created_at: '2026-10-01T00:00:00.000Z',
+    updated_at: '2026-10-01T00:00:00.000Z',
+    checklist: [],
+    participant_ids: [],
+    my_alerts: [],
+    plan_day: null,
+    last_completed_at: null,
+    comment_count: 0,
     ...overrides,
   };
 }

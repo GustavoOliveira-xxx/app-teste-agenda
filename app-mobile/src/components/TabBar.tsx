@@ -1,4 +1,4 @@
-// Navegação principal SynCK: Hoje, Calendário, Agendas e Perfil.
+// Navegação principal SynCK: Hoje, Calendário, Tarefas, Agendas e Perfil.
 // Celular: barra embaixo; a pílula `primarySoft` escorrega até o item novo e o
 // ícone pula 2 dp. Tablet e computador: menu lateral com o logo no topo.
 import type { Tabs } from 'expo-router/js-tabs';

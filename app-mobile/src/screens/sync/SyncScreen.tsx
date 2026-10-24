@@ -11,6 +11,7 @@ import { Screen } from '@/components/Screen';
 import { SectionHeader } from '@/components/SectionHeader';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
 import { useEventsMap } from '@/hooks/useEventsView';
+import { useItems } from '@/hooks/useItems';
 import { strings, t } from '@/i18n';
 import type { OutboxOp } from '@/offline/outbox';
 import { discardOperation, retryOperation, syncNow } from '@/offline/syncEngine';
@@ -37,6 +38,7 @@ export default function SyncScreen() {
   const { confirm } = useFeedback();
   const sync = useSyncStore();
   const events = useEventsMap();
+  const items = useItems();
 
   const discard = async (op: OutboxOp) => {
     const ok = await confirm({
@@ -107,17 +109,23 @@ export default function SyncScreen() {
       ) : (
         sync.outbox.map((op) => {
           const event = events[op.entityId];
+          const item = op.entity === 'task' ? items.tasks[op.entityId] : op.entity === 'note' ? items.notes[op.entityId] : undefined;
           const title =
             (op.payload.title as string | undefined) ??
-            event?.title ??
+            (op.payload.name as string | undefined) ??
+            (op.entity === 'event' ? event?.title : item?.title) ??
             (op.conflict?.server.title as string | undefined) ??
             '';
+          const kind =
+            op.entity === 'event' || !op.entity
+              ? strings.sync.kinds[op.kind]
+              : `${strings.sync.entities[op.entity]}: ${strings.sync.kinds[op.kind].replace(/ evento$/, '').toLowerCase()}`;
           return (
             <Card key={op.id}>
               <View style={styles.row}>
                 <AppText variant="label" style={styles.flex}>
-                  {strings.sync.kinds[op.kind]}
-                  {title ? `: ${title}` : ''}
+                  {kind}
+                  {title ? ` · ${title}` : ''}
                 </AppText>
                 <Badge label={STATUS[op.status].label} tone={STATUS[op.status].tone} />
               </View>

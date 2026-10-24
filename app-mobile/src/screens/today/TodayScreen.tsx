@@ -1,12 +1,14 @@
-// Tela Hoje: data em overline, saudação, semana compacta, faixa de
-// sincronização e os compromissos do dia em cartões. Anéis de órbita no canto
-// superior direito, sangrando pela borda.
+// Tela Hoje: central do dia. Data e saudação, semana compacta, faixa de
+// sincronização, a pergunta "O que você pretende fazer hoje?", o próximo
+// compromisso e seções recolhíveis (agenda, tarefas, atrasadas, lembretes,
+// movimento nas agendas, horários livres e o resumo da semana).
 import { router } from 'expo-router';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
   Easing,
+  FadeIn,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -17,37 +19,50 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText } from '@/components/AppText';
 import { OrbitRings, useDecorSize } from '@/components/brand/Decor';
+import { Card } from '@/components/Card';
+import { Chip } from '@/components/Chip';
 import { EventRow } from '@/components/EventRow';
 import { FAB } from '@/components/FAB';
-import { Icon } from '@/components/Icon';
+import { Icon, type IconName } from '@/components/Icon';
 import { IconButton } from '@/components/IconButton';
 import { EnterItem, PressableScale, tapFeedback } from '@/components/motion';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { EmptyState, LoadingState } from '@/components/StateViews';
+import { TaskRow } from '@/components/TaskRow';
 import { useDisplaySettings } from '@/hooks/useDisplaySettings';
 import { useCalendarsMap, useOccurrences } from '@/hooks/useEventsView';
+import { useItems } from '@/hooks/useItems';
+import { useNow } from '@/hooks/useNow';
+import { usePeople, useSharedMembers } from '@/hooks/usePeople';
+import { myBusy } from '@/hooks/usePlanning';
 import { useScreenFocus } from '@/hooks/useScreenFocus';
+import { useTaskActions } from '@/hooks/useTaskActions';
 import { strings, t } from '@/i18n';
-import type { DateKey, Occurrence } from '@/models/types';
+import type { DateKey, Occurrence, Task } from '@/models/types';
 import { ensureRange, syncNow } from '@/offline/syncEngine';
-import { useAuthStore } from '@/stores/authStore';
+import { useAuthStore, useUserId } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
+import { useUiStore } from '@/stores/uiStore';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { fonte, motion, radius, SCREEN_MARGIN, spacing } from '@/theme/tokens';
 import { conflictingKeys } from '@/utils/conflicts';
+import { shouldAskToday } from '@/utils/dailyPlan';
 import {
   addDaysToKey,
   capitalize,
   dateKeyParts,
   formatLongDate,
+  formatRelative,
+  formatTime,
   spannedDayKeys,
   startOfDayInstant,
   todayKey,
   weekKeys,
 } from '@/utils/dates';
+import { freeSlots } from '@/utils/freeTime';
 import { CONTENT_MAX_WIDTH } from '@/utils/layout';
-import { canCreateEvents } from '@/utils/permissions';
+import { isOpen, isOverdue, sortTasks } from '@/utils/tasks';
 
 function greeting(name: string, hour: number): string {
   const first = name.trim().split(/\s+/)[0] ?? '';
@@ -198,6 +213,104 @@ function SyncPill({ calendars }: { calendars: number }) {
   );
 }
 
+
+/** Seção recolhível (o estado fica guardado no aparelho). */
+function Section({
+  id,
+  title,
+  count,
+  icon,
+  tone,
+  children,
+  defaultCollapsed,
+}: {
+  id: string;
+  title: string;
+  count?: number;
+  icon: IconName;
+  tone?: 'danger';
+  children: ReactNode;
+  defaultCollapsed?: boolean;
+}) {
+  const { colors } = useAppTheme();
+  const collapsedList = useUiStore((s) => s.collapsed);
+  const toggle = useUiStore((s) => s.toggleCollapsed);
+  // "defaultCollapsed": a seção começa fechada e a lista guarda as que foram abertas.
+  const flagged = collapsedList.includes(id);
+  const collapsed = defaultCollapsed ? !flagged : flagged;
+  const color = tone === 'danger' ? colors.danger : colors.textMuted;
+  return (
+    <View style={styles.section}>
+      <Pressable
+        onPress={() => {
+          tapFeedback('select');
+          toggle(id);
+        }}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: !collapsed }}
+        accessibilityLabel={`${title}${count !== undefined ? `, ${count}` : ''}. ${collapsed ? t('todayHub.expand') : t('todayHub.collapse')}`}
+        style={styles.sectionHeader}
+      >
+        <Icon name={icon} size={16} color={color} />
+        <AppText variant="overline" style={[styles.flex, { color }]}>
+          {count !== undefined ? `${title} · ${count}` : title}
+        </AppText>
+        <Icon name={collapsed ? 'chevron-down' : 'chevron-up'} size={18} color={colors.textMuted} />
+      </Pressable>
+      {!collapsed && (
+        <Animated.View entering={FadeIn.duration(160)} style={styles.sectionBody}>
+          {children}
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+/** Próximo compromisso (ou o que está acontecendo), com contagem regressiva. */
+function NextUp({ occ, now, timezone }: { occ: Occurrence; now: number; timezone: string }) {
+  const { colors } = useAppTheme();
+  const display = useDisplaySettings();
+  const happening = occ.start.getTime() <= now;
+  const minutes = Math.max(0, Math.round((occ.start.getTime() - now) / 60_000));
+  const when = happening
+    ? t('todayHub.happening')
+    : minutes < 60
+      ? t('todayHub.nextIn', { time: `${minutes} min` })
+      : t('todayHub.nextIn', { time: `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}` });
+  return (
+    <Card
+      outlined={happening}
+      onPress={() => router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } })}
+      accessibilityLabel={`${t('todayHub.next')}: ${occ.event.is_masked ? t('events.maskedTitle') : occ.title}. ${when}`}
+      style={[styles.next, { backgroundColor: colors.tide }]}
+    >
+      <AppText variant="overline" style={{ color: colors.mint }}>
+        {t('todayHub.next')}
+      </AppText>
+      <AppText variant="title" numberOfLines={2} style={{ color: '#FFFFFF' }}>
+        {occ.event.is_masked ? t('events.maskedTitle') : occ.title}
+      </AppText>
+      <View style={styles.nextRow}>
+        <Icon name="time-outline" size={16} color={colors.mint} />
+        <AppText variant="label" style={{ color: '#FFFFFF' }}>
+          {`${formatTime(occ.start, timezone, display.timeFormat)} · ${when}`}
+        </AppText>
+      </View>
+      {occ.location ? (
+        <View style={styles.nextRow}>
+          <Icon name="location-outline" size={16} color={colors.mint} />
+          <AppText variant="small" numberOfLines={1} style={{ color: '#FFFFFF' }}>
+            {occ.location}
+          </AppText>
+        </View>
+      ) : null}
+    </Card>
+  );
+}
+
+/** Pergunta do dia: aparece sozinha uma vez por dia (se a pessoa não desligou). */
+let askedOn: DateKey | null = null;
+
 export default function TodayScreen() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
@@ -205,17 +318,24 @@ export default function TodayScreen() {
   const display = useDisplaySettings();
   const tz = display.timezone;
   const today = todayKey(tz);
-  // Sem escolha, o dia mostrado é sempre hoje (inclusive quando o dia vira).
+  const now = useNow();
   const [picked, setPicked] = useState<DateKey | null>(null);
   const selected = picked ?? today;
   const setSelected = (day: DateKey) => setPicked(day === today ? null : day);
-  const name = useAuthStore((s) => s.account?.display_name ?? '');
+  const account = useAuthStore((s) => s.account);
+  const name = account?.display_name ?? '';
+  const userId = useUserId();
   const calendars = useDataStore((s) => s.calendars);
   const hydrated = useDataStore((s) => s.hydrated);
-  const unread = useDataStore((s) => s.notifications.filter((n) => !n.read_at).length);
+  const notifications = useDataStore((s) => s.notifications);
+  const unread = notifications.filter((n) => !n.read_at).length;
   const calendarsMap = useCalendarsMap();
   const syncing = useSyncStore((s) => s.syncing);
-  // Anéis no canto: proporcionais à largura, sem invadir a semana logo abaixo.
+  const dismissedOn = useUiStore((s) => s.planDismissedOn);
+  const items = useItems();
+  const people = usePeople();
+  useSharedMembers();
+  const { toggle, openMenu, sheet } = useTaskActions();
   const decor = Math.min(useDecorSize('header') * 1.25, 168);
 
   const days = useMemo(() => weekKeys(selected, display.weekStartsOn), [selected, display.weekStartsOn]);
@@ -228,6 +348,23 @@ export default function TodayScreen() {
     void ensureRange(from, to);
   }, [from, to]);
 
+  // Primeira abertura do dia: "O que você pretende fazer hoje?".
+  const checkedIn = items.checkins.includes(today);
+  const ask = shouldAskToday({
+    enabled: account?.preferences.daily_checkin ?? true,
+    today,
+    checkins: items.checkins,
+    dismissedOn,
+  });
+  const opened = useRef(false);
+  useEffect(() => {
+    if (!hydrated || !focused || !ask || askedOn === today || opened.current) return;
+    opened.current = true;
+    askedOn = today;
+    const timer = setTimeout(() => router.push('/plan-day'), 500);
+    return () => clearTimeout(timer);
+  }, [hydrated, focused, ask, today]);
+
   const byDay = useMemo(() => {
     const map = new Map<DateKey, Occurrence[]>();
     for (const occ of occurrences) {
@@ -239,22 +376,75 @@ export default function TodayScreen() {
     }
     return map;
   }, [occurrences, tz]);
-  const busy = useMemo(() => new Set(byDay.keys()), [byDay]);
+  const tasks = useMemo(() => Object.values(items.tasks), [items.tasks]);
+  const busy = useMemo(() => {
+    const set = new Set(byDay.keys());
+    for (const x of tasks) if (isOpen(x) && x.due_date) set.add(x.due_date);
+    return set;
+  }, [byDay, tasks]);
   const list = byDay.get(selected) ?? [];
+  const isToday = selected === today;
+
+  const open = tasks.filter(isOpen);
+  const dayTasks = sortTasks(
+    open.filter((x) => x.item_type === 'task' && (x.due_date === selected || (isToday && x.plan_day === today))),
+    'due',
+  );
+  const overdue = isToday
+    ? sortTasks(open.filter((x) => isOverdue(x, today) && x.due_date !== today && x.plan_day !== today), 'due')
+    : [];
+  const reminders = sortTasks(
+    open.filter(
+      (x) =>
+        x.item_type === 'reminder' &&
+        x.due_date &&
+        (x.due_date === selected || (isToday && x.due_date === addDaysToKey(today, 1))),
+    ),
+    'due',
+  );
+  const nextOcc = isToday
+    ? list
+        .filter((o) => !o.allDay && o.event.status !== 'cancelled' && o.end.getTime() > now)
+        .sort((a, b) => a.start.getTime() - b.start.getTime())[0]
+    : undefined;
+  const slots = freeSlots(myBusy(list, userId), [selected], tz, display.dayStart, display.dayEnd, {
+    minMinutes: 30,
+    now: new Date(now),
+  });
+  const recent = notifications.filter((n) => !n.read_at).slice(0, 3);
 
   const openEvent = useCallback(
     (occ: Occurrence) =>
       router.push({ pathname: '/event/[id]', params: { id: occ.event.id, date: occ.originalDate } }),
     [],
   );
-  const newEvent = () => router.push({ pathname: '/event/new', params: { date: selected } });
-  const writable = calendars.some((c) => canCreateEvents(c));
+  const openTask = useCallback((task: Task) => router.push({ pathname: '/task/[id]', params: { id: task.id } }), []);
   const active = calendars.filter((c) => !c.deleted_at && c.status === 'active').length;
 
   if (!hydrated) return <LoadingState />;
 
   const hour = new Date().getHours();
   const dateLine = capitalize(formatLongDate(selected));
+  const taskRow = (task: Task, i: number) => {
+    const cal = task.calendar_id ? calendarsMap[task.calendar_id] : undefined;
+    return (
+      <EnterItem key={task.id} index={i}>
+        <TaskRow
+          task={task}
+          today={today}
+          timeFormat={display.timeFormat}
+          calendarName={cal?.name}
+          calendarColor={cal?.color}
+          assignee={task.assignee_id ? (people[task.assignee_id] ?? null) : null}
+          onPress={openTask}
+          onToggle={(x) => void toggle(x)}
+          onLongPress={openMenu}
+          compact
+        />
+      </EnterItem>
+    );
+  };
+  const nothing = !list.length && !dayTasks.length && !overdue.length && !reminders.length;
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.background }]}>
@@ -275,9 +465,7 @@ export default function TodayScreen() {
                 {dateLine}
               </AppText>
               <AppText variant="title" style={styles.greeting} numberOfLines={2}>
-                {selected === today
-                  ? greeting(name, hour)
-                  : capitalize(formatLongDate(selected).split(',')[0])}
+                {isToday ? greeting(name, hour) : capitalize(formatLongDate(selected).split(',')[0])}
               </AppText>
             </View>
             <View>
@@ -294,7 +482,7 @@ export default function TodayScreen() {
 
           <View style={styles.pillRow}>
             <SyncPill calendars={active} />
-            {selected !== today && (
+            {!isToday && (
               <PressableScale
                 onPress={() => setSelected(today)}
                 accessibilityRole="button"
@@ -307,6 +495,31 @@ export default function TodayScreen() {
             )}
           </View>
 
+          {isToday && (
+            <Card
+              onPress={() => router.push('/plan-day')}
+              accessibilityLabel={checkedIn ? t('planDay.title') : `${t('planDay.open')}. ${t('planDay.openHint')}`}
+              style={[styles.planCard, { backgroundColor: colors.primarySoft }]}
+            >
+              <View style={[styles.planIcon, { backgroundColor: colors.primary }]}>
+                <Icon name="sunny-outline" size={22} color={colors.primaryText} />
+              </View>
+              <View style={styles.flex}>
+                <AppText variant="heading" style={{ color: colors.primaryInk }}>
+                  {checkedIn ? t('planDay.title') : t('planDay.question')}
+                </AppText>
+                <AppText variant="small" tone="muted">
+                  {checkedIn
+                    ? t('planDay.summary', { n: dayTasks.length + list.length })
+                    : t('planDay.openHint')}
+                </AppText>
+              </View>
+              <Icon name="chevron-forward" size={20} color={colors.primaryInk} />
+            </Card>
+          )}
+
+          {nextOcc && <NextUp occ={nextOcc} now={now} timezone={tz} />}
+
           {calendars.length === 0 ? (
             <EmptyState
               art="orbit"
@@ -315,35 +528,140 @@ export default function TodayScreen() {
               actionLabel={t('calendars.new')}
               onAction={() => router.push('/calendar/new')}
             />
-          ) : list.length === 0 ? (
+          ) : nothing ? (
             <EmptyState
               art="kairo"
               title={t('today.emptyTitle')}
               message={t('today.emptyMessage')}
-              actionLabel={writable ? t('today.createEvent') : undefined}
-              onAction={writable ? newEvent : undefined}
+              actionLabel={t('create.title')}
+              onAction={() => router.push({ pathname: '/create', params: { date: selected } })}
             />
-          ) : (
-            <View style={styles.list} key={selected}>
-              {list.map((occ, i) => (
-                <EnterItem key={occ.key} index={i}>
-                  <EventRow
-                    occurrence={occ}
-                    calendarName={calendarsMap[occ.event.calendar_id]?.name}
-                    calendarColor={calendarsMap[occ.event.calendar_id]?.color}
-                    timezone={tz}
-                    timeFormat={display.timeFormat}
-                    dateFormat={display.dateFormat}
-                    conflict={conflicts.has(occ.key)}
-                    onPress={openEvent}
-                  />
-                </EnterItem>
-              ))}
-            </View>
+          ) : null}
+
+          {list.length > 0 && (
+            <Section id="agenda" title={t('todayHub.agenda')} count={list.length} icon="calendar-outline">
+              <View style={styles.list} key={selected}>
+                {list.map((occ, i) => (
+                  <EnterItem key={occ.key} index={i}>
+                    <EventRow
+                      occurrence={occ}
+                      calendarName={calendarsMap[occ.event.calendar_id]?.name}
+                      calendarColor={calendarsMap[occ.event.calendar_id]?.color}
+                      timezone={tz}
+                      timeFormat={display.timeFormat}
+                      dateFormat={display.dateFormat}
+                      conflict={conflicts.has(occ.key)}
+                      onPress={openEvent}
+                    />
+                  </EnterItem>
+                ))}
+              </View>
+            </Section>
           )}
+
+          {(dayTasks.length > 0 || isToday) && !nothing && (
+            <Section id="tasks" title={t('todayHub.dueToday')} count={dayTasks.length} icon="task-outline">
+              {dayTasks.length ? (
+                <View style={styles.list}>{dayTasks.map(taskRow)}</View>
+              ) : (
+                <AppText variant="small" tone="muted">
+                  {t('todayHub.nothingDue')}
+                </AppText>
+              )}
+            </Section>
+          )}
+
+          {overdue.length > 0 && (
+            <Section
+              id="overdue"
+              title={t('todayHub.overdue')}
+              count={overdue.length}
+              icon="alert-circle-outline"
+              tone="danger"
+              defaultCollapsed={overdue.length > 3}
+            >
+              <View style={styles.list}>{overdue.slice(0, 10).map(taskRow)}</View>
+              {overdue.length > 10 && (
+                <Chip label={t('common.seeAll')} selected={false} onPress={() => router.push('/tasks')} />
+              )}
+            </Section>
+          )}
+
+          {reminders.length > 0 && (
+            <Section id="reminders" title={t('todayHub.reminders')} count={reminders.length} icon="notifications-outline">
+              <View style={styles.list}>{reminders.map(taskRow)}</View>
+            </Section>
+          )}
+
+          {isToday && recent.length > 0 && (
+            <Section id="shared" title={t('todayHub.shared')} count={recent.length} icon="group-outline">
+              {recent.map((n) => (
+                <PressableScale
+                  key={n.id}
+                  onPress={() => router.push('/notifications')}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${n.title}. ${n.body ?? ''}`}
+                  style={[styles.notice, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  <View style={[styles.unreadDot, { backgroundColor: colors.coral }]} />
+                  <View style={styles.flex}>
+                    <AppText variant="label" numberOfLines={1}>
+                      {n.title}
+                    </AppText>
+                    {n.body ? (
+                      <AppText variant="caption" tone="muted" numberOfLines={1}>
+                        {n.body}
+                      </AppText>
+                    ) : null}
+                  </View>
+                  <AppText variant="caption" tone="muted">
+                    {formatRelative(new Date(n.created_at), now, tz, display.dateFormat)}
+                  </AppText>
+                </PressableScale>
+              ))}
+            </Section>
+          )}
+
+          {(list.length > 0 || dayTasks.length > 0) && (
+            <Section id="free" title={t('todayHub.freeSlots')} count={slots.length} icon="time-outline" defaultCollapsed>
+              {slots.length ? (
+                <View style={styles.chips}>
+                  {slots.map((s) => (
+                    <Chip
+                      key={s.start.toISOString()}
+                      label={`${formatTime(s.start, tz, display.timeFormat)} a ${formatTime(s.end, tz, display.timeFormat)}`}
+                      selected={false}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/create',
+                          params: { date: selected },
+                        })
+                      }
+                    />
+                  ))}
+                </View>
+              ) : (
+                <AppText variant="small" tone="muted">
+                  {t('todayHub.freeSlotsEmpty')}
+                </AppText>
+              )}
+            </Section>
+          )}
+
+          <Card onPress={() => router.push('/week')} accessibilityLabel={t('todayHub.weekSummary')} style={styles.weekCard}>
+            <Icon name="sparkles-outline" size={22} color={colors.primaryInk} />
+            <View style={styles.flex}>
+              <AppText variant="heading">{t('todayHub.weekSummary')}</AppText>
+              <AppText variant="small" tone="muted">
+                {t('todayHub.weekSummaryHint')}
+              </AppText>
+            </View>
+            <Icon name="chevron-forward" size={20} color={colors.textMuted} />
+          </Card>
         </View>
       </ScrollView>
-      {writable && <FAB label={t('calendarView.newEvent')} onPress={newEvent} />}
+      <FAB label={t('create.title')} onPress={() => router.push({ pathname: '/create', params: { date: selected } })} />
+      {sheet}
     </View>
   );
 }
@@ -370,5 +688,23 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     alignSelf: 'flex-start',
   },
-  list: { gap: spacing.md },
+  list: { gap: spacing.sm },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  section: { gap: spacing.sm },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, minHeight: 36 },
+  sectionBody: { gap: spacing.sm },
+  planCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  planIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  next: { gap: spacing.xs },
+  nextRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  notice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  unreadDot: { width: 8, height: 8, borderRadius: 4 },
+  weekCard: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
 });

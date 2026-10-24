@@ -24,14 +24,66 @@ function same(field: string, a: unknown, b: unknown): boolean {
   if ((field === 'starts_at' || field === 'ends_at') && typeof x === 'string' && typeof y === 'string') {
     return new Date(x).getTime() === new Date(y).getTime();
   }
+  // Horário de prazo: "19:00" e "19:00:00" são o mesmo valor.
+  if (field === 'due_time' && typeof x === 'string' && typeof y === 'string') {
+    return x.slice(0, 5) === y.slice(0, 5);
+  }
+  if (Array.isArray(x) && Array.isArray(y)) {
+    return x.length === y.length && x.every((v, i) => v === y[i]);
+  }
   return x === y;
 }
 
-export interface MergeResult {
+export interface MergeResult<T = Partial<EventFields>> {
   /** Campos que ainda precisam ser enviados (as alterações locais que sobreviveram). */
-  payload: Partial<EventFields>;
+  payload: T;
   /** Campos alterados pelos dois lados com valores diferentes. */
   conflicts: string[];
+}
+
+/** Campos de prazo de uma tarefa: tratados como um bloco, como o horário dos eventos. */
+export const DUE_GROUP = ['due_date', 'due_time', 'timezone'];
+
+/**
+ * Mesclagem genérica: `group` reúne campos que só fazem sentido juntos
+ * (ex.: início e fim). O conflito do grupo aparece com o nome `groupName`.
+ */
+export function mergeFields(
+  base: Record<string, unknown>,
+  local: Record<string, unknown>,
+  server: Record<string, unknown>,
+  group: string[] = [],
+  groupName = 'time',
+): MergeResult<Record<string, unknown>> {
+  const payload: Record<string, unknown> = {};
+  const conflicts: string[] = [];
+  const localKeys = Object.keys(local);
+
+  const touchesGroup = localKeys.some((k) => group.includes(k));
+  const serverChangedGroup = group.some((k) => k in base && !same(k, base[k], server[k]));
+
+  for (const key of localKeys) {
+    const localValue = local[key];
+    const serverValue = server[key];
+    if (same(key, localValue, serverValue)) continue; // os dois chegaram ao mesmo valor
+    const inGroup = group.includes(key);
+    const serverChanged = inGroup ? serverChangedGroup : !same(key, base[key], serverValue);
+    if (serverChanged) {
+      const name = inGroup ? groupName : key;
+      if (!conflicts.includes(name)) conflicts.push(name);
+    } else {
+      payload[key] = localValue;
+    }
+  }
+
+  // Se mexi no grupo e o servidor não, envio o grupo completo para não
+  // misturar um lado com o outro.
+  if (touchesGroup && !serverChangedGroup) {
+    for (const key of group) {
+      if (key in local) payload[key] = local[key];
+    }
+  }
+  return { payload, conflicts };
 }
 
 export function threeWayMerge(
@@ -39,32 +91,11 @@ export function threeWayMerge(
   local: Partial<EventFields>,
   server: Partial<CalendarEvent>,
 ): MergeResult {
-  const payload: Partial<EventFields> = {};
-  const conflicts: string[] = [];
-  const localKeys = Object.keys(local) as (keyof EventFields)[];
-
-  const touchesTime = localKeys.some((k) => TIME_GROUP.includes(k));
-  const serverChangedTime = TIME_GROUP.some((k) => k in base && !same(k, base[k], server[k]));
-
-  for (const key of localKeys) {
-    const localValue = local[key];
-    const serverValue = server[key as keyof CalendarEvent];
-    if (same(key, localValue, serverValue)) continue; // os dois chegaram ao mesmo valor
-    const isTime = TIME_GROUP.includes(key);
-    const serverChanged = isTime ? serverChangedTime : !same(key, base[key], serverValue);
-    if (serverChanged) {
-      if (!conflicts.includes(isTime ? 'time' : key)) conflicts.push(isTime ? 'time' : key);
-    } else {
-      (payload as Record<string, unknown>)[key] = localValue;
-    }
-  }
-
-  // Se mexi no horário e o servidor não, envio o bloco de horário completo
-  // para não misturar início de um lado com fim do outro.
-  if (touchesTime && !serverChangedTime) {
-    for (const key of TIME_GROUP) {
-      if (key in local) (payload as Record<string, unknown>)[key] = local[key];
-    }
-  }
-  return { payload, conflicts };
+  const result = mergeFields(
+    base as Record<string, unknown>,
+    local as Record<string, unknown>,
+    server as Record<string, unknown>,
+    TIME_GROUP as string[],
+  );
+  return { payload: result.payload as Partial<EventFields>, conflicts: result.conflicts };
 }

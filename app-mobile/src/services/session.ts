@@ -5,11 +5,13 @@ import { Platform } from 'react-native';
 import { env } from '@/config/env';
 import { loadLocalState, requestSync, setAfterSyncHook, syncNow } from '@/offline/syncEngine';
 import { clearUserData, getInstallationId } from '@/offline/storage';
+import { overlayItems } from '@/offline/itemOverlay';
 import { overlayPending } from '@/offline/outbox';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
 import { getDeviceTimezone } from '@/hooks/useDeviceTimezone';
+import { todayKey } from '@/utils/dates';
 import { expandEvents } from '@/utils/recurrence';
 
 import * as api from './api';
@@ -30,11 +32,19 @@ export async function refreshReminders(): Promise<void> {
   const occurrences = expandEvents(Object.values(events), now, new Date(now.getTime() + 31 * 86_400_000));
   const tz =
     account?.preferences.use_device_timezone === false ? account.preferences.timezone : getDeviceTimezone();
+  const data = useDataStore.getState();
+  const items = overlayItems(
+    { tasks: data.tasks, lists: data.lists, notes: data.notes, habits: data.habits, checkins: data.checkins },
+    useSyncStore.getState().outbox,
+    userId,
+    todayKey(tz),
+  );
   await rescheduleReminders(
     occurrences,
     account?.notification_preferences ?? null,
     tz,
     account?.preferences.time_format ?? '24h',
+    Object.values(items.tasks),
   );
 }
 

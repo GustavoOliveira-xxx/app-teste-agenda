@@ -12,6 +12,8 @@ export const storageKeys = {
   window: (uid: string) => `${PREFIX}:${uid}:window`,
   account: (uid: string) => `${PREFIX}:${uid}:account`,
   notifications: (uid: string) => `${PREFIX}:${uid}:notifications`,
+  items: (uid: string) => `${PREFIX}:${uid}:items`,
+  snoozes: `${PREFIX}:snoozes`,
   outbox: (uid: string) => `${PREFIX}:${uid}:outbox`,
   syncMeta: (uid: string) => `${PREFIX}:${uid}:sync-meta`,
   errorLog: `${PREFIX}:error-log`,

@@ -15,10 +15,10 @@ import { supabase } from '@/services/supabase';
 import { useAuthStore } from '@/stores/authStore';
 import { useDataStore } from '@/stores/dataStore';
 import { useSyncStore } from '@/stores/syncStore';
-import type { Account, CalendarEvent, EventFields } from '@/models/types';
+import type { Account, CalendarEvent, DateKey, EventFields, MyItems } from '@/models/types';
 import { errorCode, isNetworkError } from '@/utils/errors';
 
-import { threeWayMerge, TIME_GROUP } from './merge';
+import { DUE_GROUP, mergeFields, threeWayMerge, TIME_GROUP } from './merge';
 import {
   enqueue,
   markConflict,
@@ -45,7 +45,7 @@ const uid = () => useAuthStore.getState().session?.user.id ?? null;
 // ---------------------------------------------------------------------
 
 export async function loadLocalState(userId: string): Promise<void> {
-  const [calendars, events, members, window, notifications, outbox, account, meta] = await Promise.all([
+  const [calendars, events, members, window, notifications, outbox, account, meta, items] = await Promise.all([
     readJSON(storageKeys.calendars(userId), []),
     readJSON(storageKeys.events(userId), {}),
     readJSON(storageKeys.members(userId), {}),
@@ -54,16 +54,39 @@ export async function loadLocalState(userId: string): Promise<void> {
     readJSON<OutboxOp[]>(storageKeys.outbox(userId), []),
     readJSON<Account | null>(storageKeys.account(userId), null),
     readJSON<{ lastSyncAt: string | null }>(storageKeys.syncMeta(userId), { lastSyncAt: null }),
+    readJSON<StoredItems | null>(storageKeys.items(userId), null),
   ]);
-  useDataStore.getState().set({ calendars, events, members, window, notifications, hydrated: true });
+  useDataStore.getState().set({
+    calendars,
+    events,
+    members,
+    window,
+    notifications,
+    ...(items ?? {}),
+    hydrated: true,
+  });
   // Se o app fechou no meio de um envio, a operação volta para a fila.
   useSyncStore.getState().patch({ outbox: recoverInterrupted(outbox), lastSyncAt: meta.lastSyncAt });
   if (account) useAuthStore.getState().setAccount(account);
 }
 
+/** Tarefas, listas, anotações, hábitos e dias planejados, gravados juntos. */
+type StoredItems = Pick<
+  ReturnType<typeof useDataStore.getState>,
+  'tasks' | 'lists' | 'notes' | 'habits' | 'checkins'
+>;
+
 export async function persistData(userId: string): Promise<void> {
   const s = useDataStore.getState();
+  const items: StoredItems = {
+    tasks: s.tasks,
+    lists: s.lists,
+    notes: s.notes,
+    habits: s.habits,
+    checkins: s.checkins,
+  };
   await Promise.all([
+    writeJSON(storageKeys.items(userId), items),
     writeJSON(storageKeys.calendars(userId), s.calendars),
     writeJSON(storageKeys.events(userId), s.events),
     writeJSON(storageKeys.members(userId), s.members),
@@ -139,12 +162,105 @@ function pick(source: Partial<CalendarEvent>, keys: string[]): Partial<EventFiel
   ) as Partial<EventFields>;
 }
 
+const STORE_KIND = { task: 'tasks', list: 'lists', note: 'notes', habit: 'habits' } as const;
+
+function originOf(op: OutboxOp): 'app' | 'offline_sync' {
+  // Operações que esperaram na fila (sem internet) são marcadas como sincronização offline.
+  return op.attempts > 0 || Date.now() - new Date(op.createdAt).getTime() > 60_000 ? 'offline_sync' : 'app';
+}
+
+function countMetric(key: 'sent' | 'failed' | 'conflicts'): void {
+  const metrics = useSyncStore.getState().metrics;
+  useSyncStore.getState().patch({ metrics: { ...metrics, [key]: metrics[key] + 1 } });
+}
+
+/** Tarefas, listas, anotações, hábitos e plano do dia: mesmo ciclo dos eventos. */
+async function processItemOp(op: OutboxOp): Promise<'continue' | 'stop'> {
+  const res = await api.applyItemOp({
+    opId: op.id,
+    entity: op.entity,
+    kind: op.kind,
+    id: op.entityId,
+    payload: op.payload,
+    baseVersion: op.baseVersion,
+    origin: originOf(op),
+  });
+  const kind = op.entity in STORE_KIND ? STORE_KIND[op.entity as keyof typeof STORE_KIND] : null;
+  const item = (res.task ?? res.list ?? res.note ?? res.habit) as
+    | ({ id: string; version?: number; deleted_at?: string | null } & Record<string, unknown>)
+    | undefined;
+
+  if (res.status === 'conflict' && item && kind) {
+    useDataStore.getState().upsertItems(kind, [item]);
+    countMetric('conflicts');
+    if (op.kind === 'update' && res.reason === 'version' && op.baseSnapshot) {
+      const merge = mergeFields(op.baseSnapshot, op.payload, item, op.entity === 'task' ? DUE_GROUP : [], 'due');
+      if (merge.conflicts.length === 0) {
+        const keys = Object.keys(merge.payload);
+        await setOutbox(
+          keys.length === 0
+            ? removeOp(useSyncStore.getState().outbox, op.id)
+            : updateOp(useSyncStore.getState().outbox, op.id, {
+                status: 'pending',
+                payload: merge.payload,
+                baseVersion: item.version ?? null,
+                baseSnapshot: Object.fromEntries(keys.map((k) => [k, item[k] ?? null])),
+              }),
+        );
+        return 'continue';
+      }
+      await setOutbox(
+        markConflict(useSyncStore.getState().outbox, op.id, {
+          reason: 'version',
+          server: item,
+          fields: merge.conflicts,
+        }),
+      );
+      return 'continue';
+    }
+    await setOutbox(
+      markConflict(useSyncStore.getState().outbox, op.id, {
+        reason: res.reason ?? 'version',
+        server: item,
+        fields: Object.keys(op.payload),
+      }),
+    );
+    return 'continue';
+  }
+
+  if (res.status === 'error') {
+    const code = res.code ?? 'UNKNOWN';
+    if (code === 'NOT_FOUND' && op.kind !== 'create' && kind) {
+      // O item sumiu (excluído ou acesso removido): não há o que enviar.
+      useDataStore.getState().upsertItems(kind, [{ id: op.entityId, deleted_at: new Date().toISOString() }]);
+      await setOutbox(removeOp(useSyncStore.getState().outbox, op.id));
+      return 'continue';
+    }
+    countMetric('failed');
+    await setOutbox(markFailed(useSyncStore.getState().outbox, op.id, code, false));
+    return 'continue';
+  }
+
+  if (item && kind) useDataStore.getState().upsertItems(kind, [item]);
+  if (op.entity === 'checkin') {
+    const day = op.payload.day as DateKey;
+    const current = useDataStore.getState().checkins;
+    if (!current.includes(day)) useDataStore.getState().set({ checkins: [day, ...current] });
+  }
+  await setOutbox(removeOp(useSyncStore.getState().outbox, op.id));
+  countMetric('sent');
+  return 'continue';
+}
+
 async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
   const sync = useSyncStore.getState();
   await setOutbox(
     updateOp(sync.outbox, op.id, { status: 'syncing', lastAttemptAt: new Date().toISOString() }),
   );
   try {
+    if (op.entity && op.entity !== 'event') {
+      return await processItemOp(op);
+    }
     if (op.kind === 'reminders_set') {
       await api.setEventReminders(op.entityId, op.payload.minutes as number[]);
     } else if (op.kind === 'attendees_set') {
@@ -156,9 +272,7 @@ async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
         eventId: op.entityId,
         payload: op.payload,
         baseVersion: op.baseVersion,
-        // Operações que esperaram na fila (sem internet) são marcadas como sincronização offline.
-        origin:
-          op.attempts > 0 || Date.now() - new Date(op.createdAt).getTime() > 60_000 ? 'offline_sync' : 'app',
+        origin: originOf(op),
       });
 
       if (res.status === 'conflict' && res.event) {
@@ -166,7 +280,11 @@ async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
         const metrics = useSyncStore.getState().metrics;
         useSyncStore.getState().patch({ metrics: { ...metrics, conflicts: metrics.conflicts + 1 } });
         if (op.kind === 'update' && res.reason === 'version' && op.baseSnapshot) {
-          const merge = threeWayMerge(op.baseSnapshot, op.payload as Partial<EventFields>, res.event);
+          const merge = threeWayMerge(
+            op.baseSnapshot as Partial<EventFields>,
+            op.payload as Partial<EventFields>,
+            res.event,
+          );
           if (merge.conflicts.length === 0) {
             const keys = Object.keys(merge.payload);
             if (keys.length === 0) {
@@ -182,7 +300,10 @@ async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
                   status: 'pending',
                   payload: merge.payload,
                   baseVersion: res.event.version ?? null,
-                  baseSnapshot: pick(res.event, [...new Set([...keys, ...timeKeys])]),
+                  baseSnapshot: pick(res.event, [...new Set([...keys, ...timeKeys])]) as Record<
+                    string,
+                    unknown
+                  >,
                 }),
               );
             }
@@ -191,7 +312,7 @@ async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
           await setOutbox(
             markConflict(useSyncStore.getState().outbox, op.id, {
               reason: 'version',
-              server: res.event,
+              server: res.event as Record<string, unknown>,
               fields: merge.conflicts,
             }),
           );
@@ -200,7 +321,7 @@ async function processOp(op: OutboxOp): Promise<'continue' | 'stop'> {
         await setOutbox(
           markConflict(useSyncStore.getState().outbox, op.id, {
             reason: res.reason ?? 'version',
-            server: res.event,
+            server: res.event as Record<string, unknown>,
             fields: Object.keys(op.payload),
           }),
         );
@@ -284,11 +405,29 @@ async function pullAll(userId: string): Promise<void> {
     window: { from: from.toISOString(), to: to.toISOString() },
   });
 
-  const [notifications, account] = await Promise.all([api.listNotifications(100), api.getMyAccount()]);
-  useDataStore.getState().set({ notifications });
+  const [notifications, account, items] = await Promise.all([
+    api.listNotifications(100),
+    api.getMyAccount(),
+    api.listMyItems(),
+  ]);
+  useDataStore.getState().set({ notifications, ...itemsToState(items) });
   useAuthStore.getState().setAccount(account);
   await writeJSON(storageKeys.account(userId), account);
   await persistData(userId);
+}
+
+function byId<T extends { id: string }>(list: T[]): Record<string, T> {
+  return Object.fromEntries(list.map((x) => [x.id, x]));
+}
+
+export function itemsToState(items: MyItems): StoredItems {
+  return {
+    tasks: byId(items.tasks ?? []),
+    lists: byId(items.lists ?? []),
+    notes: byId(items.notes ?? []),
+    habits: byId(items.habits ?? []),
+    checkins: items.checkins ?? [],
+  };
 }
 
 /** Garante que eventos de um período (ex.: navegou para outro ano) estejam carregados. */

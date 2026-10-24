@@ -102,6 +102,10 @@ export interface CalendarEvent extends Omit<EventFields, 'title'> {
   deleted_at?: string | null;
   /** Somente no app: o evento tem alterações ainda não enviadas. */
   pending?: boolean;
+  /** Bloco de tempo: a tarefa que este evento reserva. */
+  task_id?: string | null;
+  /** Identificador do evento de origem (importação de arquivo .ics). */
+  external_uid?: string | null;
 }
 
 /** Uma ocorrência concreta de um evento (eventos recorrentes geram várias). */
@@ -198,6 +202,13 @@ export interface UserPreferences {
   time_format: TimeFormat;
   theme: ThemePreference;
   week_starts_on: 0 | 1;
+  /** Perguntar "O que você pretende fazer hoje?" na primeira abertura do dia. */
+  daily_checkin: boolean;
+  /** Pessoas das agendas compartilhadas veem só os horários ocupados (sem detalhes). */
+  share_availability: boolean;
+  /** Janela do dia usada no planejador e nos horários livres (HH:MM:SS). */
+  day_start: string;
+  day_end: string;
 }
 
 export interface NotificationPreferences {
@@ -211,6 +222,7 @@ export interface NotificationPreferences {
   notify_member_changes: boolean;
   notify_comments: boolean;
   notify_reminders: boolean;
+  notify_tasks: boolean;
   sound: boolean;
   vibration: boolean;
 }
@@ -241,7 +253,12 @@ export type NotificationType =
   | 'member_removed'
   | 'role_changed'
   | 'ownership_received'
-  | 'comment_added';
+  | 'comment_added'
+  | 'task_assigned'
+  | 'task_completed'
+  | 'task_comment'
+  | 'poll_created'
+  | 'poll_closed';
 
 export interface AppNotification {
   id: string;
@@ -296,4 +313,196 @@ export interface DeletionImpact {
   calendars_to_delete: number;
   events_kept_in_shared_calendars: number;
   comments_to_delete: number;
+}
+
+// ---------------------------------------------------------------------
+// Versão 3.0: tarefas, lembretes, listas, anotações, hábitos e enquetes
+// ---------------------------------------------------------------------
+
+/** Tarefa (atividade com conclusão) ou lembrete (aviso numa data). */
+export type ItemType = 'task' | 'reminder';
+
+export type TaskStatus = 'pending' | 'in_progress' | 'waiting' | 'done' | 'cancelled';
+
+/** 0 sem prioridade, 1 baixa, 2 média, 3 alta, 4 urgente. */
+export type TaskPriority = 0 | 1 | 2 | 3 | 4;
+
+export type TaskPrivacy = 'members' | 'participants' | 'private';
+
+/** calendar: datas da regra ("todo dia 5"); completion: intervalo após a última conclusão. */
+export type RecurrenceMode = 'calendar' | 'completion';
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  done: boolean;
+  done_at: string | null;
+  done_by: string | null;
+  position: number;
+}
+
+/** Campos de uma tarefa que o app pode enviar ao servidor. */
+export interface TaskFields {
+  item_type: ItemType;
+  calendar_id: string | null;
+  list_id: string | null;
+  title: string;
+  description: string | null;
+  links: string[];
+  tags: string[];
+  start_date: DateKey | null;
+  due_date: DateKey | null;
+  /** HH:MM ou HH:MM:SS, no fuso da tarefa. */
+  due_time: string | null;
+  timezone: string;
+  estimated_minutes: number | null;
+  priority: TaskPriority;
+  status: TaskStatus;
+  recurrence_rule: string | null;
+  recurrence_mode: RecurrenceMode;
+  assignee_id: string | null;
+  privacy: TaskPrivacy;
+  position: number;
+}
+
+export interface Task extends TaskFields {
+  id: string;
+  recurrence_start: DateKey | null;
+  created_by: string | null;
+  updated_by: string | null;
+  completed_at: string | null;
+  completed_by: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  checklist: ChecklistItem[];
+  participant_ids: string[];
+  my_alerts: number[];
+  /** Dia em que a pessoa pretende fazer a tarefa ("Meu dia"). */
+  plan_day: DateKey | null;
+  last_completed_at: string | null;
+  comment_count: number;
+  /** Somente no app: alterações ainda não enviadas. */
+  pending?: boolean;
+}
+
+export interface TaskList {
+  id: string;
+  calendar_id: string | null;
+  name: string;
+  color: string | null;
+  icon: string | null;
+  position: number;
+  created_by: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  pending?: boolean;
+}
+
+export interface Note {
+  id: string;
+  calendar_id: string | null;
+  title: string | null;
+  body: string;
+  pinned: boolean;
+  event_id: string | null;
+  task_id: string | null;
+  created_by: string | null;
+  updated_by: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  pending?: boolean;
+}
+
+export type HabitStatus = 'active' | 'paused' | 'archived';
+
+export interface Habit {
+  id: string;
+  calendar_id: string | null;
+  title: string;
+  description: string | null;
+  color: string | null;
+  recurrence_rule: string;
+  start_date: DateKey;
+  status: HabitStatus;
+  show_streak: boolean;
+  created_by: string | null;
+  version: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string | null;
+  logs: { user_id: string; day: DateKey }[];
+  pending?: boolean;
+}
+
+export interface TaskComment {
+  id: string;
+  author_id: string | null;
+  author_name: string;
+  author_color: string;
+  body: string | null;
+  created_at: string;
+  edited_at: string | null;
+  deleted_at: string | null;
+  is_mine: boolean;
+}
+
+export interface TaskHistoryEntry {
+  kind: 'activity' | 'completion';
+  action?: string;
+  details?: Record<string, unknown>;
+  occurrence_date?: DateKey | null;
+  at: string;
+  actor_name: string;
+}
+
+export type PollAnswer = 'yes' | 'maybe' | 'no';
+
+export interface Poll {
+  id: string;
+  calendar_id: string;
+  title: string;
+  description: string | null;
+  duration_minutes: number;
+  timezone: string;
+  status: 'open' | 'closed' | 'scheduled';
+  closes_at: string | null;
+  chosen_option_id: string | null;
+  event_id: string | null;
+  created_by: string | null;
+  created_by_name: string;
+  created_at: string;
+  participants: { user_id: string; display_name: string }[];
+  options: {
+    id: string;
+    starts_at: string;
+    ends_at: string;
+    votes: { user_id: string; answer: PollAnswer }[];
+  }[];
+}
+
+/** Horário ocupado de alguém (sem título nem detalhes). */
+export interface BusyEvent {
+  user_id: string;
+  starts_at: string;
+  ends_at: string;
+  all_day: boolean;
+  start_date: DateKey | null;
+  end_date: DateKey | null;
+  timezone: string;
+  recurrence_rule: string | null;
+  exceptions: Pick<RecurrenceException, 'original_date' | 'is_cancelled' | 'starts_at' | 'ends_at'>[];
+}
+
+export interface MyItems {
+  lists: TaskList[];
+  tasks: Task[];
+  notes: Note[];
+  habits: Habit[];
+  checkins: DateKey[];
 }

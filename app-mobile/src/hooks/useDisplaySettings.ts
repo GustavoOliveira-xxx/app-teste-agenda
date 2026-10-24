@@ -10,6 +10,9 @@ export interface DisplaySettings {
   dateFormat: DateFormat;
   timeFormat: TimeFormat;
   weekStartsOn: 0 | 1;
+  /** Janela do dia para horários livres e planejador (HH:MM). */
+  dayStart: string;
+  dayEnd: string;
 }
 
 /** Fuso e formatos de exibição escolhidos pela pessoa (ou os do celular). */
@@ -21,6 +24,8 @@ export function useDisplaySettings(): DisplaySettings {
       dateFormat: prefs?.date_format ?? 'dd/MM/yyyy',
       timeFormat: prefs?.time_format ?? '24h',
       weekStartsOn: prefs?.week_starts_on ?? 0,
+      dayStart: (prefs?.day_start ?? '08:00').slice(0, 5),
+      dayEnd: (prefs?.day_end ?? '22:00').slice(0, 5),
     }),
     [prefs],
   );

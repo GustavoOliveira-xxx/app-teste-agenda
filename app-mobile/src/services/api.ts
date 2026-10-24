@@ -4,6 +4,7 @@ import type {
   Account,
   ActivityEntry,
   AppNotification,
+  BusyEvent,
   Calendar,
   CalendarEvent,
   CreatedInvitation,
@@ -13,7 +14,13 @@ import type {
   InvitationPreview,
   InvitationSummary,
   Member,
+  MyItems,
   NotificationPreferences,
+  Poll,
+  PollAnswer,
+  Task,
+  TaskComment,
+  TaskHistoryEntry,
   ReceivedInvitation,
   Role,
   UserPreferences,
@@ -351,4 +358,129 @@ export async function markNotificationsRead(ids?: string[]) {
 
 export async function deleteReadNotifications() {
   unwrap(await supabase.from('notifications').delete().not('read_at', 'is', null));
+}
+
+// ------------------------------------- tarefas, listas, anotações, hábitos
+
+export async function listMyItems(doneSince?: Date): Promise<MyItems> {
+  return unwrap(
+    await supabase.rpc('list_my_items', { p_done_since: doneSince ? doneSince.toISOString() : null }),
+  ) as MyItems;
+}
+
+export interface ItemOpResult {
+  status: 'ok' | 'conflict' | 'error';
+  code?: string;
+  reason?: 'version' | 'deleted';
+  task?: Record<string, unknown>;
+  list?: Record<string, unknown>;
+  note?: Record<string, unknown>;
+  habit?: Record<string, unknown>;
+  replayed?: boolean;
+}
+
+export async function applyItemOp(args: {
+  opId: string;
+  entity: string;
+  kind: string;
+  id: string;
+  payload: Record<string, unknown>;
+  baseVersion: number | null;
+  origin: 'app' | 'offline_sync';
+}): Promise<ItemOpResult> {
+  return unwrap(
+    await supabase.rpc('apply_item_op', {
+      p_op_id: args.opId,
+      p_entity: args.entity,
+      p_kind: args.kind,
+      p_id: args.id,
+      p_payload: args.payload,
+      p_base_version: args.baseVersion,
+      p_origin: args.origin,
+    }),
+  ) as ItemOpResult;
+}
+
+export async function listDoneTasks(before: string | null, limit = 50): Promise<Task[]> {
+  return unwrap(await supabase.rpc('list_done_tasks', { p_before: before, p_limit: limit })) as Task[];
+}
+
+export async function listTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
+  return unwrap(await supabase.rpc('list_task_history', { p_task_id: taskId })) as TaskHistoryEntry[];
+}
+
+export async function listTaskComments(taskId: string): Promise<TaskComment[]> {
+  return unwrap(await supabase.rpc('list_task_comments', { p_task_id: taskId })) as TaskComment[];
+}
+
+export async function addTaskComment(taskId: string, body: string) {
+  unwrap(await supabase.rpc('add_task_comment', { p_task_id: taskId, p_body: body }));
+}
+
+export async function deleteTaskComment(id: string) {
+  unwrap(await supabase.rpc('delete_task_comment', { p_comment_id: id }));
+}
+
+// --------------------------------------------- encontrar horário e enquetes
+
+export async function listBusyTimes(
+  calendarId: string,
+  userIds: string[],
+  from: Date,
+  to: Date,
+): Promise<BusyEvent[]> {
+  return unwrap(
+    await supabase.rpc('list_busy_times', {
+      p_calendar_id: calendarId,
+      p_user_ids: userIds,
+      p_from: from.toISOString(),
+      p_to: to.toISOString(),
+    }),
+  ) as BusyEvent[];
+}
+
+export async function createPoll(args: {
+  calendarId: string;
+  title: string;
+  description: string | null;
+  durationMinutes: number;
+  timezone: string;
+  closesAt: string | null;
+  participantIds: string[];
+  options: { starts_at: string; ends_at: string }[];
+}): Promise<string> {
+  return unwrap(
+    await supabase.rpc('create_poll', {
+      p_calendar_id: args.calendarId,
+      p_title: args.title,
+      p_description: args.description,
+      p_duration_minutes: args.durationMinutes,
+      p_timezone: args.timezone,
+      p_closes_at: args.closesAt,
+      p_participant_ids: args.participantIds,
+      p_options: args.options,
+    }),
+  ) as string;
+}
+
+export async function listPolls(calendarId: string): Promise<Poll[]> {
+  return unwrap(await supabase.rpc('list_polls', { p_calendar_id: calendarId })) as Poll[];
+}
+
+export async function votePoll(optionId: string, answer: PollAnswer) {
+  unwrap(await supabase.rpc('vote_poll', { p_option_id: optionId, p_answer: answer }));
+}
+
+export async function closePoll(
+  pollId: string,
+  optionId: string | null,
+  createEvent: boolean,
+): Promise<{ ok: boolean; event_id: string | null }> {
+  return unwrap(
+    await supabase.rpc('close_poll', {
+      p_poll_id: pollId,
+      p_option_id: optionId,
+      p_create_event: createEvent,
+    }),
+  ) as { ok: boolean; event_id: string | null };
 }

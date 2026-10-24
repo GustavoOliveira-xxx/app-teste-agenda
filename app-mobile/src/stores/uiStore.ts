@@ -6,8 +6,19 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 
 import type { DateKey } from '@/models/types';
 import { DEFAULT_FILTERS, type EventFilters } from '@/utils/filters';
+import { DEFAULT_TASK_FILTERS, type SmartView, type TaskFilters, type TaskSort } from '@/utils/tasks';
 
 export type CalendarViewMode = 'month' | 'week' | 'day' | 'list';
+
+/** Visão da aba Tarefas: uma visão inteligente ou uma lista (`list:<id>`). */
+export type TaskViewKey = SmartView | `list:${string}`;
+
+/** Tipos mostrados no calendário. */
+export interface CalendarLayers {
+  events: boolean;
+  tasks: boolean;
+  reminders: boolean;
+}
 
 interface UiState {
   onboardingDone: boolean;
@@ -15,7 +26,21 @@ interface UiState {
   selectedDate: DateKey | null;
   filters: EventFilters;
   listTab: 'upcoming' | 'past';
+  taskView: TaskViewKey;
+  taskSort: TaskSort;
+  taskFilters: TaskFilters;
+  layers: CalendarLayers;
+  /** Seções recolhidas na tela Hoje. */
+  collapsed: string[];
+  /** Dia em que a pessoa tocou "Agora não" na pergunta do dia. */
+  planDismissedOn: DateKey | null;
+  setPlanDismissedOn: (day: DateKey | null) => void;
   setOnboardingDone: () => void;
+  setTaskView: (view: TaskViewKey) => void;
+  setTaskSort: (sort: TaskSort) => void;
+  setTaskFilters: (filters: TaskFilters) => void;
+  setLayers: (layers: CalendarLayers) => void;
+  toggleCollapsed: (key: string) => void;
   setViewMode: (mode: CalendarViewMode) => void;
   setSelectedDate: (date: DateKey) => void;
   setFilters: (filters: EventFilters) => void;
@@ -31,7 +56,22 @@ export const useUiStore = create<UiState>()(
       selectedDate: null,
       filters: DEFAULT_FILTERS,
       listTab: 'upcoming',
+      taskView: 'today',
+      taskSort: 'due',
+      taskFilters: DEFAULT_TASK_FILTERS,
+      layers: { events: true, tasks: true, reminders: true },
+      collapsed: [],
+      planDismissedOn: null,
+      setPlanDismissedOn: (planDismissedOn) => set({ planDismissedOn }),
       setOnboardingDone: () => set({ onboardingDone: true }),
+      setTaskView: (taskView) => set({ taskView }),
+      setTaskSort: (taskSort) => set({ taskSort }),
+      setTaskFilters: (taskFilters) => set({ taskFilters }),
+      setLayers: (layers) => set({ layers }),
+      toggleCollapsed: (key) =>
+        set((s) => ({
+          collapsed: s.collapsed.includes(key) ? s.collapsed.filter((k) => k !== key) : [...s.collapsed, key],
+        })),
       setViewMode: (viewMode) => set({ viewMode }),
       setSelectedDate: (selectedDate) => set({ selectedDate }),
       setFilters: (filters) => set({ filters }),
@@ -41,7 +81,16 @@ export const useUiStore = create<UiState>()(
     {
       name: 'ui-preferences-v1',
       storage: createJSONStorage(() => AsyncStorage),
-      partialize: (s) => ({ onboardingDone: s.onboardingDone, viewMode: s.viewMode, listTab: s.listTab }),
+      partialize: (s) => ({
+        onboardingDone: s.onboardingDone,
+        viewMode: s.viewMode,
+        listTab: s.listTab,
+        taskView: s.taskView,
+        taskSort: s.taskSort,
+        layers: s.layers,
+        collapsed: s.collapsed,
+        planDismissedOn: s.planDismissedOn,
+      }),
     },
   ),
 );
