@@ -113,7 +113,12 @@ export function commonFree(
 }
 
 /** Opções de início dentro dos horários livres (de 30 em 30 minutos). */
-export function startOptions(slots: FreeSlot[], durationMinutes: number, stepMinutes = 30, max = 20): Interval[] {
+export function startOptions(
+  slots: FreeSlot[],
+  durationMinutes: number,
+  stepMinutes = 30,
+  max = 20,
+): Interval[] {
   const step = stepMinutes * 60_000;
   const length = durationMinutes * 60_000;
   const out: Interval[] = [];

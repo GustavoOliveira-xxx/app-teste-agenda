@@ -66,19 +66,25 @@ export function TaskCheck({
   const fill = useSharedValue(done ? 1 : 0);
   const pop = useSharedValue(1);
   useEffect(() => {
-    fill.value = reduceMotion ? withTiming(done ? 1 : 0, { duration: 120 }) : withSpring(done ? 1 : 0, motion.mola);
+    fill.value = reduceMotion
+      ? withTiming(done ? 1 : 0, { duration: 120 })
+      : withSpring(done ? 1 : 0, motion.mola);
   }, [done, reduceMotion, fill]);
   const boxStyle = useAnimatedStyle(() => ({
     backgroundColor: fill.value > 0.5 ? colors.primary : 'transparent',
     transform: [{ scale: pop.value }],
   }));
-  const checkStyle = useAnimatedStyle(() => ({ opacity: fill.value, transform: [{ scale: 0.5 + 0.5 * fill.value }] }));
+  const checkStyle = useAnimatedStyle(() => ({
+    opacity: fill.value,
+    transform: [{ scale: 0.5 + 0.5 * fill.value }],
+  }));
   return (
     <Pressable
       onPress={() => {
         if (disabled) return;
         tapFeedback(done ? 'light' : 'success');
-        if (!reduceMotion) pop.set(withSequence(withTiming(0.86, { duration: 80 }), withSpring(1, motion.mola)));
+        if (!reduceMotion)
+          pop.set(withSequence(withTiming(0.86, { duration: 80 }), withSpring(1, motion.mola)));
         onPress();
       }}
       hitSlop={8}
@@ -138,7 +144,11 @@ export const TaskRow = memo(function TaskRow({
     task.priority ? strings.tasks.priorities[task.priority] : '',
     ...meta,
     task.recurrence_rule ? strings.tasks.recurring : '',
-    assignee ? (assignee.isMe ? strings.tasks.assignedToMe : t('tasks.assignedTo', { name: assignee.name })) : '',
+    assignee
+      ? assignee.isMe
+        ? strings.tasks.assignedToMe
+        : t('tasks.assignedTo', { name: assignee.name })
+      : '',
     task.pending ? strings.tasks.pendingBadge : '',
   ]
     .filter(Boolean)
@@ -169,14 +179,13 @@ export const TaskRow = memo(function TaskRow({
       />
       <View style={styles.body}>
         <View style={styles.titleRow}>
-          {task.item_type === 'reminder' && <Icon name="notifications-outline" size={15} color={colors.textMuted} />}
+          {task.item_type === 'reminder' && (
+            <Icon name="notifications-outline" size={15} color={colors.textMuted} />
+          )}
           <AppText
             variant="bodyMd"
             numberOfLines={2}
-            style={[
-              styles.title,
-              done && { textDecorationLine: 'line-through', color: colors.textMuted },
-            ]}
+            style={[styles.title, done && { textDecorationLine: 'line-through', color: colors.textMuted }]}
           >
             {task.title}
           </AppText>

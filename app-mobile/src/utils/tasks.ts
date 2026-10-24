@@ -1,14 +1,7 @@
 // Regras de tarefas e lembretes usadas pelas telas: prazos, atraso, visões
 // inteligentes, filtros e ordenação. Funções puras (testadas em __tests__).
 import { interpolate, strings } from '@/i18n';
-import type {
-  DateKey,
-  ItemType,
-  Task,
-  TaskPriority,
-  TaskStatus,
-  TimeFormat,
-} from '@/models/types';
+import type { DateKey, ItemType, Task, TaskPriority, TaskStatus, TimeFormat } from '@/models/types';
 
 import {
   addDaysToKey,

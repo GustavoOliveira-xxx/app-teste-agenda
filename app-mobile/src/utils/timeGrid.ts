@@ -49,7 +49,7 @@ export function layoutDay(items: GridInput[], day: DateKey, timezone: string): G
     .sort((a, b) => a.top - b.top || b.bottom - a.bottom);
 
   const out: GridBox[] = [];
-  let cluster: (typeof pieces[number] & { lane: number })[] = [];
+  let cluster: ((typeof pieces)[number] & { lane: number })[] = [];
   let clusterEnd = -1;
   const flush = () => {
     const lanes = Math.max(1, ...cluster.map((c) => c.lane + 1));

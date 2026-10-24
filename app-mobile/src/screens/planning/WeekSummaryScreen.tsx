@@ -22,13 +22,13 @@ import { t } from '@/i18n';
 import { useAppTheme } from '@/theme/ThemeProvider';
 import { radius, spacing } from '@/theme/tokens';
 import {
+  addDaysToKey,
   capitalize,
   formatLongDate,
   formatShortDate,
   formatTime,
   toDateKey,
   todayKey,
-  weekKeys,
 } from '@/utils/dates';
 import { describeDue } from '@/utils/tasks';
 import { summarizeWeek } from '@/utils/weekSummary';
@@ -52,7 +52,8 @@ export default function WeekSummaryScreen() {
   const display = useDisplaySettings();
   const focused = useScreenFocus();
   const today = todayKey(display.timezone);
-  const days = useMemo(() => weekKeys(today, display.weekStartsOn), [today, display.weekStartsOn]);
+  // Sempre os próximos 7 dias a partir de hoje: no fim de semana o resumo já olha a semana seguinte.
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDaysToKey(today, i)), [today]);
   const { slots, occurrences } = useFreeSlots(days, 30);
   const tasks = useTasks();
   const calendars = useCalendarsMap();

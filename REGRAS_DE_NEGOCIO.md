@@ -65,6 +65,16 @@ Cada regra de negócio, onde ela é garantida e qual teste automático a comprov
 | A11 | Seed de demonstração só roda em banco sem usuários | Proteção contra contas de teste em produção |
 | A12 | Ao sair da conta, todos os dados locais são apagados | Privacidade em aparelho compartilhado |
 | A13 | Máximo de 5 lembretes por evento, 100 participantes e 20 aparelhos por pessoa | Limites razoáveis contra abuso |
+| A14 | Tarefa, lista, anotação ou hábito sem agenda é só de quem criou | Dividir uma agenda com alguém não abre a sua vida pessoal |
+| A15 | O responsável por uma tarefa pode concluí-la, reabri-la e marcar subtarefas, mesmo sem poder editar o resto | Quem faz a tarefa precisa dar baixa nela |
+| A16 | Concluir todas as subtarefas não conclui a tarefa sozinho; o app pergunta | Às vezes a lista acaba e ainda falta conferir algo |
+| A17 | Tarefa que se repete avança uma vez por ocorrência, mesmo concluída em dois aparelhos | Evita pular datas |
+| A18 | Alertas, "Meu dia" e a resposta da pergunta diária são pessoais | Cada pessoa planeja o próprio dia |
+| A19 | Responsável e participantes de tarefa precisam ser membros ativos da agenda; quem sai perde tudo daquela agenda na hora | Mesma regra dos eventos |
+| A20 | Uma tarefa só entra numa lista da mesma agenda | Evita que a tarefa apareça para quem não deveria |
+| A21 | "Encontrar horário" mostra só horários ocupados; outras agendas só com autorização da pessoa | Combinar horário sem espiar a agenda dos outros |
+| A22 | O evento de uma enquete só é criado quando quem abriu a enquete escolhe o horário | Nada entra na agenda sem decisão de alguém |
+| A23 | Planejador e sugestões nunca mudam compromissos sozinhos | A pessoa revisa e confirma |
 
 ## Papéis e permissões (resumo)
 
@@ -82,6 +92,27 @@ Cada regra de negócio, onde ela é garantida e qual teste automático a comprov
 | Arquivar, lixeira, excluir agenda, transferir | ✓ | | | | |
 | Ver histórico administrativo | ✓ | ✓ | | | |
 | Sair da agenda | após transferir | ✓ | ✓ | ✓ | ✓ |
+
+## Tarefas e lembretes por papel (3.0)
+
+| Ação numa agenda compartilhada | Proprietário | Administrador | Editor | Colaborador | Visualizador |
+|---|:-:|:-:|:-:|:-:|:-:|
+| Ver tarefas permitidas (conforme a privacidade de cada uma) | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Criar tarefas, lembretes, listas, anotações e hábitos | ✓ | ✓ | ✓ | ✓ | |
+| Editar tarefas de outras pessoas | ✓ | ✓ | ✓ (se a agenda permitir) | | |
+| Editar as próprias tarefas | ✓ | ✓ | ✓ | ✓ | |
+| Concluir uma tarefa atribuída a si | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Comentar em tarefas | ✓ | ✓ | ✓ | ✓ | se for o responsável |
+| Ver tarefas "só participantes" sem participar | ✓ | ✓ | | | |
+| Abrir enquete de horário | ✓ | ✓ | ✓ | ✓ | |
+
+## Validações de tarefa (app e servidor)
+
+- Título obrigatório (1 a 200 caracteres); descrição até 5.000.
+- Horário só com data de prazo; início não depois do prazo; repetição exige prazo.
+- Repetição "depois da conclusão" aceita só o intervalo (sem dias da semana, dia do mês, fim por data ou quantidade).
+- Prioridade de 0 (sem) a 4 (urgente); estimativa de 5 minutos a 24 horas.
+- Até 5 links (`http://` ou `https://`), 10 etiquetas de até 30 caracteres, 100 subtarefas, 50 participantes e 5 alertas por pessoa.
 
 ## Status e validações de convites
 

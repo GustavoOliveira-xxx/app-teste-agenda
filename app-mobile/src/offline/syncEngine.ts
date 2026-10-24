@@ -45,17 +45,19 @@ const uid = () => useAuthStore.getState().session?.user.id ?? null;
 // ---------------------------------------------------------------------
 
 export async function loadLocalState(userId: string): Promise<void> {
-  const [calendars, events, members, window, notifications, outbox, account, meta, items] = await Promise.all([
-    readJSON(storageKeys.calendars(userId), []),
-    readJSON(storageKeys.events(userId), {}),
-    readJSON(storageKeys.members(userId), {}),
-    readJSON(storageKeys.window(userId), null),
-    readJSON(storageKeys.notifications(userId), []),
-    readJSON<OutboxOp[]>(storageKeys.outbox(userId), []),
-    readJSON<Account | null>(storageKeys.account(userId), null),
-    readJSON<{ lastSyncAt: string | null }>(storageKeys.syncMeta(userId), { lastSyncAt: null }),
-    readJSON<StoredItems | null>(storageKeys.items(userId), null),
-  ]);
+  const [calendars, events, members, window, notifications, outbox, account, meta, items] = await Promise.all(
+    [
+      readJSON(storageKeys.calendars(userId), []),
+      readJSON(storageKeys.events(userId), {}),
+      readJSON(storageKeys.members(userId), {}),
+      readJSON(storageKeys.window(userId), null),
+      readJSON(storageKeys.notifications(userId), []),
+      readJSON<OutboxOp[]>(storageKeys.outbox(userId), []),
+      readJSON<Account | null>(storageKeys.account(userId), null),
+      readJSON<{ lastSyncAt: string | null }>(storageKeys.syncMeta(userId), { lastSyncAt: null }),
+      readJSON<StoredItems | null>(storageKeys.items(userId), null),
+    ],
+  );
   useDataStore.getState().set({
     calendars,
     events,
@@ -187,14 +189,19 @@ async function processItemOp(op: OutboxOp): Promise<'continue' | 'stop'> {
   });
   const kind = op.entity in STORE_KIND ? STORE_KIND[op.entity as keyof typeof STORE_KIND] : null;
   const item = (res.task ?? res.list ?? res.note ?? res.habit) as
-    | ({ id: string; version?: number; deleted_at?: string | null } & Record<string, unknown>)
-    | undefined;
+    ({ id: string; version?: number; deleted_at?: string | null } & Record<string, unknown>) | undefined;
 
   if (res.status === 'conflict' && item && kind) {
     useDataStore.getState().upsertItems(kind, [item]);
     countMetric('conflicts');
     if (op.kind === 'update' && res.reason === 'version' && op.baseSnapshot) {
-      const merge = mergeFields(op.baseSnapshot, op.payload, item, op.entity === 'task' ? DUE_GROUP : [], 'due');
+      const merge = mergeFields(
+        op.baseSnapshot,
+        op.payload,
+        item,
+        op.entity === 'task' ? DUE_GROUP : [],
+        'due',
+      );
       if (merge.conflicts.length === 0) {
         const keys = Object.keys(merge.payload);
         await setOutbox(

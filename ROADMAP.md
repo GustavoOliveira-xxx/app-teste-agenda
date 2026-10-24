@@ -1,6 +1,22 @@
 # Roadmap
 
-O que fica para depois da primeira versão, com o impacto de cada item. A arquitetura já foi pensada para eles: o app fala com o servidor por uma única camada (`app-mobile/src/services`), o banco é SQL padrão versionado e todas as datas são guardadas em UTC com fuso IANA (o mesmo formato usado por Google, Apple e Outlook).
+O que fica para as próximas versões, com o impacto de cada item. A arquitetura já foi pensada para eles: o app fala com o servidor por uma única camada (`app-mobile/src/services`), o banco é SQL padrão versionado e todas as datas são guardadas em UTC com fuso IANA (o mesmo formato usado por Google, Apple e Outlook).
+
+## Entregue até a 3.0.0
+
+Saíram desta lista: lembretes na versão web (Web Push, 2.0), login com Google (2.0), exportação e importação de arquivos .ics (3.0), tarefas, lembretes avulsos, planejamento do dia e da semana, horário em comum e enquetes (3.0). Detalhes no [CHANGELOG.md](CHANGELOG.md).
+
+## Próximos passos da 3.x
+
+| Item | Situação | Próximo passo |
+|---|---|---|
+| Validar a 3.0 no aparelho | Testes automáticos passam; notificações e uso por duas pessoas ainda não foram vistos num Android real | Roteiros A, B e C de [docs/VALIDACAO_3.0.md](docs/VALIDACAO_3.0.md) |
+| Assinatura de calendário (.ics por link) | Exportação manual pronta | Link secreto por agenda, revogável, numa Edge Function (tabela `calendar_feeds`) |
+| Importar .ics escolhendo o arquivo no Android | No Android importa-se colando o conteúdo; no navegador, escolhendo o arquivo | `expo-document-picker` (não pede permissão nova) |
+| Exceções de séries importadas | Exclusões e ocorrências alteradas de outro app não são importadas | Ler `EXDATE` e `RECURRENCE-ID` e criar as exceções |
+| Repetições avançadas | "Segunda terça do mês", último dia do mês | Ampliar o subconjunto de RRULE no app, no banco e nos testes compartilhados |
+| Anexos em tarefas e anotações | Só texto e links | Storage com bucket privado (mesmas regras dos comentários) |
+| Sugestões mais finas no "O que você pretende fazer hoje?" | Regras fixas: hábitos, repetições e o que você costuma concluir | Considerar horário habitual e duração; continuar sem IA paga |
 
 ## Prioridades sugeridas
 
@@ -8,10 +24,8 @@ O que fica para depois da primeira versão, com o impacto de cada item. A arquit
 |---|---|---|
 | **Alta** | Envio de e-mail de convite e SMTP próprio | Convidar por e-mail sem depender do código |
 | **Alta** | Push remoto no Android (Firebase Cloud Messaging) | Avisar na hora quando alguém muda um evento, com o app Android fechado (iPhone e computador já recebem pelo navegador desde a 2.0) |
-| **Alta** | Lembretes na versão web (Web Push) | Lembretes que tocam no iPhone (app instalado na tela de início, iOS 16.4 ou mais novo) e no computador |
-| **Alta** | Exportação ICS (e assinatura de calendário) | Ver os eventos no Google Agenda ou no calendário do iPhone sem integração complexa |
+| **Alta** | Assinatura de calendário (.ics por link) | Ver os eventos no Google Agenda ou no calendário do iPhone sempre atualizados (a exportação manual já existe desde a 3.0) |
 | **Alta** | Publicação na Play Store | Instalação e atualização mais fáceis e confiáveis |
-| Média | Login com Google | Cadastro em um toque |
 | Média | Autenticação em dois fatores (2FA) | Mais segurança para quem quiser |
 | Média | Exportação CSV | Planilhas e relatórios |
 | Média | Anexos | Receitas, ingressos, comprovantes |
@@ -58,7 +72,9 @@ Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos
 
 ### Exportação ICS
 
-- **Dependências:** gerar arquivos `.ics` (RFC 5545). O modelo de recorrência já usa o mesmo formato (RRULE), então a conversão é direta. Para "assinar" o calendário, uma Edge Function que responde um link secreto por agenda.
+**Situação:** exportar e importar arquivos ficou pronto na 3.0 (DECISOES.md, D38). Falta a assinatura por link.
+
+- **Dependências:** para "assinar" o calendário, uma Edge Function que responde um link secreto por agenda, reaproveitando `utils/ics.ts`.
 - **Riscos:** o link de assinatura dá acesso de leitura a quem o tiver; precisa ser revogável e respeitar a privacidade dos eventos (privados e "ocupado" não podem vazar).
 - **Permissões:** nenhuma (o compartilhamento usa a folha de compartilhar do sistema).
 - **Privacidade:** o arquivo sai do app; mostrar aviso. O link de assinatura deve ser opt-in, com expiração.
@@ -149,6 +165,8 @@ Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos
 
 ### Login com Google
 
+**Situação:** pronto desde a 2.0 (DECISOES.md, D28). Mantido aqui como referência.
+
 - **Dependências:** provedor Google no Supabase Auth, projeto no Google Cloud, `expo-auth-session` ou Google Sign-In nativo, App Links.
 - **Riscos:** configuração de impressões digitais (SHA-1) da chave de assinatura; contas duplicadas (mesmo e-mail com senha e com Google).
 - **Permissões:** nenhuma.
@@ -182,7 +200,6 @@ Legenda de custo: **gratuito** (dentro dos planos gratuitos para grupos pequenos
 | Item | Situação atual | Próximo passo |
 |---|---|---|
 | Push remoto | Lembretes locais e central de avisos no app | FCM + tabela de tokens (já existe `devices`) + Edge Function ou gatilho que envia ao criar um aviso. Exige liberar a permissão de push do Google (hoje bloqueada, ver [DECISOES.md, D22](DECISOES.md#d22-lista-fechada-de-permissões-do-android)) |
-| Lembretes na versão web | Os lembretes ficam salvos, mas não tocam no navegador; o app avisa isso | Web Push: chaves VAPID (segredo só no servidor), tabela de inscrições por aparelho, Edge Function que envia, e agendamento (`pg_cron`) que dispara os lembretes no horário. Custo: gratuito para volume baixo. Privacidade: o endereço de push do navegador é um dado do aparelho; apagar ao sair |
 | App nativo de iPhone | Código compatível, não compilado; no iPhone usa-se a versão web instalável | Conta Apple Developer (paga), EAS Build, TestFlight, testes de notificações e do cofre de senhas no iPhone ([GUIA_DE_DEPLOY.md, parte 7](GUIA_DE_DEPLOY.md#parte-7-app-nativo-para-iphone-app-store)) |
 | Play Store | AAB gerado | Ficha da loja, teste fechado ([GUIA_DE_DEPLOY.md, parte 5](GUIA_DE_DEPLOY.md#parte-5-google-play-store)) |
 | Foto de perfil | Avatar com iniciais e cor | Storage + seletor de imagem do sistema |

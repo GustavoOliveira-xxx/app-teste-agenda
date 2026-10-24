@@ -108,13 +108,13 @@ Depois de instalar, volte em **Configurações > Apps > Acesso especial > Instal
 
 O app do Android **não se atualiza sozinho** (ele não vem da Play Store). A partir da versão 1.2.0, quando sai uma versão nova, o app avisa ao abrir ("Há uma versão nova do app") e mostra **Baixar versão nova** no Perfil. Tocar ali baixa o APK novo.
 
-1. Baixe o APK mais novo pelo aviso ou pela página Releases (passos 1 a 5). O Android vai mostrar da página Releases (passos 1 a 5). **"Deseja instalar uma atualização?"**. Toque em **Instalar**.
-2. Seus dados continuam: eles ficam no servidor e o app sincroniza de novo.
+1. Baixe o APK mais novo pelo aviso ou pela página Releases (passos 1 a 5). O Android vai perguntar **"Deseja instalar uma atualização?"**. Toque em **Instalar**.
+2. Seus dados continuam: eles ficam no servidor e o app sincroniza de novo. Da 2.0 para a 3.0 nada muda nos seus eventos e agendas: aparece a aba **Tarefas** e, na primeira abertura do dia, a pergunta **"O que você pretende fazer hoje?"** (dá para desligar em **Perfil > Preferências**).
 3. Se aparecer **"App não instalado"** ou **"o pacote está em conflito"**, o APK novo foi assinado com outra chave (por exemplo, a versão de testes foi trocada pela versão com chave própria). Desinstale a versão antiga e instale a nova. Os dados estão no servidor; alterações feitas offline e ainda não enviadas serão perdidas, então abra o app com internet antes de desinstalar.
 
 ### Como ver a versão instalada
 
-- No app: no fim da tela **Perfil** aparece, por exemplo, "Versão 1.0.0 (build 4)". A tela **Perfil > Diagnóstico** mostra o mesmo.
+- No app: no fim da tela **Perfil** aparece, por exemplo, "Versão 3.0.0 (build 25)". A tela **Perfil > Diagnóstico** mostra o mesmo.
 - No Android: **Configurações > Apps > SynCK** (a versão aparece no final da página).
 
 ### Como desinstalar
@@ -160,7 +160,7 @@ Se você instalou pelo APK de testes, será preciso desinstalar antes de instala
 
 ### O que muda em relação ao app Android
 
-- **Lembretes e avisos chegam como notificação** depois de ativar em **Perfil > Notificações > Notificações neste navegador**. No iPhone, isso só aparece abrindo pelo ícone da Tela de Início. Mudanças feitas por outras pessoas também ficam no sino da tela **Hoje**.
+- **Lembretes, alertas de tarefas e avisos chegam como notificação** depois de ativar em **Perfil > Notificações > Notificações neste navegador**. No iPhone, isso só aparece abrindo pelo ícone da Tela de Início. Mudanças feitas por outras pessoas também ficam no sino da tela **Hoje**.
 - Use sempre o **ícone instalado**: o iPhone pode apagar os dados de sites que ficam muitas semanas sem uso no Safari, e isso não acontece com apps adicionados à tela de início.
 - Em **computador compartilhado**, toque em **Perfil > Sair** ao terminar: os dados ficam guardados no navegador.
 

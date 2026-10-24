@@ -49,13 +49,10 @@ export interface TaskForm {
   timezone: string;
 }
 
-export type TaskFormField = 'title' | 'description' | 'due' | 'start' | 'recurrence' | 'links' | 'tags' | 'alerts';
+export type TaskFormField =
+  'title' | 'description' | 'due' | 'start' | 'recurrence' | 'links' | 'tags' | 'alerts';
 
-export function newTaskForm(
-  itemType: ItemType,
-  timezone: string,
-  options: Partial<TaskForm> = {},
-): TaskForm {
+export function newTaskForm(itemType: ItemType, timezone: string, options: Partial<TaskForm> = {}): TaskForm {
   return {
     itemType,
     title: '',
@@ -129,7 +126,8 @@ export function validateTaskForm(form: TaskForm): FieldErrors<TaskFormField> {
   if (form.dueDate && !isValidDateKey(form.dueDate)) e.due = t('validation.invalidDate');
   if (form.dueTime && !form.dueDate) e.due = t('tasks.addDue');
   if (form.itemType === 'reminder' && !form.dueDate && form.recurrence) e.due = t('tasks.repeatNeedsDate');
-  if (form.startDate && form.dueDate && form.startDate > form.dueDate) e.start = t('validation.endBeforeStart');
+  if (form.startDate && form.dueDate && form.startDate > form.dueDate)
+    e.start = t('validation.endBeforeStart');
   if (form.recurrence) {
     if (!form.dueDate) e.recurrence = t('tasks.repeatNeedsDate');
     else if (!isValidForMode(serializeRule(form.recurrence), form.recurrenceMode))

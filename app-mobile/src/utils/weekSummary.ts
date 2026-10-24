@@ -37,7 +37,9 @@ export function summarizeWeek(input: {
   const deadlines = open
     .filter((t) => t.due_date && compareKeys(t.due_date, first) >= 0 && compareKeys(t.due_date, last) <= 0)
     .sort((a, b) => a.due_date!.localeCompare(b.due_date!));
-  const overdue = open.filter((t) => isOverdue(t, input.today, input.now) && compareKeys(t.due_date!, input.today) < 0);
+  const overdue = open.filter(
+    (t) => isOverdue(t, input.today, input.now) && compareKeys(t.due_date!, input.today) < 0,
+  );
   const freeMinutes = input.slots.reduce((s, x) => s + x.minutes, 0);
   const conflicts = conflictingKeys(events.filter((o) => !o.allDay)).size;
   const suggestions: WeekSummary['suggestions'] = [];

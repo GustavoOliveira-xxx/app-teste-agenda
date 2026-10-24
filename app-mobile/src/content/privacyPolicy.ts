@@ -1,6 +1,6 @@
 // Resumo da política de privacidade mostrado no app. O texto completo está
 // em POLITICA_DE_PRIVACIDADE.md (modelo técnico inicial, sujeito a revisão jurídica).
-export const PRIVACY_POLICY_VERSION = '1.0 (outubro de 2026)';
+export const PRIVACY_POLICY_VERSION = '1.1 (outubro de 2026)';
 
 export const PRIVACY_POLICY: { title: string; body: string }[] = [
   {
@@ -9,7 +9,7 @@ export const PRIVACY_POLICY: { title: string; body: string }[] = [
   },
   {
     title: 'Quais dados coletamos',
-    body: 'Nome, e-mail, senha (guardada apenas como hash pelo provedor de autenticação), preferências (fuso, formatos, tema, notificações), agendas, eventos, comentários, lembretes, histórico de alterações e informações básicas do aparelho (modelo, sistema e versão do app) para a lista de aparelhos conectados.',
+    body: 'Nome, e-mail, senha (guardada apenas como hash pelo provedor de autenticação), preferências (fuso, formatos, tema, notificações, janela do seu dia), agendas, eventos, tarefas, lembretes, listas, anotações, hábitos, o que você planejou para o dia, votos em enquetes de horário, comentários, histórico de alterações e informações básicas do aparelho (modelo, sistema e versão do app) para a lista de aparelhos conectados.',
   },
   {
     title: 'Para que usamos',
@@ -21,11 +21,11 @@ export const PRIVACY_POLICY: { title: string; body: string }[] = [
   },
   {
     title: 'Quem pode ver',
-    body: 'Membros de uma agenda veem o nome e a cor do avatar uns dos outros, e os eventos conforme a privacidade de cada evento. Seu e-mail não é mostrado aos outros membros.',
+    body: 'Membros de uma agenda veem o nome e a cor do avatar uns dos outros, e os eventos e tarefas conforme a privacidade de cada um. Tarefas, anotações e hábitos sem agenda são só seus. Ao procurar um horário em comum, os outros veem só quando você está ocupado, sem detalhes; as suas outras agendas só entram se você ligar "Compartilhar minha disponibilidade". O que você planejou para o dia é só seu. Seu e-mail não é mostrado aos outros membros.',
   },
   {
     title: 'Por quanto tempo',
-    body: 'Enquanto a conta existir. Itens na lixeira são apagados após 30 dias. Avisos lidos podem ser apagados após 90 dias.',
+    body: 'Enquanto a conta existir. Itens na lixeira (agendas, eventos, tarefas, listas, anotações e hábitos) são apagados após 30 dias. O histórico de tarefas e anotações é mantido por até 1 ano. Avisos lidos podem ser apagados após 90 dias.',
   },
   {
     title: 'Seus direitos (LGPD)',
@@ -33,7 +33,7 @@ export const PRIVACY_POLICY: { title: string; body: string }[] = [
   },
   {
     title: 'Exclusão da conta',
-    body: 'Suas agendas pessoais e comentários são apagados. Eventos que você criou em agendas de outras pessoas continuam lá para o grupo, sem o seu nome.',
+    body: 'Suas agendas pessoais, comentários e as tarefas, listas, anotações e hábitos sem agenda são apagados. Eventos e tarefas que você criou em agendas de outras pessoas continuam lá para o grupo, sem o seu nome.',
   },
   {
     title: 'Terceiros',

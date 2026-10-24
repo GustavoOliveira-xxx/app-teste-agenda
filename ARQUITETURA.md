@@ -26,8 +26,12 @@ flowchart TB
     DB[("PostgreSQL + Row Level Security")]
     RT["Realtime (mudanças em tempo real)"]
     Storage["Storage (arquivos: futuro)"]
+    Cron["Agendador (pg_cron), a cada minuto"]
+    Fn["Função enviar-push (Edge Function)"]
     API --> DB
     RT --> DB
+    Cron --> Fn
+    Fn --> DB
   end
 
   subgraph GitHub["GitHub"]
@@ -45,7 +49,7 @@ flowchart TB
   Releases -- "baixa e instala" --> Celular
   Email["Serviço de e-mail (SMTP)"] -. "códigos de confirmação e recuperação" .-> Pessoa
   Auth -.-> Email
-  Push["Push remoto (FCM): futuro"] -.-> Celular
+  Fn -- "Web Push (VAPID)" --> Navegador["Navegador no iPhone ou computador"]
 ```
 
 ### Componentes
@@ -57,7 +61,7 @@ flowchart TB
 | Banco | PostgreSQL 17 (Supabase) | Dados e **todas** as regras de permissão (RLS) |
 | Lógica de servidor | Funções SQL (PL/pgSQL) | Convites, papéis, eventos com versão, exportação, exclusão de conta |
 | Tempo real | Supabase Realtime | Avisar o app quando algo muda (respeitando RLS) |
-| Notificações | expo-notifications (local) | Lembretes no aparelho; push remoto planejado |
+| Notificações | expo-notifications (local) no Android; Web Push no navegador | Android: lembretes e alertas agendados no próprio aparelho, sem internet. iPhone e computador: a função `enviar-push` manda pelo navegador (D27) |
 | Armazenamento local | AsyncStorage + expo-secure-store | Cache para offline; sessão no Android Keystore |
 | Observabilidade | Registro local de erros + logs do Supabase | Tela de Diagnóstico, métricas de sincronização |
 | CI/CD | GitHub Actions | Testes, verificação de segredos, APK/AAB, Releases |
@@ -175,12 +179,14 @@ Ver [Offline e sincronização](#offline-e-sincronização) abaixo.
 ### 8. Envio de notificação
 - **Lembretes:** após cada sincronização, `rescheduleReminders` cancela todos e agenda de novo (próximos 30 dias, até 60 lembretes) com `expo-notifications`. Funcionam sem internet e com o app fechado.
 - **Avisos de colaboração:** gatilhos no banco gravam na tabela `notifications` (respeitando preferências, privacidade do evento e quem está ativo). O app recebe na hora pelo Realtime e mostra na aba Avisos.
-- **Push remoto (app fechado):** planejado no [ROADMAP.md](ROADMAP.md).
+- **Alertas de tarefas e lembretes (3.0):** entram no mesmo agendamento, com prazo como base (sem horário, 9h). Eventos e tarefas dividem o limite de 60 agendamentos pelos mais próximos. As notificações de tarefa têm os botões Concluir e Adiar; o adiamento fica guardado no aparelho e é reagendado a cada sincronização, sem duplicar.
+- **Navegador (iPhone e computador):** o agendador do banco chama a função `enviar-push` a cada minuto, só quando existe alguma inscrição. Ela calcula os lembretes, os alertas de tarefas e os avisos novos com a mesma lógica de datas do app e envia por Web Push (D27).
+- **Android com o app fechado por servidor (FCM):** não usado. As notificações locais já funcionam sem internet; os avisos de colaboração chegam ao abrir o app ou pelo tempo real.
 
 ### 9. Funcionamento offline
 - O app detecta a conexão com `@react-native-community/netinfo` e mostra a faixa "Sem internet".
 - Leitura: tudo que já foi sincronizado (agendas, eventos, membros, avisos).
-- Escrita: criar, editar, excluir, cancelar, concluir eventos, mudar lembretes e participantes vão para a fila.
+- Escrita: criar, editar, excluir, cancelar, concluir eventos, mudar lembretes e participantes vão para a fila. Na 3.0 a fila também aceita tarefas, lembretes, subtarefas, conclusões, listas, anotações, hábitos, alertas e o plano do dia (enviados por `apply_item_op`).
 - Ações que dependem do servidor (convites, membros, configurações, conta) mostram "Esta ação precisa de internet".
 
 ### 10. Recuperação após reconexão
@@ -268,5 +274,24 @@ O que já está feito:
 1. Subir o plano do Supabase (mais CPU e conexões) não muda código.
 2. Trocar a sincronização por janela completa por sincronização incremental (`updated_at > última`), usando `deleted_at` como lápide.
 3. Índice de texto (`pg_trgm`) para a busca.
-4. Push remoto via fila (Edge Function + FCM) em vez de avisos só dentro do app.
+4. Push remoto para Android (Edge Function + FCM), se as notificações locais deixarem de bastar.
 5. Particionar `activity_logs` e `notifications` por data e aplicar retenção (`purge_trash`).
+
+## Módulos da versão 3.0
+
+| Módulo | Onde está | Observação |
+|---|---|---|
+| Tarefas e lembretes | `screens/tasks/`, `services/itemActions.ts`, `utils/tasks.ts`, `validation/task.ts` | Aba Tarefas, visões, filtros, ordenação, listas, subtarefas, comentários e histórico |
+| Itens sem internet | `offline/itemOverlay.ts`, `offline/merge.ts`, `offline/syncEngine.ts` | Mesma fila dos eventos; conflitos mesclados por campo (prazo e horário contam como um bloco só) |
+| Repetição de tarefas | `utils/taskRecurrence.ts` e `private.rrule_next` no banco | Mesmos 24 casos testados nos dois lados (D32) |
+| Criação universal e adição rápida | `screens/create/`, `components/QuickAddBar.tsx`, `utils/quickAdd.ts`, `services/quickCreate.ts` | Regras fixas em português, prévia quando há dúvida (D37) |
+| Hoje e "O que você pretende fazer hoje?" | `screens/today/`, `screens/planning/PlanDayScreen.tsx`, `utils/dailyPlan.ts` | Pergunta uma vez por dia; sugestões explicadas (D34) |
+| Grade de horários | `components/TimeGrid.tsx`, `utils/timeGrid.ts` | Semana e dia, lado a lado, linha do horário atual, arrastar e alternativa por botões |
+| Planejamento | `utils/freeTime.ts`, `utils/planner.ts`, `utils/weekSummary.ts`, `screens/planning/` | Horários livres, planejar a semana e resumo dos próximos 7 dias (D35) |
+| Horário em comum e enquetes | `screens/findTime/`, `list_busy_times`, `create_poll` e afins | Só horários ocupados, sem detalhes (D36) |
+| Anotações e hábitos | `screens/notes/`, `screens/habits/` | Pessoais ou da agenda |
+| Busca | `screens/misc/SearchScreen.tsx`, `utils/search.ts` | Eventos no servidor (ou no aparelho sem internet); o resto no aparelho |
+| Arquivos .ics | `utils/ics.ts`, `screens/ics/`, `services/share.ts` | Exportar e importar sem permissões novas (D38) |
+
+O app tem cinco abas: Hoje, Calendário, Tarefas, Agendas e Perfil. Nas abas Hoje e Calendário, o botão "+" abre "O que você deseja adicionar?" (evento, tarefa, lembrete, anotação ou hábito); na aba Tarefas ele cria uma tarefa direto.
+

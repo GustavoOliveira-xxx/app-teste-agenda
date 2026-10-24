@@ -76,7 +76,7 @@ export function useTaskActions(options: { ordered?: Task[] } = {}) {
       }
       case 'nextWeek': {
         // Próxima segunda-feira.
-        const day = addDaysToKey(today, ((8 - weekdayOfKey(today)) % 7) || 7);
+        const day = addDaysToKey(today, (8 - weekdayOfKey(today)) % 7 || 7);
         await postponeTask(task, day);
         return toast(t('tasks.postponed', { date: formatShortDate(day) }));
       }

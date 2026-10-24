@@ -47,7 +47,8 @@ export function chunks(minutes: number): number[] {
   const out: number[] = [];
   let left = minutes;
   while (left > 0) {
-    const size = left > MAX_BLOCK && left - MAX_BLOCK < MIN_BLOCK ? left - MIN_BLOCK : Math.min(MAX_BLOCK, left);
+    const size =
+      left > MAX_BLOCK && left - MAX_BLOCK < MIN_BLOCK ? left - MIN_BLOCK : Math.min(MAX_BLOCK, left);
     out.push(size);
     left -= size;
   }

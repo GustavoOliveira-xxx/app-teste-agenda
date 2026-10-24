@@ -44,7 +44,7 @@ O plano gratuito permite **2 projetos ativos** por pessoa. Sua conta já tem 2 p
 
 ### 1.2 Criar as tabelas (aplicar as migrations)
 
-"Migrations" são os arquivos SQL que criam o banco. São 6 e precisam ser aplicados **em ordem**.
+"Migrations" são os arquivos SQL que criam o banco. São 8 e precisam ser aplicados **em ordem**.
 
 1. No GitHub, abra a pasta [`supabase/migrations`](supabase/migrations).
 2. No painel do Supabase, abra **SQL Editor** (menu da esquerda) > **New query**.
@@ -58,6 +58,8 @@ O plano gratuito permite **2 projetos ativos** por pessoa. Sua conta já tem 2 p
    | 4 | `20261020000400_activity_notifications.sql` | Histórico, avisos e auditoria |
    | 5 | `20261020000500_rpc.sql` | Funções usadas pelo app (convites, eventos, exportação, exclusão de conta) |
    | 6 | `20261020000600_security.sql` | Regras de acesso (RLS) e permissões |
+   | 7 | `20261022000700_synck.sql` | Versão 2.0: confirmação de presença e notificações no navegador |
+   | 8 | `20261023000800_tarefas.sql` | Versão 3.0: tarefas, lembretes, listas, plano do dia, anotações, hábitos, enquetes e horário em comum |
 
    a. No GitHub, abra o arquivo e clique no botão **Copy raw file** (ícone de duas folhas, no canto superior direito do código).
    b. No SQL Editor, apague o que houver, cole (Ctrl+V) e clique em **Run** (ou Ctrl+Enter).
@@ -233,6 +235,8 @@ Secrets nunca aparecem de novo depois de salvos, nem nos registros do Actions. R
 4. Gere a release pela parte 2.2. Alternativa para quem usa Git: criar uma tag `v1.1.0` e enviar (`git tag v1.1.0 && git push origin v1.1.0`); o workflow publica a release sozinho.
 5. **Se a versão mudar o banco** (nova migration em `supabase/migrations`): faça um backup (1.8) e aplique a nova migration no SQL Editor **antes** de distribuir o APK novo.
 
+   **Da 2.0 para a 3.0:** a única migration nova é `20261023000800_tarefas.sql` (já aplicada no projeto de produção em 24/10/2026). Ela só acrescenta tabelas, colunas e funções, então o APK 2.0 continua funcionando enquanto as pessoas não atualizam. O SQL Editor pode pedir confirmação porque o arquivo substitui uma regra antiga dos tipos de aviso; nenhum dado é apagado. Depois, atualize também a função `enviar-push` (parte 10).
+
 ## Parte 5: Google Play Store
 
 O arquivo para a loja é o **`.aab`** (gerado junto com o APK). A publicação exige:
@@ -385,7 +389,7 @@ Já está ativado no servidor (função `enviar-push` e o agendamento que roda a
 
 **O que chega:** os lembretes de cada evento (mesmo horário do Android, com "Em 30 min: ...") e os avisos (evento criado, alterado ou cancelado, convite, comentário, pessoa entrando na agenda). Ao tocar, o SynCK abre direto no evento. O horário de silêncio e a opção "Mostrar detalhes na tela bloqueada" valem aqui também.
 
-**Como funciona:** cada navegador que ativa gera uma inscrição (tabela `push_subscriptions`). O agendamento `synck-enviar-push` (pg_cron) chama a função `enviar-push` a cada minuto; ela calcula os lembretes que venceram com a mesma lógica do app (cópia em `supabase/functions/enviar-push/logica`, conferida pelo CI) e envia pelo padrão Web Push. As chaves desse envio são criadas pela própria função e ficam só no banco.
+**Como funciona:** cada navegador que ativa gera uma inscrição (tabela `push_subscriptions`). O agendamento `synck-enviar-push` (pg_cron) chama a função `enviar-push` a cada minuto; ela calcula os lembretes de eventos, os alertas de tarefas e lembretes avulsos (3.0) e os avisos novos com a mesma lógica do app (cópia em `supabase/functions/enviar-push/logica`, conferida pelo CI) e envia pelo padrão Web Push. As chaves desse envio são criadas pela própria função e ficam só no banco.
 
 **Android com o app fechado:** os lembretes já tocam (são agendados no próprio celular). Os **avisos de outras pessoas** com o app fechado exigiriam o Firebase Cloud Messaging (conta no Firebase e um arquivo de configuração no APK). Ficou como passo opcional no [ROADMAP.md](ROADMAP.md); hoje eles aparecem no sino da tela Hoje assim que o app abre.
 

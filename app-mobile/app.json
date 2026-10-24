@@ -3,7 +3,7 @@
     "name": "SynCK",
     "slug": "agenda-compartilhada",
     "scheme": "agendacompartilhada",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",

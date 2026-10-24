@@ -27,7 +27,11 @@ export function ParsePreview({ parse, today }: { parse: QuickParse; today: DateK
   const { timeFormat } = useDisplaySettings();
   const items: { icon: IconName; text: string }[] = [];
   const kindIcon: IconName =
-    parse.kind === 'event' ? 'calendar-outline' : parse.kind === 'reminder' ? 'notifications-outline' : 'task-outline';
+    parse.kind === 'event'
+      ? 'calendar-outline'
+      : parse.kind === 'reminder'
+        ? 'notifications-outline'
+        : 'task-outline';
   items.push({ icon: kindIcon, text: strings.create[parse.kind] });
   if (parse.date) {
     items.push({
@@ -91,7 +95,9 @@ export function QuickAddBar({
   const { toast } = useFeedback();
   const display = useDisplaySettings();
   const calendars = useDataStore((s) => s.calendars);
-  const defaultReminder = useAuthStore((s) => s.account?.notification_preferences.default_reminder_minutes ?? null);
+  const defaultReminder = useAuthStore(
+    (s) => s.account?.notification_preferences.default_reminder_minutes ?? null,
+  );
   const online = useSyncStore((s) => s.online);
   const [text, setText] = useState('');
   const [focused, setFocused] = useState(false);
@@ -101,7 +107,10 @@ export function QuickAddBar({
   const submit = async () => {
     if (!parse) return;
     if (needsReview(parse)) {
-      router.push({ pathname: '/create', params: { text, listId: listId ?? '', calendarId: calendarId ?? '' } });
+      router.push({
+        pathname: '/create',
+        params: { text, listId: listId ?? '', calendarId: calendarId ?? '' },
+      });
       setText('');
       return;
     }
@@ -119,7 +128,11 @@ export function QuickAddBar({
     setText('');
     onSaved?.();
     const message =
-      saved.kind === 'event' ? t('events.created') : saved.kind === 'reminder' ? t('tasks.reminderCreated') : t('tasks.created');
+      saved.kind === 'event'
+        ? t('events.created')
+        : saved.kind === 'reminder'
+          ? t('tasks.reminderCreated')
+          : t('tasks.created');
     toast(online ? message : t('events.savedOffline'));
   };
 
@@ -149,7 +162,12 @@ export function QuickAddBar({
           testID="quick-add"
         />
         {text.trim() ? (
-          <IconButton icon="send" label={t('create.save')} onPress={() => void submit()} color={colors.primary} />
+          <IconButton
+            icon="send"
+            label={t('create.save')}
+            onPress={() => void submit()}
+            color={colors.primary}
+          />
         ) : null}
       </View>
       {parse && <ParsePreview parse={parse} today={today} />}

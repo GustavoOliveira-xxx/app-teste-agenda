@@ -88,9 +88,14 @@ const EventBox = memo(function EventBox({
   const active = !!moving && moving.occ.key === occ.key;
   const lift = useSharedValue(0);
   useEffect(() => {
-    lift.value = reduceMotion ? withTiming(active ? 1 : 0, { duration: 120 }) : withSpring(active ? 1 : 0, motion.mola);
+    lift.value = reduceMotion
+      ? withTiming(active ? 1 : 0, { duration: 120 })
+      : withSpring(active ? 1 : 0, motion.mola);
   }, [active, reduceMotion, lift]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: 1 + 0.03 * lift.value }], zIndex: active ? 5 : 1 }));
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: 1 + 0.03 * lift.value }],
+    zIndex: active ? 5 : 1,
+  }));
 
   const responder = useMemo(
     () =>
@@ -205,7 +210,10 @@ export function TimeGrid({
 
   useEffect(() => {
     const start = initialHour ?? Math.max(0, Math.min(17, new Date(now).getHours() - 1));
-    const id = setTimeout(() => scroll.current?.scrollTo({ y: Math.max(0, (start || 7) * HOUR - 8), animated: false }), 0);
+    const id = setTimeout(
+      () => scroll.current?.scrollTo({ y: Math.max(0, (start || 7) * HOUR - 8), animated: false }),
+      0,
+    );
     return () => clearTimeout(id);
     // Rola só ao abrir a grade ou trocar de período.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -268,7 +276,8 @@ export function TimeGrid({
               {allDay
                 .filter((o) => spannedDayKeys(o, timezone).includes(day))
                 .map((o) => {
-                  const color = agendaColor(o.event.color ?? calendarColors[o.event.calendar_id], dark) ?? colors.primary;
+                  const color =
+                    agendaColor(o.event.color ?? calendarColors[o.event.calendar_id], dark) ?? colors.primary;
                   return (
                     <Pressable
                       key={`${o.key}-${day}`}
@@ -291,10 +300,20 @@ export function TimeGrid({
                     onPress={() => onPressTask(x)}
                     accessibilityRole="button"
                     accessibilityLabel={`${x.item_type === 'reminder' ? t('create.reminder') : t('create.task')}: ${x.title}`}
-                    style={[styles.chip, styles.taskChip, { borderColor: colors.primaryInk, opacity: isOpen(x) ? 1 : 0.5 }]}
+                    style={[
+                      styles.chip,
+                      styles.taskChip,
+                      { borderColor: colors.primaryInk, opacity: isOpen(x) ? 1 : 0.5 },
+                    ]}
                   >
                     <Icon
-                      name={!isOpen(x) ? 'checkmark' : x.item_type === 'reminder' ? 'notifications-outline' : 'task-outline'}
+                      name={
+                        !isOpen(x)
+                          ? 'checkmark'
+                          : x.item_type === 'reminder'
+                            ? 'notifications-outline'
+                            : 'task-outline'
+                      }
                       size={11}
                       color={colors.primaryInk}
                     />
@@ -315,7 +334,12 @@ export function TimeGrid({
         </View>
       )}
 
-      <ScrollView ref={scroll} scrollEnabled={!moving} style={styles.flex} contentContainerStyle={{ height: 24 * HOUR + 16 }}>
+      <ScrollView
+        ref={scroll}
+        scrollEnabled={!moving}
+        style={styles.flex}
+        contentContainerStyle={{ height: 24 * HOUR + 16 }}
+      >
         <View style={{ height: 24 * HOUR, marginTop: 8 }}>
           {hours.map((h) => (
             <View key={h} style={[styles.hourRow, { top: h * HOUR }]}>
@@ -334,7 +358,8 @@ export function TimeGrid({
                   left: GUTTER + i * columnWidth,
                   width: columnWidth,
                   borderLeftColor: colors.border,
-                  backgroundColor: day === today && !single ? mix(colors.primarySoft, colors.background, 0.6) : undefined,
+                  backgroundColor:
+                    day === today && !single ? mix(colors.primarySoft, colors.background, 0.6) : undefined,
                 },
               ]}
             >
@@ -401,7 +426,8 @@ export function TimeGrid({
                 const occ = occByKey[box.key];
                 if (!occ) return null;
                 const color =
-                  agendaColor(occ.event.color ?? calendarColors[occ.event.calendar_id], dark) ?? colors.primary;
+                  agendaColor(occ.event.color ?? calendarColors[occ.event.calendar_id], dark) ??
+                  colors.primary;
                 return (
                   <EventBox
                     key={`${box.key}-${day}`}
@@ -426,7 +452,10 @@ export function TimeGrid({
                 );
               })}
               {nowLine[i] !== null && (
-                <View pointerEvents="none" style={[styles.now, { top: ((nowLine[i] as number) / 60) * HOUR }]}>
+                <View
+                  pointerEvents="none"
+                  style={[styles.now, { top: ((nowLine[i] as number) / 60) * HOUR }]}
+                >
                   <View style={[styles.nowDot, { backgroundColor: colors.coral }]} />
                   <View style={[styles.nowLine, { backgroundColor: colors.coral }]} />
                 </View>
@@ -446,10 +475,30 @@ export function TimeGrid({
             )}`}
           </AppText>
           <View style={styles.moveButtons}>
-            <Button title={t('calendarGrid.earlier')} variant="secondary" compact onPress={() => nudge(-15, 0)} />
-            <Button title={t('calendarGrid.later')} variant="secondary" compact onPress={() => nudge(15, 0)} />
-            <Button title={t('calendarGrid.prevDay')} variant="secondary" compact onPress={() => nudge(0, -1)} />
-            <Button title={t('calendarGrid.nextDay')} variant="secondary" compact onPress={() => nudge(0, 1)} />
+            <Button
+              title={t('calendarGrid.earlier')}
+              variant="secondary"
+              compact
+              onPress={() => nudge(-15, 0)}
+            />
+            <Button
+              title={t('calendarGrid.later')}
+              variant="secondary"
+              compact
+              onPress={() => nudge(15, 0)}
+            />
+            <Button
+              title={t('calendarGrid.prevDay')}
+              variant="secondary"
+              compact
+              onPress={() => nudge(0, -1)}
+            />
+            <Button
+              title={t('calendarGrid.nextDay')}
+              variant="secondary"
+              compact
+              onPress={() => nudge(0, 1)}
+            />
             <Button title={t('common.cancel')} variant="ghost" compact onPress={() => setMoving(null)} />
             <Button title={t('common.done')} compact onPress={drop} />
           </View>
@@ -473,11 +522,24 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
   allDayCol: { gap: 2, paddingHorizontal: 1 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 3, borderRadius: radius.xs, paddingHorizontal: 4, minHeight: 20 },
+  chip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    borderRadius: radius.xs,
+    paddingHorizontal: 4,
+    minHeight: 20,
+  },
   taskChip: { borderWidth: 1, backgroundColor: 'transparent' },
   chipText: { fontSize: 11, lineHeight: 14, flexShrink: 1, ...fonte('semi') },
   hourRow: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', alignItems: 'flex-start' },
-  hourLabel: { width: GUTTER - 4, textAlign: 'right', marginTop: -7, paddingRight: 4, fontVariant: ['tabular-nums'] },
+  hourLabel: {
+    width: GUTTER - 4,
+    textAlign: 'right',
+    marginTop: -7,
+    paddingRight: 4,
+    fontVariant: ['tabular-nums'],
+  },
   hourLine: { flex: 1, height: StyleSheet.hairlineWidth },
   column: { position: 'absolute', top: 0, bottom: 0, borderLeftWidth: StyleSheet.hairlineWidth },
   box: {

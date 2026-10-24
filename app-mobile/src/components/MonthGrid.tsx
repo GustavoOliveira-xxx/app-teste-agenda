@@ -128,7 +128,9 @@ export const MonthGrid = memo(function MonthGrid({
                       ]}
                     />
                   ) : null}
-                  {info?.reminders ? <View style={[styles.reminderMark, { borderColor: colors.coral }]} /> : null}
+                  {info?.reminders ? (
+                    <View style={[styles.reminderMark, { borderColor: colors.coral }]} />
+                  ) : null}
                 </View>
               </Pressable>
             );

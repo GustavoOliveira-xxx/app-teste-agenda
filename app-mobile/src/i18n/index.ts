@@ -24,13 +24,15 @@ function lookup(key: string): unknown {
 
 /**
  * Plural em português a partir do número `n`: "agenda(s)" vira "agenda" com
- * n = 1 e "agendas" nos demais casos; "alteração(ões)" vira "alterações".
+ * n = 1 e "agendas" nos demais casos; "alteração(ões)" vira "alterações" e
+ * "item(ns)" vira "itens".
  */
 export function pluralize(text: string, n: number): string {
   const many = n !== 1;
   return text
     .replace(/mês\(es\)/g, many ? 'meses' : 'mês')
     .replace(/ão\(ões\)/g, many ? 'ões' : 'ão')
+    .replace(/m\(ns\)/g, many ? 'ns' : 'm')
     .replace(/\((s|es)\)/g, many ? '$1' : '');
 }
 

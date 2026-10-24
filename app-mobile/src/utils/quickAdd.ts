@@ -174,9 +174,12 @@ export function parseQuickAdd(text: string, today: DateKey): QuickParse {
 
   // Tipo: "lembrar de", "lembre-me de", "me lembre de", "lembrete:".
   if (
-    take(/^\s*(?:lembrete\s*:|lembre-me\s+(?:de|do|da)|me\s+lembre\s+(?:de|do|da)|lembrar\s+(?:de|do|da|dos|das)|lembrar)\s*/, () => {
-      result.kind = 'reminder';
-    })
+    take(
+      /^\s*(?:lembrete\s*:|lembre-me\s+(?:de|do|da)|me\s+lembre\s+(?:de|do|da)|lembrar\s+(?:de|do|da|dos|das)|lembrar)\s*/,
+      () => {
+        result.kind = 'reminder';
+      },
+    )
   ) {
     // tipo definido
   }
@@ -232,11 +235,14 @@ export function parseQuickAdd(text: string, today: DateKey): QuickParse {
     rule(`FREQ=${unit}${count > 1 ? `;INTERVAL=${count}` : ''}`);
   });
   // "após a última limpeza", "depois de concluir": conta a partir da conclusão.
-  take(/\b(?:apos|depois d[aoe]s?)\s+(?:a |o )?(?:ultim[ao]s?|conclusao|concluir|terminar|feit[oa])(?:\s+[a-z]+)?\b/, () => {
-    if (!result.recurrence) return false;
-    if (/BYDAY|BYMONTHDAY/.test(result.recurrence.rule)) return false;
-    result.recurrence.mode = 'completion';
-  });
+  take(
+    /\b(?:apos|depois d[aoe]s?)\s+(?:a |o )?(?:ultim[ao]s?|conclusao|concluir|terminar|feit[oa])(?:\s+[a-z]+)?\b/,
+    () => {
+      if (!result.recurrence) return false;
+      if (/BYDAY|BYMONTHDAY/.test(result.recurrence.rule)) return false;
+      result.recurrence.mode = 'completion';
+    },
+  );
 
   // Horários.
   const setTime = (h: number, min: number, period?: string, explicit = true): string | null => {
@@ -331,10 +337,16 @@ export function parseQuickAdd(text: string, today: DateKey): QuickParse {
     (m) => {
       if (result.date) return false;
       const wd = WEEKDAYS.indexOf(m[2]);
-      const next = !!m[3] || (m[1] ?? '').startsWith('prox') || (m[1] ?? '').startsWith('na prox') || (m[1] ?? '').startsWith('no prox');
+      const next =
+        !!m[3] ||
+        (m[1] ?? '').startsWith('prox') ||
+        (m[1] ?? '').startsWith('na prox') ||
+        (m[1] ?? '').startsWith('no prox');
       result.date = nextWeekday(today, wd, !next);
       if (!next && weekdayOfKey(today) === wd) {
-        result.ambiguities.push('Hoje já é esse dia da semana: usei hoje. Para a próxima semana, escreva "que vem".');
+        result.ambiguities.push(
+          'Hoje já é esse dia da semana: usei hoje. Para a próxima semana, escreva "que vem".',
+        );
       }
     },
   );
@@ -407,9 +419,7 @@ export function parseQuickAdd(text: string, today: DateKey): QuickParse {
     const byday = /BYDAY=([A-Z,]+)/.exec(r)?.[1];
     if (byday) {
       const days = byday.split(',').map((c) => WEEKDAY_CODES.indexOf(c as WeekdayCode));
-      result.date = days
-        .map((d) => nextWeekday(today, d, true))
-        .sort()[0];
+      result.date = days.map((d) => nextWeekday(today, d, true)).sort()[0];
     } else {
       result.date = today;
     }
@@ -423,7 +433,10 @@ export function parseQuickAdd(text: string, today: DateKey): QuickParse {
     .trim();
   const DANGLING = /(?:\s+|^)(?:as|às|a|à|na|no|nas|nos|em|de|do|da|para|pra|e|,|-|ate|até|dia|a partir)$/i;
   for (let i = 0; i < 4; i++) title = title.replace(DANGLING, '').trim();
-  title = title.replace(/^(?:de|do|da|para|pra|que)\s+/i, '').replace(/[,;:-]+$/, '').trim();
+  title = title
+    .replace(/^(?:de|do|da|para|pra|que)\s+/i, '')
+    .replace(/[,;:-]+$/, '')
+    .trim();
   result.title = title ? title.charAt(0).toUpperCase() + title.slice(1) : '';
 
   // Evento: faixa de horário, ou palavra de compromisso com horário.

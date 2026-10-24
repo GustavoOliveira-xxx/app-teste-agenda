@@ -62,9 +62,17 @@ async function ensureCategory(): Promise<void> {
     },
   ]).catch(() => undefined);
   await Notifications.setNotificationCategoryAsync(TASK_CATEGORY, [
-    { identifier: ACTION_OPEN, buttonTitle: t('reminders.actionOpen'), options: { opensAppToForeground: true } },
+    {
+      identifier: ACTION_OPEN,
+      buttonTitle: t('reminders.actionOpen'),
+      options: { opensAppToForeground: true },
+    },
     { identifier: ACTION_DONE, buttonTitle: t('tasks.complete'), options: { opensAppToForeground: true } },
-    { identifier: ACTION_SNOOZE, buttonTitle: t('reminders.actionSnooze'), options: { opensAppToForeground: true } },
+    {
+      identifier: ACTION_SNOOZE,
+      buttonTitle: t('reminders.actionSnooze'),
+      options: { opensAppToForeground: true },
+    },
   ]).catch(() => undefined);
 }
 
@@ -113,7 +121,11 @@ async function scheduleSnooze(s: Snooze): Promise<void> {
       color: marca.cores.claro.primary,
       categoryIdentifier: s.category,
     },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: new Date(s.at), channelId: CHANNEL_PRIVATE },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(s.at),
+      channelId: CHANNEL_PRIVATE,
+    },
   });
 }
 
@@ -135,7 +147,10 @@ export async function snoozeReminder(request: Notifications.NotificationRequest)
   for (const old of previous.filter((p) => p.identifier.startsWith(`${origin}:adiado:`))) {
     await Notifications.cancelScheduledNotificationAsync(old.identifier).catch(() => undefined);
   }
-  const next = activeSnoozes([...previous.filter((p) => !p.identifier.startsWith(`${origin}:adiado:`)), snooze]);
+  const next = activeSnoozes([
+    ...previous.filter((p) => !p.identifier.startsWith(`${origin}:adiado:`)),
+    snooze,
+  ]);
   await writeSnoozes(next);
   await scheduleSnooze(snooze);
 }
@@ -266,12 +281,25 @@ export async function rescheduleReminders(
 
     const snoozes = activeSnoozes(await readSnoozes());
     await writeSnoozes(snoozes);
-    const plan = combinePlans(planReminders(occurrences), planTaskAlerts(tasks), MAX_SCHEDULED - snoozes.length);
+    const plan = combinePlans(
+      planReminders(occurrences),
+      planTaskAlerts(tasks),
+      MAX_SCHEDULED - snoozes.length,
+    );
     for (const s of snoozes) await scheduleSnooze(s);
     const today = todayKey(timezone);
     for (const { at, task, minutes } of plan.tasks) {
-      const quiet = isWithinQuietHours(at, timezone, prefs?.quiet_hours_start ?? null, prefs?.quiet_hours_end ?? null);
-      const channelId = quiet ? CHANNEL_QUIET : prefs?.show_details_on_lock_screen ? CHANNEL_PUBLIC : CHANNEL_PRIVATE;
+      const quiet = isWithinQuietHours(
+        at,
+        timezone,
+        prefs?.quiet_hours_start ?? null,
+        prefs?.quiet_hours_end ?? null,
+      );
+      const channelId = quiet
+        ? CHANNEL_QUIET
+        : prefs?.show_details_on_lock_screen
+          ? CHANNEL_PUBLIC
+          : CHANNEL_PRIVATE;
       await Notifications.scheduleNotificationAsync({
         identifier: `task:${task.id}:${task.due_date}:${minutes}`,
         content: {

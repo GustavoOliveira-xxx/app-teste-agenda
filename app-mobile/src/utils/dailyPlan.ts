@@ -98,7 +98,13 @@ export function suggestForToday(input: {
     if (!t.recurrence_rule || !t.due_date) continue;
     const days = diffDays(t.due_date, today);
     if (days > 0 && days <= 3) {
-      add({ id: `task:${t.id}`, kind: 'task', task: t, title: t.title, reason: { key: 'recurring', rule: t.recurrence_rule } });
+      add({
+        id: `task:${t.id}`,
+        kind: 'task',
+        task: t,
+        title: t.title,
+        reason: { key: 'recurring', rule: t.recurrence_rule },
+      });
     }
   }
   // O que a pessoa costuma concluir neste dia da semana (últimos 30 dias).
@@ -114,10 +120,14 @@ export function suggestForToday(input: {
     if (weekdayOfKey(day) === weekday) entry.sameWeekday += 1;
     byTitle.set(k, entry);
   }
-  for (const [k, e] of [...byTitle.entries()].sort((a, b) => b[1].sameWeekday - a[1].sameWeekday || b[1].count - a[1].count)) {
+  for (const [k, e] of [...byTitle.entries()].sort(
+    (a, b) => b[1].sameWeekday - a[1].sameWeekday || b[1].count - a[1].count,
+  )) {
     if (open.some((t) => normalizeText(t.title) === k)) continue;
-    if (e.sameWeekday >= 1) add({ id: `title:${k}`, kind: 'title', title: e.title, reason: { key: 'weekday', weekday } });
-    else if (e.count >= 2) add({ id: `title:${k}`, kind: 'title', title: e.title, reason: { key: 'frequent', n: e.count } });
+    if (e.sameWeekday >= 1)
+      add({ id: `title:${k}`, kind: 'title', title: e.title, reason: { key: 'weekday', weekday } });
+    else if (e.count >= 2)
+      add({ id: `title:${k}`, kind: 'title', title: e.title, reason: { key: 'frequent', n: e.count } });
   }
   for (const t of open) {
     if (t.due_date) {

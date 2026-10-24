@@ -20,21 +20,34 @@ export function myBusy(occurrences: Occurrence[], userId: string | null): Interv
 }
 
 /** Horários livres nos dias pedidos (janela do dia da pessoa). */
-export function useFreeSlots(days: DateKey[], minMinutes = 30): { slots: FreeSlot[]; occurrences: Occurrence[] } {
+export function useFreeSlots(
+  days: DateKey[],
+  minMinutes = 30,
+): { slots: FreeSlot[]; occurrences: Occurrence[] } {
   const display = useDisplaySettings();
   const userId = useUserId();
   const first = days[0];
   const last = days[days.length - 1];
   const from = useMemo(() => startOfDayInstant(first, display.timezone), [first, display.timezone]);
-  const to = useMemo(() => startOfDayInstant(addDaysToKey(last, 1), display.timezone), [last, display.timezone]);
+  const to = useMemo(
+    () => startOfDayInstant(addDaysToKey(last, 1), display.timezone),
+    [last, display.timezone],
+  );
   const occurrences = useOccurrences(from, to);
   const key = days.join(',');
   const slots = useMemo(
     () =>
-      freeSlots(myBusy(occurrences, userId), key.split(','), display.timezone, display.dayStart, display.dayEnd, {
-        minMinutes,
-        now: new Date(),
-      }),
+      freeSlots(
+        myBusy(occurrences, userId),
+        key.split(','),
+        display.timezone,
+        display.dayStart,
+        display.dayEnd,
+        {
+          minMinutes,
+          now: new Date(),
+        },
+      ),
     [occurrences, userId, key, display.timezone, display.dayStart, display.dayEnd, minMinutes],
   );
   return { slots, occurrences };

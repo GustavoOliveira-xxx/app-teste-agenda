@@ -81,6 +81,13 @@ async function entrar(page, email) {
   await page.locator('input').nth(1).fill(SENHA_DEMO);
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await page.getByText(/^(Bom dia|Boa tarde|Boa noite),/).first().waitFor({ timeout: 20_000 });
+  // Na primeira abertura do dia o app pergunta "O que você pretende fazer hoje?".
+  const pular = page.getByText('Agora não', { exact: true }).first();
+  if (await pular.waitFor({ timeout: 5_000 }).then(() => true, () => false)) {
+    await foto(page, `00-plano-do-dia-${email.split('.')[0]}`);
+    await pular.click();
+    await pular.waitFor({ state: 'detached', timeout: 10_000 });
+  }
 }
 
 async function ir(page, caminho) {
@@ -241,6 +248,46 @@ test('tablet: menu lateral e formulário centralizado', async () => {
   await ir(page, '/event/new');
   await visivel(page, 'Título');
   await foto(page, '20-tablet-novo-evento');
+  await page.context().close();
+});
+
+test('3.0: tarefas, criação universal, planejamento, horário em comum e busca', async () => {
+  const page = await abrirSessao();
+  await entrar(page, 'ana.demo@exemplo.test');
+
+  await ir(page, '/tasks');
+  const rapida = page.getByPlaceholder('Adicionar tarefa (ex.: Comprar pão amanhã)');
+  await rapida.fill('Comprar pão amanhã');
+  await rapida.press('Enter');
+  // Com prazo amanhã, a tarefa não entra em "Meu dia" de hoje: aparece nos próximos dias.
+  await page.getByText(/^Próximos 7 dias/).first().click();
+  await visivel(page, 'Comprar pão');
+  await foto(page, '22-tarefas');
+
+  await ir(page, '/create');
+  await visivel(page, 'O que você deseja adicionar?');
+  await foto(page, '23-criar');
+
+  await ir(page, '/planner');
+  await foto(page, '24-planejador');
+  await ir(page, '/week');
+  await visivel(page, 'Minha semana em sintonia');
+  await foto(page, '25-semana');
+
+  await ir(page, `/calendar/${AGENDA}/find-time`);
+  await page.getByText('Procurar horários', { exact: true }).click();
+  await visivel(page, 'Horários livres para todos');
+  await foto(page, '26-encontrar-horario');
+
+  await ir(page, '/search');
+  await page.locator('input').first().fill('pão');
+  await visivel(page, 'Comprar pão');
+  await foto(page, '27-busca-tudo');
+
+  await ir(page, '/notes');
+  await foto(page, '28-anotacoes');
+  await ir(page, '/habits');
+  await foto(page, '29-habitos');
   await page.context().close();
 });
 

@@ -276,7 +276,12 @@ export default function TasksScreen() {
   const sidePicker = twoPane ? viewPicker(true) : null;
 
   const links = (
-    <View style={styles.links}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.links}
+      style={styles.linksScroll}
+    >
       <Button
         title={t('tasks.habitsLink')}
         icon="leaf-outline"
@@ -298,7 +303,7 @@ export default function TasksScreen() {
         compact
         onPress={() => router.push('/planner')}
       />
-    </View>
+    </ScrollView>
   );
 
   const header = (
@@ -515,7 +520,8 @@ const styles = StyleSheet.create({
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
   title: { flex: 1, fontSize: 26, lineHeight: 32 },
   chips: { gap: spacing.sm, paddingRight: spacing.lg },
-  links: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  links: { flexDirection: 'row', gap: spacing.sm },
+  linksScroll: { flexGrow: 0 },
   viewTitle: { marginTop: spacing.xs },
   section: { marginTop: spacing.lg, marginBottom: spacing.sm },
   item: { marginBottom: spacing.sm },

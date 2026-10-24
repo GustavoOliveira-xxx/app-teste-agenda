@@ -11,6 +11,8 @@ describe('plural', () => {
 
   it('trata "mês(es)" e deixa o resto do texto como está', () => {
     expect(pluralize('a cada mês(es)', 3)).toBe('a cada meses');
+    expect(pluralize('{n} item(ns)', 0)).toBe('{n} itens');
+    expect(pluralize('{n} item(ns)', 1)).toBe('{n} item');
     expect(pluralize('convidado(a)', 2)).toBe('convidado(a)');
   });
 });

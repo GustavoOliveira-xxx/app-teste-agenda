@@ -23,6 +23,24 @@ Cada decisão segue o formato: **contexto**, **opções**, **decisão**, **motiv
 - [D18 Autoria, licença e repositório](#d18-autoria-licença-e-repositório)
 - [D19 Agenda pessoal criada no cadastro](#d19-agenda-pessoal-criada-no-cadastro)
 - [D20 Testes do banco com PGlite](#d20-testes-do-banco-com-pglite)
+- [D21 APK só para processadores ARM](#d21-apk-só-para-processadores-arm)
+- [D22 Lista fechada de permissões do Android](#d22-lista-fechada-de-permissões-do-android)
+- [D23 Testes de tela na versão web, contra o banco real](#d23-testes-de-tela-na-versão-web-contra-o-banco-real)
+- [D24 Versão web instalável para iPhone e computadores](#d24-versão-web-instalável-para-iphone-e-computadores)
+- [D25 Layout responsivo](#d25-layout-responsivo)
+- [D26 Identidade SynCK](#d26-identidade-synck)
+- [D27 Notificações no navegador (Web Push)](#d27-notificações-no-navegador-web-push)
+- [D28 Entrar com Google](#d28-entrar-com-google)
+- [D29 Auditoria antes de evoluir](#d29-auditoria-antes-de-evoluir)
+- [D30 Tarefas e lembretes numa tabela própria](#d30-tarefas-e-lembretes-numa-tabela-própria)
+- [D31 Escrita das novas entidades só por função](#d31-escrita-das-novas-entidades-só-por-função)
+- [D32 Recorrência de tarefas](#d32-recorrência-de-tarefas)
+- [D33 Subtarefas e conclusão da tarefa](#d33-subtarefas-e-conclusão-da-tarefa)
+- [D34 "O que você pretende fazer hoje?" e Meu dia](#d34-o-que-você-pretende-fazer-hoje-e-meu-dia)
+- [D35 Blocos de tempo e planejador](#d35-blocos-de-tempo-e-planejador)
+- [D36 Disponibilidade e enquetes de horário](#d36-disponibilidade-e-enquetes-de-horário)
+- [D37 Adição rápida sem inteligência artificial](#d37-adição-rápida-sem-inteligência-artificial)
+- [D38 Arquivos .ics](#d38-arquivos-ics)
 
 ---
 
@@ -315,3 +333,115 @@ Recuperação de senha também usa código de 6 dígitos digitado no app (evita 
 Formulários e listas têm largura máxima de 720 (leitura confortável) e diálogos, de 520. O app passou a girar (retrato e paisagem) e a aceitar iPad.
 
 **Motivo.** Um único código para todas as telas, sem telas duplicadas. Os testes de tela conferem os tamanhos de celular, tablet e computador.
+
+## D26 Identidade SynCK
+
+**Contexto.** Na versão 2.0.0 o app deixou de ser "Agenda Compartilhada" e virou **SynCK**, um produto CK Group.
+
+**Decisão.** Cores, fontes, ícones e mascote ficam num só lugar (`app-mobile/src/theme/marca.ts` e `tokens.ts`). Telas usam só os tokens, nunca cores soltas. O nome do pacote Android e a assinatura do APK não mudaram, para quem já tinha o app atualizar por cima.
+
+**Consequências.** Trocar a marca no futuro é mexer nesses arquivos e nos ícones de `assets/`. O repositório passou a se chamar `synck-app` e o site, `/synck-app`.
+
+## D27 Notificações no navegador (Web Push)
+
+**Contexto.** No iPhone e no computador o SynCK roda como site instalável (D24), e o navegador só mostra um aviso com o app fechado se um servidor mandar.
+
+**Decisão.** A função `enviar-push` (Supabase Edge Function) é chamada a cada minuto pelo agendador do banco (`pg_cron`), mas só quando existe ao menos uma inscrição. As chaves VAPID nascem na primeira rodada e ficam em `private.web_push_config`, inacessível ao app. A lógica de datas e repetição é a mesma do app: o script `scripts/copiar-logica-push.mjs` copia os arquivos e o CI falha se a cópia estiver desatualizada.
+
+**Consequências.** Nenhum serviço pago. No Android continuam as notificações locais do aparelho, que funcionam sem internet. A 3.0.0 acrescentou os alertas de tarefas e lembretes e o caminho certo ao tocar em avisos de tarefa e enquete.
+
+## D28 Entrar com Google
+
+**Decisão.** Login social pelo próprio Supabase Auth, aberto no navegador do sistema. O botão só aparece funcionando depois que o provedor é ligado no painel (GUIA_DE_DEPLOY.md, parte 9). Nenhuma chave do Google fica no app.
+
+## D29 Auditoria antes de evoluir
+
+**Contexto.** O pedido da 3.0.0 exigia não dar nada como pronto só porque a documentação dizia.
+
+**Decisão.** Antes de qualquer mudança, a auditoria em [docs/AUDITORIA_3.0.md](docs/AUDITORIA_3.0.md) rodou todos os testes e comparou cada funcionalidade com o código. O resultado de cada cenário de aceite fica em [docs/VALIDACAO_3.0.md](docs/VALIDACAO_3.0.md), marcado como aprovado só quando há teste que o demonstre.
+
+**Consequências.** A auditoria achou um defeito real (o lembrete adiado sumia na sincronização seguinte), corrigido na 3.0.0.
+
+## D30 Tarefas e lembretes numa tabela própria
+
+**Contexto.** Na 2.0 "tarefa" e "lembrete" eram só tipos de evento: exigiam início e fim e não tinham prazo sem horário, prioridade, subtarefas nem conclusão por ocorrência.
+
+**Alternativas.** (a) Continuar como eventos com campos extras; (b) uma tabela para tarefas e outra para lembretes; (c) **uma tabela `tasks` com a coluna `item_type` (`task` ou `reminder`)**.
+
+**Decisão.** (c). Tarefas e lembretes compartilham prazo, repetição, alertas, listas, sincronização e permissões; o que muda é a apresentação (o lembrete não tem subtarefas nem estimativa e aparece com caixa quadrada). Eventos continuam na tabela `events`.
+
+**Compatibilidade.** Nada da 2.0 foi apagado nem convertido. Eventos antigos dos tipos tarefa e lembrete continuam eventos e abrem normalmente; esses tipos só saíram da lista ao criar evento novo (em produção não havia nenhum).
+
+**Alertas.** A base do alerta é o prazo com horário; sem horário, 9h do dia do prazo. Cada pessoa escolhe os seus alertas (`task_alerts`), como nos eventos.
+
+## D31 Escrita das novas entidades só por função
+
+**Decisão.** Tarefas, lembretes, listas, anotações, hábitos e o plano do dia só mudam pela função `public.apply_item_op` (SECURITY DEFINER), que confere a permissão de cada operação e grava o histórico. O app tem apenas leitura direta (RLS de `select`) e nenhuma permissão de `insert`, `update` ou `delete` nessas tabelas.
+
+**Motivo.** Regras que dependem de várias tabelas (quem pode concluir uma tarefa atribuída, quem pode mudar a lista, o que cada papel vê) ficam num lugar só e testável. Cada operação tem um identificador (`sync_operations`), então reenviar a mesma operação depois de uma queda de conexão não duplica nada.
+
+**Privacidade.** Tarefa pessoal (sem agenda) só é vista pela dona, mesmo por quem divide outra agenda com ela. Tarefa numa agenda segue a privacidade escolhida: todos os membros, só participantes ou privada.
+
+## D32 Recorrência de tarefas
+
+**Alternativas.** (a) Gerar as próximas ocorrências como linhas; (b) **guardar só a próxima data e registrar cada conclusão**.
+
+**Decisão.** (b). A tarefa guarda o próximo prazo (`due_date`). Concluir grava uma linha em `task_completions` (única por tarefa e data) e avança o prazo. Dois modos:
+
+- **pelo calendário** ("todo dia 5", "toda segunda"): a próxima data segue a regra, mesmo concluindo atrasado;
+- **depois da conclusão** ("3 dias depois de concluir"): conta a partir do dia em que foi concluída.
+
+**Mesmo resultado no app e no banco.** O cálculo existe em TypeScript (`utils/taskRecurrence.ts`) e em SQL (`private.rrule_next`). Os dois são testados com os mesmos 24 casos de `supabase/tests/fixtures/proxima-data.json`.
+
+**Consequências.** Concluir a mesma ocorrência em dois aparelhos avança o prazo uma vez só. Reabrir uma ocorrência devolve o prazo para ela.
+
+## D33 Subtarefas e conclusão da tarefa
+
+**Decisão.** Concluir todas as subtarefas não conclui a tarefa sozinho: o app pergunta "Concluir a tarefa também?". Concluir a tarefa não marca as subtarefas. Numa tarefa que se repete, as subtarefas voltam a ficar abertas quando o prazo avança.
+
+**Motivo.** Evita surpresas: às vezes a lista acaba e ainda falta conferir algo.
+
+## D34 "O que você pretende fazer hoje?" e Meu dia
+
+**Pedido do proprietário.** Uma pergunta diária, na primeira abertura do dia, com o que já está marcado, um jeito rápido de acrescentar o que a pessoa vai fazer e sugestões do que ela costuma fazer.
+
+**Decisão.**
+
+- A pergunta abre sozinha uma vez por dia (pode ser desligada em Perfil > Preferências). "Agora não" fecha até o dia seguinte; "Começar o dia" registra a resposta em `daily_checkins`.
+- O plano do dia é **pessoal** (`task_plans`): planejar uma tarefa compartilhada para hoje não muda nada para os outros membros.
+- As sugestões seguem regras fixas e explicáveis, sem IA: hábitos previstos para hoje e ainda não feitos, tarefas que se repetem e vencem nos próximos 3 dias e o que a pessoa concluiu com frequência nos últimos 30 dias, principalmente no mesmo dia da semana. Cada sugestão mostra o motivo.
+- Na adição rápida, "Meu dia" só recebe o que é para hoje: "pão amanhã" digitado na visão Hoje fica para amanhã.
+
+## D35 Blocos de tempo e planejador
+
+**Decisão.** Reservar tempo para uma tarefa cria um **evento ligado à tarefa** (`events.task_id`). O bloco aparece no calendário, entra nos horários ocupados e pode ser movido ou apagado como qualquer evento, sem mexer na tarefa.
+
+**Planejar minha semana.** Regras fixas (`utils/planner.ts`): só horários livres dentro da janela do dia da pessoa; nunca mexe em compromissos existentes; prazo mais próximo primeiro, depois prioridade, depois duração; tarefas longas viram blocos de até 60 minutos; sem estimativa, 30 minutos. Nada é gravado até a pessoa revisar e confirmar.
+
+## D36 Disponibilidade e enquetes de horário
+
+**Decisão.**
+
+- "Encontrar horário" usa só **horários ocupados**, sem título, local nem participantes (`list_busy_times`).
+- Compromissos da agenda em questão entram para todos os membros. Compromissos de **outras** agendas de alguém só entram se essa pessoa ligou "Compartilhar minha disponibilidade" (desligado por padrão).
+- A consulta vale para no máximo 62 dias.
+- Enquete: cada participante vota em cada horário (posso, talvez, não posso). O evento só é criado quando quem abriu a enquete encerra e escolhe o horário.
+
+**Motivo.** Achar um horário em comum não pode virar um jeito de espiar a agenda dos outros.
+
+## D37 Adição rápida sem inteligência artificial
+
+**Decisão.** A frase digitada ("Reunião com Paulo terça das 14h às 15h", "Pagar luz todo dia 10 #casa !!") é interpretada por regras fixas em português (`utils/quickAdd.ts`), no próprio aparelho e sem internet. Etiquetas usam `#` e a prioridade, `!`, `!!`, `!!!` ou a palavra "urgente". Quando há dúvida ("às 3" pode ser 03:00 ou 15:00, "de manhã", um dia que o mês não tem, "semana que vem"), o app mostra uma prévia editável em vez de salvar direto.
+
+**Motivo.** Nenhum serviço pago nem envio do texto para terceiros; o resultado é previsível e testado.
+
+## D38 Arquivos .ics
+
+**Decisão.**
+
+- **Exportar:** gera o arquivo da agenda (padrão RFC 5545) com repetições, exclusões e ocorrências alteradas. No navegador baixa o arquivo; no Android abre a folha de compartilhar com o conteúdo. Eventos marcados como "Ocupado" para você não saem no arquivo.
+- **Importar:** colando o conteúdo do arquivo ou, no navegador, escolhendo o arquivo. Mostra a prévia antes de importar e guarda o identificador de origem (`events.external_uid`), então importar o mesmo arquivo de novo não duplica.
+- Repetições que o SynCK não representa (como "segunda terça do mês") entram como evento único, e a prévia avisa quantos foram.
+
+**Motivo.** Funciona sem pedir nenhuma permissão nova no Android e sem bibliotecas nativas novas.
+

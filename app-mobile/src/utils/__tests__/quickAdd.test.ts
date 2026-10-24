@@ -47,11 +47,17 @@ describe('adição rápida em português', () => {
       date: '2026-10-26',
       time: '07:00',
     });
-    expect(parseQuickAdd('Organizar a semana todo domingo', today).recurrence?.rule).toBe('FREQ=WEEKLY;BYDAY=SU');
+    expect(parseQuickAdd('Organizar a semana todo domingo', today).recurrence?.rule).toBe(
+      'FREQ=WEEKLY;BYDAY=SU',
+    );
     expect(parseQuickAdd('Tomar remédio todos os dias às 8h', today).recurrence?.rule).toBe('FREQ=DAILY');
-    expect(parseQuickAdd('Ponto dias úteis', today).recurrence?.rule).toBe('FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR');
+    expect(parseQuickAdd('Ponto dias úteis', today).recurrence?.rule).toBe(
+      'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR',
+    );
     expect(parseQuickAdd('Pagar condomínio todo mês', today).recurrence?.rule).toBe('FREQ=MONTHLY');
-    expect(parseQuickAdd('Trocar a toalha quinzenalmente', today).recurrence?.rule).toBe('FREQ=WEEKLY;INTERVAL=2');
+    expect(parseQuickAdd('Trocar a toalha quinzenalmente', today).recurrence?.rule).toBe(
+      'FREQ=WEEKLY;INTERVAL=2',
+    );
   });
 
   it('datas', () => {
@@ -61,7 +67,10 @@ describe('adição rápida em português', () => {
     expect(parseQuickAdd('Renovar seguro em 3 dias', today).date).toBe('2026-10-26');
     expect(parseQuickAdd('Ligar daqui a 2 semanas', today).date).toBe('2026-11-06');
     expect(parseQuickAdd('Faxina depois de amanhã', today).date).toBe('2026-10-25');
-    expect(parseQuickAdd('Churrasco no fim de semana', today)).toMatchObject({ title: 'Churrasco', date: '2026-10-24' });
+    expect(parseQuickAdd('Churrasco no fim de semana', today)).toMatchObject({
+      title: 'Churrasco',
+      date: '2026-10-24',
+    });
     expect(parseQuickAdd('Entregar trabalho segunda-feira', today).date).toBe('2026-10-26');
     expect(parseQuickAdd('Feira sexta que vem', today).date).toBe('2026-10-30');
   });
@@ -76,7 +85,11 @@ describe('adição rápida em português', () => {
     });
     expect(parseQuickAdd('Correr amanhã 6:45', today).time).toBe('06:45');
     expect(parseQuickAdd('Pizza hoje às 8 da noite', today)).toMatchObject({ time: '20:00', title: 'Pizza' });
-    expect(parseQuickAdd('Aula 19h-21h', today)).toMatchObject({ kind: 'event', time: '19:00', endTime: '21:00' });
+    expect(parseQuickAdd('Aula 19h-21h', today)).toMatchObject({
+      kind: 'event',
+      time: '19:00',
+      endTime: '21:00',
+    });
   });
 
   it('prioridade e etiquetas', () => {
@@ -85,7 +98,10 @@ describe('adição rápida em português', () => {
       priority: 3,
       tags: ['casa'],
     });
-    expect(parseQuickAdd('Enviar relatório urgente', today)).toMatchObject({ title: 'Enviar relatório', priority: 4 });
+    expect(parseQuickAdd('Enviar relatório urgente', today)).toMatchObject({
+      title: 'Enviar relatório',
+      priority: 4,
+    });
   });
 
   it('não transforma texto ambíguo em data errada sem avisar', () => {

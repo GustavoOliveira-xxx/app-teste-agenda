@@ -25,6 +25,20 @@
 | Proteção contra replay | Cada operação tem id único; o servidor guarda os ids processados e não reaplica |
 | Permissões mínimas no celular | Internet, estado da rede, notificações, reinício (para lembretes) e vibração. Câmera, microfone, localização, arquivos e telefone **bloqueados** no `app.json` |
 
+## Versão 3.0: tarefas, planejamento e colaboração
+
+| Ponto | Como foi tratado |
+|---|---|
+| Escrita nas tabelas novas | Nenhuma permissão de `insert`, `update` ou `delete` para o app. Tudo passa por `apply_item_op` e funções específicas, que conferem papel, dono, responsável e privacidade a cada operação (DECISOES.md, D31) |
+| Tarefas e itens pessoais | Itens sem agenda são vistos só por quem criou, mesmo por quem divide outras agendas com a pessoa. Testado com consultas diretas às tabelas |
+| Tarefas privadas e "só participantes" | Regra única (`private.task_access_for`) usada na leitura, nos comentários, no histórico, nos avisos e no envio pelo navegador |
+| Encontrar horário em comum | Devolve só início e fim dos compromissos, sem título, local ou participantes; outras agendas de alguém só com "Compartilhar minha disponibilidade" ligado; período máximo de 62 dias |
+| Histórico de itens | `item_activity` não grava o título de tarefas privadas ou "só participantes" |
+| Remoção de membro | Ao sair ou ser removido, a pessoa perde na hora as tarefas da agenda, deixa de ser responsável ou participante e seus alertas e planos daquela agenda são apagados |
+| Limites | Comentários de tarefa: 60 a cada 10 minutos por pessoa; até 100 subtarefas, 5 alertas, 5 links e 10 etiquetas por tarefa |
+| Arquivos .ics | Importação lida só como texto; links só `http(s)`; tamanhos limitados (título, descrição, local) |
+| Adição rápida | Interpretada no próprio aparelho, sem enviar o texto a serviço externo |
+
 ## Nunca coloque no repositório
 
 - senha do banco;
@@ -96,6 +110,6 @@ Por que a chave pública pode ir no APK: ela só permite o que as regras RLS per
 - **Chave de testes no APK padrão:** sem os Secrets de assinatura, o APK usa a chave de debug do template do React Native, que é pública. Serve para testes entre pessoas conhecidas; para distribuir, configure sua chave ([GUIA_DE_DEPLOY.md](GUIA_DE_DEPLOY.md)).
 - **E-mail:** sem SMTP próprio, a confirmação e a recuperação de senha só funcionam para e-mails da equipe do projeto no Supabase.
 - **Cadastro aberto:** qualquer pessoa com o APK pode criar conta no seu projeto (só vê os próprios dados). Para fechar, desligue "Allow new users to sign up" no Supabase depois que todos tiverem conta.
-- **Sem 2FA** na V1 (planejado no roadmap).
+- **Sem 2FA** (planejado no roadmap).
 - **Dispositivo comprometido (root):** o cache local (AsyncStorage) não é criptografado; a sessão é. Em aparelho com root, os dados em cache podem ser lidos.
 - **Versão web:** a sessão fica no armazenamento do navegador, sem criptografia do sistema. Quem tiver acesso ao computador desbloqueado e ao navegador pode usar a sessão; por isso, em computador compartilhado, saia da conta.

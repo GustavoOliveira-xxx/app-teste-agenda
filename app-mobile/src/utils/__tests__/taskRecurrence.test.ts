@@ -2,7 +2,9 @@ import fixtureFile from '../../../../supabase/tests/fixtures/proxima-data.json';
 import { addRuleInterval, isValidForMode, nextDueAfterCompletion, nextSeriesDate } from '../taskRecurrence';
 
 // Mesmos casos usados no teste do banco (private.rrule_next).
-const fixture = fixtureFile as { casos: { regra: string; inicio: string; depois: string; esperado: string | null }[] };
+const fixture = fixtureFile as {
+  casos: { regra: string; inicio: string; depois: string; esperado: string | null }[];
+};
 
 describe('próxima data de tarefa recorrente', () => {
   it.each(fixture.casos)('$regra desde $inicio depois de $depois', (c) => {

@@ -45,7 +45,8 @@ const sameList = (a: readonly unknown[], b: readonly unknown[]) =>
 
 function snapshotOf(task: Task, changes: Record<string, unknown>): Record<string, unknown> {
   const keys = Object.keys(changes);
-  if (keys.some((k) => ['due_date', 'due_time', 'timezone'].includes(k))) keys.push('due_date', 'due_time', 'timezone');
+  if (keys.some((k) => ['due_date', 'due_time', 'timezone'].includes(k)))
+    keys.push('due_date', 'due_time', 'timezone');
   return Object.fromEntries([...new Set(keys)].map((k) => [k, task[k as keyof Task] ?? null]));
 }
 
@@ -194,7 +195,10 @@ export async function createList(input: Pick<TaskList, 'name' | 'calendar_id' | 
   return id;
 }
 
-export async function updateList(list: TaskList, changes: Partial<Pick<TaskList, 'name' | 'color' | 'position'>>) {
+export async function updateList(
+  list: TaskList,
+  changes: Partial<Pick<TaskList, 'name' | 'color' | 'position'>>,
+) {
   await queue('list', 'update', list.id, list.calendar_id, changes, { version: list.version });
 }
 
@@ -205,7 +209,8 @@ export async function deleteList(list: TaskList): Promise<void> {
 // --------------------------------------------------------------- anotações
 
 export async function createNote(
-  input: Pick<Note, 'title' | 'body' | 'calendar_id' | 'pinned'> & Partial<Pick<Note, 'event_id' | 'task_id'>>,
+  input: Pick<Note, 'title' | 'body' | 'calendar_id' | 'pinned'> &
+    Partial<Pick<Note, 'event_id' | 'task_id'>>,
 ): Promise<string> {
   const id = newId();
   await queue('note', 'create', id, input.calendar_id, {
@@ -233,7 +238,10 @@ export async function deleteNote(note: Note): Promise<void> {
 // ------------------------------------------------------------------ hábitos
 
 export async function createHabit(
-  input: Pick<Habit, 'title' | 'description' | 'calendar_id' | 'recurrence_rule' | 'start_date' | 'show_streak' | 'color'>,
+  input: Pick<
+    Habit,
+    'title' | 'description' | 'calendar_id' | 'recurrence_rule' | 'start_date' | 'show_streak' | 'color'
+  >,
 ): Promise<string> {
   const id = newId();
   await queue('habit', 'create', id, input.calendar_id, { ...input });

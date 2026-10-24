@@ -2,7 +2,7 @@
 
 > **Aviso importante:** este documento é um **modelo técnico inicial**, escrito a partir de como o aplicativo funciona. Ele **pode precisar de revisão jurídica** antes de o aplicativo ser oferecido ao público em geral (por exemplo, na Google Play Store).
 
-**Versão:** 1.0, outubro de 2026
+**Versão:** 1.1, outubro de 2026 (versão 3.0.0 do app: tarefas, planejamento e horário em comum)
 **Responsável (controlador):** Gustavo Oliveira dos Santos
 **Contato para assuntos de privacidade:** [defina um e-mail de contato antes de divulgar o app]
 
@@ -26,8 +26,12 @@
 | Nome de exibição | Identificar você para quem divide agenda com você | Execução de contrato |
 | E-mail | Login, confirmação de conta, recuperação de senha, convites por e-mail | Execução de contrato |
 | Senha | Login. Guardada **apenas como hash** pelo provedor de autenticação | Execução de contrato |
-| Preferências (fuso, formatos, tema, notificações) | Mostrar o app do seu jeito | Execução de contrato |
+| Preferências (fuso, formatos, tema, notificações, janela do seu dia, pergunta diária, compartilhar disponibilidade) | Mostrar o app do seu jeito | Execução de contrato |
 | Agendas, eventos, comentários, lembretes, participantes | O próprio serviço | Execução de contrato |
+| Tarefas, lembretes avulsos, listas, subtarefas, anotações, hábitos e seus registros | O próprio serviço | Execução de contrato |
+| O que você planejou para o dia e os dias em que respondeu "O que você pretende fazer hoje?" | Mostrar seu plano e sugerir o que você costuma fazer | Execução de contrato |
+| Votos em enquetes de horário | Marcar compromissos em grupo | Execução de contrato |
+| Inscrição de notificação do navegador (endereço técnico fornecido pelo navegador) | Enviar lembretes e avisos no iPhone e no computador, se você ativar | Consentimento |
 | Histórico de alterações | Transparência para o grupo e segurança | Legítimo interesse |
 | Aparelho (modelo, sistema, versão do app, identificador da instalação) | Lista de aparelhos conectados e suporte | Legítimo interesse |
 | Data do último acesso | Segurança e suporte | Legítimo interesse |
@@ -45,7 +49,8 @@
 | Dado | Retenção |
 |---|---|
 | Conta e conteúdo | Enquanto a conta existir |
-| Itens na lixeira (agendas e eventos) | 30 dias, depois apagados |
+| Itens na lixeira (agendas, eventos, tarefas, listas, anotações e hábitos) | 30 dias, depois apagados |
+| Histórico de tarefas, listas, anotações, hábitos e enquetes | Até 1 ano |
 | Avisos lidos | Até 90 dias |
 | Registro de operações de sincronização | 30 dias |
 | Contadores de tentativas (limite de requisições) | 1 dia |
@@ -54,13 +59,15 @@
 ## 5. Quem pode acessar
 
 - **Você.**
-- **Membros das agendas que você participa:** veem seu nome e cor do avatar, seu papel, e os eventos conforme a privacidade de cada evento. **Seu e-mail não é mostrado** a outros membros.
+- **Membros das agendas que você participa:** veem seu nome e cor do avatar, seu papel, e os eventos e tarefas conforme a privacidade de cada um. **Seu e-mail não é mostrado** a outros membros.
+- **Itens sem agenda** (tarefas, listas, anotações e hábitos pessoais) e **o que você planejou para o dia** são só seus.
+- **Encontrar horário em comum:** quem procura vê apenas os horários em que você está ocupado, sem título, local ou participantes. Compromissos das suas **outras** agendas só entram se você ligar **Perfil > Preferências > Compartilhar minha disponibilidade** (desligado por padrão).
 - **Proprietário e administradores de uma agenda:** veem o histórico administrativo daquela agenda.
 - **Responsável pelo serviço:** tem acesso técnico ao banco para manutenção e suporte, apenas quando necessário.
 
 ## 6. Como exportar seus dados
 
-App > **Perfil > Privacidade e dados > Exportar meus dados**. O app gera um arquivo (JSON) com conta, perfil, preferências, aparelhos, participações, agendas que você possui, eventos que criou, lembretes, comentários e avisos, e abre o compartilhamento do celular para você salvar.
+App > **Perfil > Privacidade e dados > Exportar meus dados**. O app gera um arquivo (JSON) com conta, perfil, preferências, aparelhos, participações, agendas que você possui, eventos que criou, lembretes, comentários, avisos, tarefas, listas, anotações, hábitos, plano do dia e votos em enquetes, e abre o compartilhamento do celular para você salvar.
 
 ## 7. Como excluir sua conta
 
@@ -69,9 +76,10 @@ App > **Perfil > Privacidade e dados > Excluir minha conta**. Antes de confirmar
 ## 8. O que acontece com eventos compartilhados após a exclusão
 
 - **Agendas que você possui** são apagadas com todos os eventos. Se elas tiverem outras pessoas, o app pede que você **transfira a propriedade** antes (para não apagar o trabalho do grupo).
-- **Eventos que você criou em agendas de outras pessoas** permanecem para o grupo, **sem o seu nome** (aparece "Ex-membro").
+- **Eventos e tarefas que você criou em agendas de outras pessoas** permanecem para o grupo, **sem o seu nome** (aparece "Ex-membro").
+- **Tarefas, listas, anotações e hábitos pessoais** são apagados.
 - **Seus comentários** são apagados.
-- Lembretes, avisos, preferências e aparelhos são apagados.
+- Lembretes, alertas de tarefas, plano do dia, votos, avisos, preferências, aparelhos e inscrições de notificação do navegador são apagados.
 
 ## 9. Terceiros que processam dados
 
@@ -81,12 +89,13 @@ App > **Perfil > Privacidade e dados > Excluir minha conta**. Antes de confirmar
 | Provedor de e-mail (SMTP), se configurado | Enviar códigos de confirmação e recuperação |
 | GitHub | Hospedar o código e os arquivos de instalação (não recebe dados de uso) |
 | Google (Android) | Exibir notificações locais no seu celular |
+| Serviço de notificação do seu navegador (Apple, Google, Mozilla ou Microsoft), se você ativar | Entregar lembretes e avisos no iPhone e no computador. A notificação leva só o título e o horário (ou "Você tem um compromisso", se os detalhes estiverem ocultos) |
 
 Não vendemos nem compartilhamos dados para publicidade.
 
 ## 10. Notificações
 
-- **Lembretes** são agendados no próprio celular.
+- **Lembretes e alertas de tarefas** são agendados no próprio celular Android. No iPhone e no computador, são enviados pelo servidor ao navegador, se você ativar em **Perfil > Notificações**.
 - **Avisos** (convites, alterações) ficam na aba Avisos do app.
 - Por padrão, a notificação na tela bloqueada mostra só **"Você tem um compromisso"**. Para mostrar o título, ative em **Perfil > Notificações > Mostrar detalhes na tela bloqueada**.
 

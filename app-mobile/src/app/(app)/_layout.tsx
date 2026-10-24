@@ -38,7 +38,9 @@ function useOpenEventFromNotification() {
       const data = response.notification.request.content.data as Record<string, unknown> | undefined;
       if (response.actionIdentifier === ACTION_DONE && data && typeof data.taskId === 'string') {
         const task = useDataStore.getState().tasks[data.taskId];
-        void Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(() => undefined);
+        void Notifications.dismissNotificationAsync(response.notification.request.identifier).catch(
+          () => undefined,
+        );
         void forgetSnoozesFor(`task:${data.taskId}:`);
         if (task) {
           void completeTask(task, typeof data.occurrence === 'string' ? data.occurrence : null).then(() =>

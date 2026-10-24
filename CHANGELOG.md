@@ -12,6 +12,49 @@ O número da compilação (build) cresce a cada APK gerado e aparece em **Perfil
 
 Nada ainda.
 
+## [3.0.0] (2026-10-24)
+
+O SynCK deixa de ser só calendário e passa a organizar o dia: tarefas, lembretes, planejamento e colaboração. Nada da 2.0 foi apagado; quem atualiza o APK mantém tudo.
+
+### Adicionado
+
+- **Tarefas** (nova aba): prazo com ou sem horário, prioridade, estado (pendente, em andamento, aguardando, concluída, cancelada), descrição, links, etiquetas, estimativa de duração, subtarefas com barra de progresso, listas e caixa de entrada.
+- **Visões de tarefas:** Hoje, Próximos 7 dias, Esta semana, Atrasadas, Sem data, Importantes, Atribuídas a mim, Compartilhadas, Lembretes e Concluídas, com filtros e ordenações.
+- **Tarefas que se repetem:** pelo calendário ("todo dia 5", "toda segunda") ou depois da conclusão ("3 dias depois de concluir"), com histórico de cada conclusão.
+- **Lembretes avulsos:** um aviso numa data, sem ocupar horário na agenda.
+- **Botão "O que você deseja adicionar?"**: evento, tarefa, lembrete, anotação ou hábito, com **adição rápida** em português ("Reunião com Paulo terça das 14h às 15h", "Pagar luz todo dia 10 #casa !!") e prévia para conferir quando algo é ambíguo.
+- **"O que você pretende fazer hoje?"**: na primeira abertura do dia, mostra o que já está marcado, deixa acrescentar o que você vai fazer e sugere o que você costuma fazer (hábitos, tarefas que se repetem, o que você conclui com frequência), sempre dizendo o motivo. Pode ser desligada em Perfil > Preferências.
+- **Tela Hoje** reorganizada: próximo compromisso, agenda, tarefas, atrasadas, lembretes, movimento nas agendas, horários livres e o resumo da semana, com seções que recolhem.
+- **Calendário profissional:** grade de horários de verdade nas visões de semana e dia, eventos ao mesmo tempo lado a lado, linha do horário atual, marcadores de tarefas e lembretes no mês, filtro por tipo (eventos, tarefas, lembretes) e **arrastar para mudar o horário** (toque longo), com alternativa por botões para quem não arrasta.
+- **Blocos de tempo:** reserve na agenda o tempo de fazer uma tarefa.
+- **Planejar minha semana:** sugere blocos para as tarefas com prazo nos horários livres, por regras fixas, e só grava depois que você confirma.
+- **Minha semana em sintonia:** compromissos, prazos, atrasadas, tempo livre e agendas compartilhadas dos próximos 7 dias, com sugestões.
+- **Tarefas compartilhadas:** responsável, participantes, privacidade, comentários e histórico; avisos quando alguém atribui, conclui ou comenta.
+- **Encontrar horário em comum** numa agenda compartilhada, usando só horários ocupados (sem detalhes), e **enquetes de horário** com votos "Posso", "Talvez" e "Não posso".
+- **Anotações** por agenda ou pessoais, com fixar no topo e links clicáveis.
+- **Hábitos e rotinas** com marcação diária e sequência opcional.
+- **Busca em tudo:** eventos, tarefas, lembretes, anotações e agendas, com etiquetas (`#casa`) e filtros de concluídas e atrasadas.
+- **Exportar e importar .ics** (Google Agenda, Outlook, Apple), sem duplicar o que já foi importado.
+- **Notificações de tarefas:** no Android com os botões Concluir e Adiar; no iPhone e no computador pelo navegador. Nova chave em Perfil > Notificações para avisos de tarefas.
+- **Preferências de planejamento:** horário em que seu dia começa e termina, pergunta diária e compartilhar disponibilidade.
+- A exportação de dados (LGPD) e a exclusão de conta incluem tarefas, lembretes, listas, anotações, hábitos, plano do dia e votos.
+
+### Corrigido
+
+- O lembrete adiado ("Adiar 10 min") sumia se o app sincronizasse nos 10 minutos seguintes. Agora o adiamento fica guardado e é reagendado sem duplicar.
+- Textos com plural "item(ns)" aparecem certos ("1 item", "3 itens").
+
+### Banco de dados
+
+- Nova migration `20261023000800_tarefas.sql`, só com acréscimos (nenhuma tabela antiga foi alterada de forma incompatível). Detalhes em [MODELO_DE_DADOS.md](MODELO_DE_DADOS.md) e decisões D30 a D38 em [DECISOES.md](DECISOES.md).
+
+### Testes
+
+- Banco: 92 testes (21 novos, incluindo os mesmos 24 casos de próxima data usados no app).
+- App: 190 testes unitários (79 novos, incluindo alertas de tarefas e o adiamento de lembretes).
+- Telas: 8 testes na versão web, com um novo cobrindo tarefas, criação universal, planejamento, horário em comum e busca.
+- O que ainda depende de teste em aparelho está em [docs/VALIDACAO_3.0.md](docs/VALIDACAO_3.0.md).
+
 ## [2.0.0] (2026-10-22)
 
 O app agora se chama **SynCK** (um produto CK Group) e ganhou a identidade visual completa.

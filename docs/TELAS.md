@@ -4,7 +4,7 @@ Este documento mostra todas as telas do SynCK, como se vai de uma para outra, os
 
 Tudo aqui foi conferido **lendo o código** em `app-mobile/src` e pelos testes de tela da versão web (capturas em [capturas/](capturas/)). O app ainda não foi usado de ponta a ponta num celular com o servidor real (veja o [README](../README.md)). Quando algo existe só em parte, isso está dito na tabela.
 
-**Em telas grandes** (tablet e computador) as mesmas telas mudam de arrumação: as quatro abas viram um menu lateral, o conteúdo fica numa coluna centralizada e, no computador, a visão Mês mostra o calendário e os eventos do dia lado a lado. Detalhes em [DESIGN.md, Tamanhos de tela](DESIGN.md#tamanhos-de-tela).
+**Em telas grandes** (tablet e computador) as mesmas telas mudam de arrumação: as cinco abas viram um menu lateral, o conteúdo fica numa coluna centralizada e, no computador, a visão Mês mostra o calendário e os eventos do dia lado a lado. Detalhes em [DESIGN.md, Tamanhos de tela](DESIGN.md#tamanhos-de-tela).
 
 Documentos relacionados: [ARQUITETURA.md](../ARQUITETURA.md) (como as peças se encaixam), [REGRAS_DE_NEGOCIO.md](../REGRAS_DE_NEGOCIO.md) (papéis e permissões) e [DESIGN.md](DESIGN.md) (cores, componentes e textos).
 
@@ -42,6 +42,7 @@ flowchart TB
   subgraph TABS["Com login: abas de (app)/(tabs)"]
     THo["Hoje<br/>(tabs)/index"]
     TAg["Calendário<br/>(tabs)/month"]
+    TTa["Tarefas<br/>(tabs)/tasks"]
     TAs["Agendas<br/>(tabs)/calendars"]
     TPe["Perfil<br/>(tabs)/profile"]
     TAv["Avisos (sino da tela Hoje)<br/>notifications"]
@@ -84,6 +85,21 @@ flowchart TB
     Diag["diagnostics<br/>Diagnóstico"]
   end
 
+  subgraph V3["Versão 3.0: tarefas e planejamento"]
+    Create["create<br/>O que você deseja adicionar?"]
+    PlanDay["plan-day<br/>O que você pretende fazer hoje?"]
+    TaskNew["task/new<br/>Nova tarefa ou lembrete"]
+    TaskDet["task/[id]<br/>Detalhes da tarefa"]
+    TaskBlock["task/[id]/block<br/>Reservar tempo"]
+    Planner["planner<br/>Planejar minha semana"]
+    Week["week<br/>Minha semana em sintonia"]
+    Notes["notes<br/>Anotações"]
+    Habits["habits<br/>Hábitos e rotinas"]
+    FindTime["calendar/[id]/find-time<br/>Encontrar horário"]
+    Polls["calendar/[id]/polls<br/>Enquetes de horário"]
+    Import["calendar/[id]/import<br/>Importar .ics"]
+  end
+
   Abrir --> Splash
   Splash -->|APK sem servidor| NC
   Splash -->|sem sessão| AIdx
@@ -107,9 +123,26 @@ flowchart TB
   TAg --> Filters
   THo -->|faixa de sincronização| Sync
   THo -->|sino| TAv
-  THo -->|botão +| EvNew
+  THo -->|1ª abertura do dia| PlanDay
+  THo -->|botão +| Create
+  TAg -->|botão +| Create
+  Create --> EvNew
+  Create --> TaskNew
+  Create --> Notes
+  Create --> Habits
+  TTa -->|botão +| TaskNew
+  TTa --> TaskDet
+  TTa --> Planner
+  TTa --> Notes
+  TTa --> Habits
+  TaskDet --> TaskBlock
+  THo --> Week
+  Week --> Planner
+  CalDet --> FindTime
+  CalDet --> Polls
+  CalDet --> Import
+  FindTime -->|várias opções| Polls
   THo --> EvDet
-  TAg -->|botão +| EvNew
   TAg --> EvDet
   TAg -->|sem agendas| CalNew
   Search --> EvDet
@@ -161,9 +194,10 @@ flowchart TB
 
 Observações sobre o mapa:
 
-- As quatro abas (Hoje, Calendário, Agendas e Perfil) ficam sempre visíveis na parte de baixo. Os **Avisos** abrem pelo sino da tela Hoje, que ganha um ponto coral quando há avisos não lidos.
+- As cinco abas (Hoje, Calendário, Tarefas, Agendas e Perfil) ficam sempre visíveis na parte de baixo. Os **Avisos** abrem pelo sino da tela Hoje, que ganha um ponto coral quando há avisos não lidos.
 - **Filtros** abre como janela modal (por cima da Agenda). As demais telas abrem empilhadas, com botão de voltar.
-- Tocar num lembrete do Android abre direto os detalhes do evento (`src/app/(app)/_layout.tsx`).
+- Tocar num lembrete do Android abre direto os detalhes do evento; num alerta de tarefa, os detalhes da tarefa. O botão "Concluir" da notificação conclui a tarefa (`src/app/(app)/_layout.tsx`).
+- "O que você pretende fazer hoje?" abre sozinha uma vez por dia, na primeira abertura, se estiver ligada em Preferências.
 - Depois de sair da conta, a apresentação não aparece de novo: o app lembra neste aparelho que ela já foi vista e vai direto para Boas-vindas.
 
 ## Fluxos principais
@@ -286,6 +320,28 @@ Legenda da coluna "Quem acessa": os papéis são Proprietário, Administrador, E
 | `(app)/settings/privacy-data.tsx` | `screens/settings/PrivacyDataScreen.tsx` | Exportar meus dados, entrar na exclusão de conta, abrir a política | Qualquer pessoa logada |
 | `(app)/diagnostics.tsx` | `screens/misc/DiagnosticsScreen.tsx` | Versão, plataforma, fila, janela de dados, permissão de notificações e erros recentes (sem senhas nem tokens), com botão para copiar | Qualquer pessoa logada (o menu chama de "Diagnóstico (desenvolvimento)") |
 
+### Telas da versão 3.0
+
+| Rota | Componente | Para que serve | Quem acessa |
+|---|---|---|---|
+| `(tabs)/tasks.tsx` | `screens/tasks/TasksScreen.tsx` | Aba Tarefas: adição rápida, visões, listas, ordenação, atalhos para hábitos, anotações e planejador | Qualquer pessoa logada |
+| `task/new.tsx`, `task/[id]/edit.tsx` | `screens/tasks/TaskFormScreen.tsx` | Criar ou editar tarefa ou lembrete (prazo, prioridade, repetição, lista, agenda, responsável, privacidade, alertas) | Quem pode criar na agenda escolhida; pessoal para todos |
+| `task/[id]/index.tsx` | `screens/tasks/TaskDetailScreen.tsx` | Subtarefas, concluir, adiar, reservar tempo, comentários e histórico | Quem vê a tarefa |
+| `task/[id]/block.tsx` | `screens/tasks/TimeBlockScreen.tsx` | Reservar um horário livre para fazer a tarefa (vira evento ligado a ela) | Quem edita na agenda |
+| `task-filters.tsx` | `screens/tasks/TaskFiltersScreen.tsx` | Filtrar por agenda, lista, prioridade, etiqueta, responsável e estado (janela modal) | Qualquer pessoa logada |
+| `list/new.tsx`, `list/[id].tsx` | `screens/tasks/ListFormScreen.tsx` | Criar e editar listas de tarefas | Pessoal: a dona; da agenda: quem edita |
+| `create.tsx` | `screens/create/CreateScreen.tsx` | "O que você deseja adicionar?": adição rápida e os cinco tipos | Qualquer pessoa logada |
+| `plan-day.tsx` | `screens/planning/PlanDayScreen.tsx` | "O que você pretende fazer hoje?": compromissos, acrescentar, sugestões e "Começar o dia" | A própria pessoa |
+| `planner.tsx` | `screens/planning/PlannerScreen.tsx` | Planejar minha semana: sugestões de blocos, revisar e confirmar | A própria pessoa |
+| `week.tsx` | `screens/planning/WeekSummaryScreen.tsx` | Minha semana em sintonia (próximos 7 dias) | A própria pessoa |
+| `notes/index.tsx`, `notes/new.tsx`, `notes/[id].tsx` | `screens/notes/` | Anotações pessoais ou da agenda | Pessoais: a dona; da agenda: membros (editar conforme o papel) |
+| `habits/index.tsx`, `habits/new.tsx`, `habits/[id].tsx` | `screens/habits/` | Hábitos e rotinas, marcar o dia | Idem |
+| `calendar/[id]/find-time.tsx` | `screens/findTime/FindTimeScreen.tsx` | Horários livres em comum e criar evento ou enquete | Membros de agenda compartilhada |
+| `calendar/[id]/polls.tsx` | `screens/findTime/PollsScreen.tsx` | Votar e encerrar enquetes | Participantes, quem criou e a administração |
+| `calendar/[id]/import.tsx` | `screens/ics/ImportIcsScreen.tsx` | Importar eventos de um arquivo .ics com prévia | Quem pode criar eventos na agenda |
+
+Exportar .ics fica em Detalhes da agenda (sem tela própria). A Busca agora procura também em tarefas, lembretes, anotações e agendas.
+
 ## Estados que cada tela trata
 
 Só está listado o que foi conferido no código. Os componentes usados são `LoadingState`, `EmptyState` e `ErrorState` (em `components/StateViews.tsx`) e `OfflineBanner` (em `components/OfflineBanner.tsx`).
@@ -317,10 +373,11 @@ Só está listado o que foi conferido no código. Os componentes usados são `Lo
 
 ## Limitações e observações
 
-- **Semana e dia sem grade de horários:** as duas visões são listas. Eventos longos aparecem em cada dia que ocupam, mas não há blocos posicionados por hora.
+- **Grade de horários (3.0):** semana e dia mostram blocos posicionados por hora, lado a lado quando acontecem ao mesmo tempo. Para mover, segure o evento e arraste, ou use os botões que aparecem; numa série, só a ocorrência tocada muda.
+- **Importar .ics no Android:** cola-se o conteúdo do arquivo; escolher o arquivo direto só existe no navegador.
 - **Permissão por papel na tela:** as telas não impedem a abertura pelo papel. Elas escondem os atalhos que a pessoa não pode usar (`utils/permissions.ts`), e o servidor recusa a gravação de quem não tem permissão. Se alguém abrir o endereço direto (por exemplo, as configurações de uma agenda em que é visualizador), a tela aparece, mas salvar falha com "Você não tem permissão para fazer isso.".
 - **Preferências e Notificações** ficam em branco enquanto os dados da conta não foram carregados (não mostram indicador de carregando).
 - **Exportação:** o texto da tela fala em "arquivo", mas o app envia o JSON como texto pelo menu de compartilhamento do Android. O mesmo vale para "Exportar eventos (JSON)" nas configurações da agenda, que usa os eventos guardados no aparelho.
 - **Diagnóstico** aparece no Perfil para todas as pessoas, não só para quem desenvolve.
 - **Ajuda** só está disponível depois do login.
-- **Sem capturas nem wireframes:** a descrição detalhada de cada tela neste documento faz o papel dos wireframes.
+- **Capturas:** as da pasta [capturas/](capturas/) saem dos testes de tela da versão web; não há wireframes separados.

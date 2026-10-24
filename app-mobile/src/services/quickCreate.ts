@@ -71,6 +71,9 @@ export async function saveQuick(
     const id = await createEvent(parseToEventForm(parse, calendar.id, defaults));
     return { kind: 'event', id };
   }
-  const id = await createTask(parseToTaskForm(parse, defaults), { planDay: defaults.planDay ?? null });
+  // "Meu dia" só recebe o que é para hoje: "pão amanhã" digitado na visão Hoje fica para amanhã.
+  const planDay =
+    defaults.planDay && (!parse.date || parse.date === defaults.planDay) ? defaults.planDay : null;
+  const id = await createTask(parseToTaskForm(parse, defaults), { planDay });
   return { kind: parse.kind, id };
 }

@@ -1,15 +1,7 @@
 // Aplica as operações ainda não enviadas de tarefas, listas, anotações,
 // hábitos e do plano do dia sobre os dados do servidor, para a tela mostrar
 // o estado mais recente na hora (inclusive sem internet). Funções puras.
-import type {
-  ChecklistItem,
-  DateKey,
-  Habit,
-  Note,
-  Task,
-  TaskFields,
-  TaskList,
-} from '@/models/types';
+import type { ChecklistItem, DateKey, Habit, Note, Task, TaskFields, TaskList } from '@/models/types';
 import { nextDueAfterCompletion } from '@/utils/taskRecurrence';
 import { addDaysToKey, compareKeys, diffDays } from '@/utils/dates';
 
@@ -147,7 +139,12 @@ function applyTaskOp(tasks: Record<string, Task>, op: OutboxOp, userId: string |
     case 'complete':
       if (current) {
         tasks[op.entityId] = {
-          ...completeLocally(current, (p.occurrence_date as DateKey | undefined) ?? null, today, op.createdAt),
+          ...completeLocally(
+            current,
+            (p.occurrence_date as DateKey | undefined) ?? null,
+            today,
+            op.createdAt,
+          ),
           pending: true,
         };
       }

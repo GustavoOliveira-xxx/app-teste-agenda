@@ -45,7 +45,9 @@ describe('prazos e atraso', () => {
 
   it('texto do prazo', () => {
     expect(describeDue(makeTask({ due_date: today }), today)).toBe('Hoje');
-    expect(describeDue(makeTask({ due_date: '2026-10-24', due_time: '19:30:00' }), today)).toBe('Amanhã, 19:30');
+    expect(describeDue(makeTask({ due_date: '2026-10-24', due_time: '19:30:00' }), today)).toBe(
+      'Amanhã, 19:30',
+    );
     expect(describeDue(makeTask({ due_date: '2026-10-27' }), today)).toBe('Ter');
     expect(describeDue(makeTask({ due_date: '2026-10-20' }), today)).toBe('Atrasada há 3 dias');
     expect(describeDue(makeTask({ due_date: '2026-10-22' }), today)).toBe('Ontem');
@@ -83,7 +85,8 @@ describe('visões inteligentes', () => {
     makeTask({ id: 'rem', item_type: 'reminder', due_date: '2026-10-24', due_time: '09:00' }),
     makeTask({ id: 'done', status: 'done', due_date: today }),
   ];
-  const ids = (view: Parameters<typeof inView>[1]) => tasks.filter((t) => inView(t, view, ctx)).map((t) => t.id);
+  const ids = (view: Parameters<typeof inView>[1]) =>
+    tasks.filter((t) => inView(t, view, ctx)).map((t) => t.id);
 
   it('cada visão mostra o que deve', () => {
     expect(ids('inbox')).toEqual(['inbox', 'late', 'soon', 'far']);
@@ -109,9 +112,30 @@ describe('visões inteligentes', () => {
 });
 
 describe('filtros e ordenação', () => {
-  const a = makeTask({ id: 'a', title: 'Banana', priority: 1, due_date: '2026-10-25', tags: ['casa'], position: 3 });
-  const b = makeTask({ id: 'b', title: 'abacaxi', priority: 4, due_date: '2026-10-24', due_time: '08:00', position: 1 });
-  const c = makeTask({ id: 'c', title: 'Cenoura', priority: 4, position: 2, recurrence_rule: 'FREQ=DAILY', due_date: '2026-10-24' });
+  const a = makeTask({
+    id: 'a',
+    title: 'Banana',
+    priority: 1,
+    due_date: '2026-10-25',
+    tags: ['casa'],
+    position: 3,
+  });
+  const b = makeTask({
+    id: 'b',
+    title: 'abacaxi',
+    priority: 4,
+    due_date: '2026-10-24',
+    due_time: '08:00',
+    position: 1,
+  });
+  const c = makeTask({
+    id: 'c',
+    title: 'Cenoura',
+    priority: 4,
+    position: 2,
+    recurrence_rule: 'FREQ=DAILY',
+    due_date: '2026-10-24',
+  });
 
   it('combina filtros', () => {
     const f = { ...DEFAULT_TASK_FILTERS, priorities: [4 as const] };

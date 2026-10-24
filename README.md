@@ -2,7 +2,9 @@
 
 > Sua rotina, sincronizada com quem importa. Um produto CK Group.
 
-Aplicativo de **agenda compartilhada** para **Android, iPhone, iPad e computador**: você cria agendas, convida pessoas e todo mundo vê os mesmos compromissos, sincronizados pela internet, cada pessoa com o nível de acesso que você escolher. Funciona para casal, família, amigos, república, equipe pequena, grupo de estudo, cuidadores e viagens.
+Aplicativo de **agenda, tarefas e planejamento compartilhados** para **Android, iPhone, iPad e computador**: você cria agendas, convida pessoas e todo mundo vê os mesmos compromissos, tarefas e lembretes, sincronizados pela internet, cada pessoa com o nível de acesso que você escolher. Funciona para casal, família, amigos, república, equipe pequena, grupo de estudo, cuidadores e viagens.
+
+**Versão atual: 3.0.0.** O que mudou está no [CHANGELOG.md](CHANGELOG.md); o que já foi validado e o que ainda depende de teste no aparelho, em [docs/VALIDACAO_3.0.md](docs/VALIDACAO_3.0.md).
 
 > **Comece aqui (para quem não programa)**
 >
@@ -25,7 +27,9 @@ A tela se adapta ao tamanho: no celular, abas embaixo; no tablet, menu lateral; 
 
 Quem divide a vida com outras pessoas costuma combinar compromissos por mensagem e perde informação: "era terça ou quarta?", "quem leva a vó no médico?", "você sabia da reunião da escola?". O app junta tudo em um calendário único, com:
 
-- cada pessoa vendo só o que deve ver (eventos podem ser privados ou só para participantes);
+- cada pessoa vendo só o que deve ver (eventos e tarefas podem ser privados ou só para participantes);
+- tarefas com responsável, prazo e subtarefas, sem precisar virar compromisso na agenda;
+- um momento de planejar o dia ("O que você pretende fazer hoje?") e a semana;
 - lembretes no celular de cada um;
 - funcionamento sem internet (as mudanças são enviadas quando a conexão volta);
 - histórico de quem mudou o quê.
@@ -40,11 +44,18 @@ Quem divide a vida com outras pessoas costuma combinar compromissos por mensagem
 | Papéis | Proprietário, administrador, editor, colaborador e visualizador; transferência de propriedade; remoção com perda de acesso imediata |
 | Eventos | Criar, editar, duplicar, cancelar, concluir, excluir e restaurar; dia inteiro; local; link; observações; participantes; 4 níveis de privacidade; comentários |
 | Recorrência | Diária, semanal (dias da semana), quinzenal, mensal, anual, com fim por data ou quantidade; editar ou excluir "só este", "este e os próximos" ou "todos" |
-| Calendário | Visões de mês, semana, dia e lista; filtros por agenda, tipo, status, participante, cor, privacidade, recorrência e período; busca |
+| Calendário | Mês com marcadores de tarefas; semana e dia em grade de horários, com eventos simultâneos lado a lado, linha do horário atual e arrastar para mudar o horário; lista; filtros por agenda, tipo, status, participante, cor, privacidade, recorrência e período; busca em eventos, tarefas, lembretes, anotações e agendas |
+| Tarefas | Aba própria com prazo (com ou sem horário), prioridade, estado, subtarefas, listas, etiquetas, estimativa, repetição pelo calendário ou depois da conclusão, responsável, participantes, comentários e histórico; visões Hoje, Próximos 7 dias, Atrasadas, Importantes, Atribuídas a mim e outras |
+| Lembretes avulsos | Um aviso numa data, sem ocupar horário na agenda |
+| Criar | Botão "O que você deseja adicionar?" (evento, tarefa, lembrete, anotação, hábito) e adição rápida em português: "Reunião com Paulo terça das 14h às 15h", "Pagar luz todo dia 10 #casa" |
+| Planejar | "O que você pretende fazer hoje?" na primeira abertura do dia, com sugestões do que você costuma fazer; reservar tempo para uma tarefa; planejar a semana nos horários livres; resumo "Minha semana em sintonia" |
+| Juntos | Encontrar horário em comum (só horários ocupados, sem detalhes) e enquetes de horário |
+| Anotações e hábitos | Anotações pessoais ou da agenda; hábitos e rotinas com marcação diária |
+| Arquivos .ics | Exportar uma agenda para Google Agenda, Outlook ou Apple e importar eventos sem duplicar |
 | Lembretes | Notificações locais no celular (no horário, 5 min, 15 min, 30 min, 1 h, 1 dia antes ou personalizado); horário de silêncio; tela bloqueada sem detalhes por padrão |
-| Offline | Cache local, fila de alterações com novas tentativas automáticas, tela de sincronização, resolução de conflitos quando duas pessoas mudam o mesmo evento |
+| Offline | Cache local, fila de alterações (eventos, tarefas, lembretes, listas, anotações, hábitos e plano do dia) com novas tentativas automáticas, tela de sincronização, resolução de conflitos quando duas pessoas mudam o mesmo item |
 | Tempo real | Alterações de outras pessoas aparecem sozinhas (Supabase Realtime) |
-| Avisos | Central de avisos no app (convites, alterações em eventos, remoções) |
+| Avisos | Central de avisos no app (convites, alterações em eventos, remoções, tarefas atribuídas, concluídas ou comentadas, enquetes) |
 | Privacidade | LGPD: exportação de dados, exclusão de conta com explicação do impacto, política de privacidade no app |
 
 O mapa completo de telas está em [docs/TELAS.md](docs/TELAS.md).
@@ -59,6 +70,10 @@ O mapa completo de telas está em [docs/TELAS.md](docs/TELAS.md).
 | Detalhes do evento e lembretes | Membros e papéis | Código de convite |
 | ![Avisos](docs/capturas/10-avisos.png) | ![Entrar](docs/capturas/02-login.png) | ![Tema escuro](docs/capturas/00-hoje-escuro.png) |
 | Avisos | Entrar (com Google) | Tema escuro |
+| ![O que você pretende fazer hoje?](docs/capturas/18-o-que-vai-fazer-hoje.png) | ![Tarefas](docs/capturas/19-tarefas.png) | ![O que você deseja adicionar?](docs/capturas/20-criar.png) |
+| O que você pretende fazer hoje? | Tarefas | Criar qualquer coisa |
+| ![Minha semana em sintonia](docs/capturas/21-semana-em-sintonia.png) | ![Encontrar horário](docs/capturas/22-encontrar-horario.png) | ![Busca](docs/capturas/23-busca.png) |
+| Minha semana em sintonia | Encontrar horário em comum | Busca em tudo |
 
 **No computador** (menu lateral com o logo; no Calendário, mês e eventos do dia lado a lado):
 
@@ -145,7 +160,7 @@ npm ci && npm run preparar && CHROMIUM_PATH=/caminho/do/chrome npm test
 npm run preparar:site && CHROMIUM_PATH=/caminho/do/chrome npm run test:site
 ```
 
-São 160 testes automáticos (69 do banco, 78 do app, 7 de tela e 6 da versão instalável). Os mesmos rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
+São 297 testes automáticos (92 do banco, 190 do app, 8 de tela e 7 da versão instalável). Os mesmos rodam sozinhos no GitHub a cada envio (workflow **Qualidade**). Estratégia, números e roteiro de teste manual em [docs/TESTES.md](docs/TESTES.md).
 
 ## Build, APK e AAB
 

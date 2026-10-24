@@ -4,21 +4,21 @@ Este documento explica como o projeto é testado, o que já roda sozinho, como r
 
 ## Resumo em números
 
-Resultado conferido em 20/10/2026, rodando os comandos abaixo neste repositório (Node.js 22.22.0, npm 10.9.4):
+Resultado conferido em 24/10/2026 (versão 3.0.0), rodando os comandos abaixo neste repositório:
 
 | O quê | Pasta e comando | Arquivos | Testes | Resultado | Tempo |
 |---|---|---|---|---|---|
-| Testes do banco (integração) | `supabase`: `npm test` | 8 | **69** | 69 passaram, 0 falharam | cerca de 3 min 30 s |
-| Testes do app (unitários) | `app-mobile`: `npm test -- --ci` | 9 | **78** | 78 passaram, 0 falharam | poucos segundos |
+| Testes do banco (integração) | `supabase`: `npm test` | 10 | **92** | 92 passaram, 0 falharam | cerca de 5 min |
+| Testes do app (unitários) | `app-mobile`: `npm test -- --ci` | 20 | **190** | 190 passaram, 0 falharam | poucos segundos |
 | Tipos (TypeScript) | `app-mobile`: `npm run typecheck` | | | sem erros | |
 | Lint (ESLint) | `app-mobile`: `npm run lint` | | | sem erros | |
 | Formatação (Prettier) | `app-mobile`: `npm run format:check` | | | "All matched files use Prettier code style!" | |
 | Segredos no repositório | raiz: `bash scripts/verificar-segredos.sh` | | | "OK: nenhum segredo encontrado nos arquivos versionados." | |
-| Testes de tela (versão web: celular, tablet e computador) | `e2e`: `npm run preparar` e `npm test` | 1 | **7** | 7 passaram, 0 falharam | cerca de 40 s (mais 1 a 2 min para gerar a versão web) |
-| Versão instalável (PWA) | `e2e`: `npm run preparar:site` e `npm run test:site` | 1 | **6** | 6 passaram, 0 falharam | cerca de 20 s (mais 1 a 2 min para gerar o site) |
+| Testes de tela (versão web: celular, tablet e computador) | `e2e`: `npm run preparar` e `npm test` | 1 | **8** | 8 passaram, 0 falharam | cerca de 40 s (mais 1 a 2 min para gerar a versão web) |
+| Versão instalável (PWA) | `e2e`: `npm run preparar:site` e `npm run test:site` | 1 | **7** | 7 passaram, 0 falharam | cerca de 20 s (mais 1 a 2 min para gerar o site) |
 | Testes de interface no Android (emulador ou celular) | | 0 | **0** | não automatizados; use o [roteiro manual](#roteiro-de-teste-manual) | |
 
-**Total automatizado: 160 testes** (69 do banco + 78 do app + 7 de tela + 6 da versão instalável).
+**Total automatizado: 297 testes** (92 do banco + 190 do app + 8 de tela + 7 da versão instalável). A função de notificações do navegador também passa pela verificação de tipos do Deno (`deno check`) e por uma conferência de que usa a mesma lógica de datas do app.
 
 > **Importante:** os testes de tela abrem a **versão web** do app (o mesmo código do APK) num navegador com tamanho de celular, ligada a um "Supabase de mentira" que usa o **banco real** do projeto (PGlite com as migrations e os dados de demonstração). Eles não usam um celular Android de verdade, nem o Supabase Auth real, nem as notificações do Android. Isso continua no roteiro manual deste documento.
 
@@ -69,7 +69,9 @@ A escolha foi colocar o esforço onde o risco é maior: regras de permissão e p
 | `06_privacidade_busca.test.mjs` | 7 | Evento privado: só quem criou vê (nem o dono da agenda); agenda pode proibir privados; "ocupado": membros veem só o horário; "só participantes"; editor não consegue esconder evento de outra pessoa; **busca respeita permissões** e trata caracteres especiais; histórico de evento privado não revela o título. |
 | `07_avisos_lgpd.test.mjs` | 8 | Criar evento avisa os outros membros (não quem criou); evento privado não gera aviso; pessoa removida recebe aviso e para de receber os da agenda; cada um vê e marca como lido só os seus avisos; mudanças administrativas ficam na auditoria, que ninguém lê pela API; exportação traz os dados da própria pessoa; exclusão de conta exige confirmação, bloqueia dono de agenda compartilhada e informa o impacto; limpeza da lixeira não pode ser chamada pelo app. |
 | `08_seed.test.mjs` | 2 | O `seed.sql` cria o cenário de demonstração completo e respeita a privacidade; o seed **não roda** em banco que já tem usuários (proteção contra rodar em produção). |
-| **Total** | **69** | |
+| `09_synck_push.test.mjs` | 2 | Confirmação de presença (Vou, Talvez, Não vou) e inscrições de notificação no navegador só da própria pessoa. |
+| `10_tarefas.test.mjs` | 21 | Versão 3.0: tarefa simples; **tarefa pessoal invisível para quem divide outra agenda e escrita direta proibida**; papéis, privacidade e responsável; reenvio sem duplicar; conflitos; **recorrência pelo calendário e depois da conclusão, concluindo uma vez só mesmo em dois aparelhos**; alertas e "Meu dia" pessoais; subtarefas; listas; mover entre pessoal e agenda; membro removido perde as tarefas na hora; comentários e histórico; anotações; hábitos; **encontrar horário sem títulos e com outras agendas só por autorização**; enquetes; blocos de tempo; compatibilidade com a 2.0; exportação e exclusão de conta; os 24 casos de próxima data compartilhados com o app. |
+| **Total** | **92** | |
 
 **O que os testes do banco não cobrem:**
 - O **Supabase Auth** de verdade (login, logout, recuperação de senha, envio de e-mail, renovação de sessão). Ele é um serviço separado que não existe no PGlite; o shim só simula a tabela `auth.users`.
@@ -144,7 +146,7 @@ npm -v
 # Finalidade: instalar o PGlite (só na primeira vez ou depois de atualizar o projeto)
 npm ci
 
-# Finalidade: rodar os 69 testes de permissões, convites, eventos, sincronização e privacidade
+# Finalidade: rodar os 92 testes de permissões, convites, eventos, tarefas, sincronização e privacidade
 npm test
 ```
 
@@ -174,7 +176,7 @@ npm test
 # Finalidade: instalar as dependências (só na primeira vez ou depois de atualizar o projeto)
 npm ci
 
-# Finalidade: rodar os 78 testes unitários
+# Finalidade: rodar os 190 testes unitários
 npm test -- --ci
 ```
 
@@ -553,11 +555,24 @@ Copie esta tabela para cada rodada de testes.
 | M02 | | | | | |
 | ... | | | | | |
 
+### Testes do app da versão 3.0
+
+| Arquivo | O que cobre |
+|---|---|
+| `utils/__tests__/tasks.test.ts` | Atraso, prazo em texto, visões (Hoje, Próximos 7 dias, Atrasadas...), filtros, ordenações e posição entre itens |
+| `utils/__tests__/taskRecurrence.test.ts` | Próxima data de tarefas que se repetem, com os mesmos 24 casos do banco (`supabase/tests/fixtures/proxima-data.json`) |
+| `utils/__tests__/quickAdd.test.ts` | Adição rápida em português: dias, horários, repetições, etiquetas, prioridade e quando pedir para conferir |
+| `utils/__tests__/planning.test.ts` | Horários livres, horário em comum, planejar a semana, grade de horários, "O que você pretende fazer hoje?" e resumo da semana |
+| `utils/__tests__/ics.test.ts` | Exportar e importar .ics: fusos, dia inteiro, repetição, exclusões, linhas longas e o que não é suportado |
+| `utils/__tests__/search.test.ts` | Busca sem acento, por etiqueta, concluídas e atrasadas |
+| `offline/__tests__/itemOverlay.test.ts` | Tarefas, listas, anotações, hábitos e plano do dia sem internet; mesclagem de conflitos |
+| `services/__tests__/taskAlerts.test.ts` | Quando cada alerta de tarefa toca, limite de agendamentos e o adiamento que não some na sincronização |
+
 ## Relação com os critérios de aceitação
 
 | Critério | Evidência automática | Evidência manual |
 |---|---|---|
-| Testes principais passarem | 69 testes do banco, 78 do app, 7 de tela e 6 da versão instalável passando (resumo no topo) | |
+| Testes principais passarem | 92 testes do banco, 190 do app, 8 de tela e 7 da versão instalável passando (resumo no topo) | |
 | Permissões funcionarem | `02`, `03`, `04`, `06` e `permissions.test.ts` | M07 (passo 4), M14 |
 | Usuário removido perder acesso | `02_agendas_membros.test.mjs`, `07_avisos_lgpd.test.mjs` | M13 |
 | Eventos recorrentes conforme escopo | `recurrence.test.ts`, `05_sincronizacao.test.mjs` | M09 |
@@ -569,6 +584,8 @@ Copie esta tabela para cada rodada de testes.
 | Conflitos detectados ou tratados | `05_sincronizacao.test.mjs`, `outbox.test.ts` | M12 |
 | Dados privados não vazarem | `01`, `06`, `07`, `08` | M15 |
 | Mensagens de erro compreensíveis | `errors.test.ts` | Passos de erro em M01, M02, M03, M05, M06 |
+
+Os 10 cenários de aceite da versão 3.0.0, com o que está aprovado e o que ainda depende do aparelho, estão em [VALIDACAO_3.0.md](VALIDACAO_3.0.md), com os roteiros A (um Android), B (duas pessoas) e C (iPhone ou computador).
 
 ## Limitações conhecidas
 

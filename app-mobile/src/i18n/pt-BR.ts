@@ -977,7 +977,8 @@ export const ptBR = {
     deleted: 'Tarefa excluída.',
     deleteTitle: 'Excluir esta tarefa?',
     deleteReminderTitle: 'Excluir este lembrete?',
-    deleteMessage: 'Ela sai das listas de todos que a acompanham. Os blocos de tempo continuam no calendário.',
+    deleteMessage:
+      'Ela sai das listas de todos que a acompanham. Os blocos de tempo continuam no calendário.',
     cancelTask: 'Cancelar tarefa',
     cancelled: 'Tarefa cancelada.',
     postpone: 'Adiar',
@@ -1199,7 +1200,8 @@ export const ptBR = {
   },
   findTime: {
     title: 'Encontrar horário',
-    intro: 'Escolha quem participa e o SynCK mostra horários livres em comum. Ninguém vê detalhes dos outros.',
+    intro:
+      'Escolha quem participa e o SynCK mostra horários livres em comum. Ninguém vê detalhes dos outros.',
     people: 'Quem participa',
     duration: 'Duração',
     range: 'Entre',
@@ -1230,7 +1232,7 @@ export const ptBR = {
     yes: 'Posso',
     maybe: 'Talvez',
     no: 'Não posso',
-    votes: '{yes} pode(m) · {maybe} talvez',
+    votes: 'Posso: {yes} · Talvez: {maybe}',
     close: 'Encerrar e marcar',
     closeOnly: 'Encerrar sem marcar',
     closed: 'Enquete encerrada.',

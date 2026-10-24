@@ -9,7 +9,11 @@ const op = (
   kind: OutboxOp['kind'],
   entityId: string,
   payload: Record<string, unknown> = {},
-) => makeOp({ id: `op-${++n}`, entity, kind, entityId, calendarId: null, payload }, new Date('2026-10-23T12:00:00Z'));
+) =>
+  makeOp(
+    { id: `op-${++n}`, entity, kind, entityId, calendarId: null, payload },
+    new Date('2026-10-23T12:00:00Z'),
+  );
 
 const empty: ItemsState = { tasks: {}, lists: {}, notes: {}, habits: {}, checkins: [] };
 const today = '2026-10-23';
@@ -40,13 +44,31 @@ describe('itens offline (tarefas, listas, anotações, hábitos)', () => {
   });
 
   it('concluir recorrente avança o prazo; desfazer volta', () => {
-    const base = makeTask({ id: 't', recurrence_rule: 'FREQ=WEEKLY', due_date: '2026-10-23', recurrence_start: '2026-10-02' });
-    const done = overlayItems({ ...empty, tasks: { t: base } }, [op('task', 'complete', 't', { occurrence_date: '2026-10-23' })], 'me', today);
+    const base = makeTask({
+      id: 't',
+      recurrence_rule: 'FREQ=WEEKLY',
+      due_date: '2026-10-23',
+      recurrence_start: '2026-10-02',
+    });
+    const done = overlayItems(
+      { ...empty, tasks: { t: base } },
+      [op('task', 'complete', 't', { occurrence_date: '2026-10-23' })],
+      'me',
+      today,
+    );
     expect(done.tasks.t).toMatchObject({ due_date: '2026-10-30', status: 'pending' });
-    const undone = overlayItems(done, [op('task', 'reopen', 't', { occurrence_date: '2026-10-23' })], 'me', today);
+    const undone = overlayItems(
+      done,
+      [op('task', 'reopen', 't', { occurrence_date: '2026-10-23' })],
+      'me',
+      today,
+    );
     expect(undone.tasks.t.due_date).toBe('2026-10-23');
     // Sem repetição: fica concluída.
-    expect(completeLocally(makeTask(), null, today, 'agora')).toMatchObject({ status: 'done', completed_at: 'agora' });
+    expect(completeLocally(makeTask(), null, today, 'agora')).toMatchObject({
+      status: 'done',
+      completed_at: 'agora',
+    });
   });
 
   it('etapas: marcar, criar, remover', () => {
@@ -71,7 +93,20 @@ describe('itens offline (tarefas, listas, anotações, hábitos)', () => {
     const s = overlayItems(
       {
         ...empty,
-        lists: { l: { id: 'l', calendar_id: null, name: 'Compras', color: null, icon: null, position: 1, created_by: 'me', version: 1, created_at: '', updated_at: '' } },
+        lists: {
+          l: {
+            id: 'l',
+            calendar_id: null,
+            name: 'Compras',
+            color: null,
+            icon: null,
+            position: 1,
+            created_by: 'me',
+            version: 1,
+            created_at: '',
+            updated_at: '',
+          },
+        },
         tasks: { t: makeTask({ id: 't', list_id: 'l' }) },
       },
       [op('list', 'delete', 'l')],
@@ -84,9 +119,20 @@ describe('itens offline (tarefas, listas, anotações, hábitos)', () => {
 
   it('plano do dia e hábitos', () => {
     const habit = {
-      id: 'h', calendar_id: null, title: 'Ler', description: null, color: null, recurrence_rule: 'FREQ=DAILY',
-      start_date: '2026-10-01', status: 'active' as const, show_streak: false, created_by: 'me', version: 1,
-      created_at: '', updated_at: '', logs: [],
+      id: 'h',
+      calendar_id: null,
+      title: 'Ler',
+      description: null,
+      color: null,
+      recurrence_rule: 'FREQ=DAILY',
+      start_date: '2026-10-01',
+      status: 'active' as const,
+      show_streak: false,
+      created_by: 'me',
+      version: 1,
+      created_at: '',
+      updated_at: '',
+      logs: [],
     };
     const s = overlayItems(
       { ...empty, habits: { h: habit } },
@@ -111,9 +157,18 @@ describe('itens offline (tarefas, listas, anotações, hábitos)', () => {
 
   it('mesclagem de tarefas: prazo é um bloco; campos diferentes se juntam', () => {
     const base = { title: 'A', priority: 1, due_date: '2026-10-30', due_time: null };
-    const server = { title: 'A', priority: 3, due_date: '2026-10-30', due_time: null, timezone: 'America/Sao_Paulo' };
+    const server = {
+      title: 'A',
+      priority: 3,
+      due_date: '2026-10-30',
+      due_time: null,
+      timezone: 'America/Sao_Paulo',
+    };
     const local = { title: 'B' };
-    expect(mergeFields(base, local, server, DUE_GROUP, 'due')).toEqual({ payload: { title: 'B' }, conflicts: [] });
+    expect(mergeFields(base, local, server, DUE_GROUP, 'due')).toEqual({
+      payload: { title: 'B' },
+      conflicts: [],
+    });
     const both = mergeFields(
       { due_date: '2026-10-30', due_time: null, timezone: 'America/Sao_Paulo' },
       { due_date: '2026-10-31' },
@@ -123,6 +178,8 @@ describe('itens offline (tarefas, listas, anotações, hábitos)', () => {
     );
     expect(both.conflicts).toEqual(['due']);
     // "19:00" e "19:00:00" são o mesmo horário.
-    expect(mergeFields({ due_time: '18:00' }, { due_time: '19:00' }, { due_time: '19:00:00' }).payload).toEqual({});
+    expect(
+      mergeFields({ due_time: '18:00' }, { due_time: '19:00' }, { due_time: '19:00:00' }).payload,
+    ).toEqual({});
   });
 });
